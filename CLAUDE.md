@@ -107,6 +107,8 @@ Supabase CLI 명령어는 `backend/`에서 실행한다. CLI가 `supabase/` 폴�
 - 브랜치: `feat/{fe|be|ai}-<설명>`, `fix/...`, `chore/...`, `docs/...` (예: `feat/fe-session-timer`)
 - 커밋: Conventional Commits 형식, scope는 `fe`, `be`, `ai`, `shared`, `docs`, `ci` 중 하나 (예: `feat(fe): 타이머 화면 추가`)
 - 커밋 메시지와 PR 설명은 한국어로 쓴다.
+- `main`에 직접 push하지 않는다. 모든 변경은 PR → merge commit으로 반영한다.
+- 예외: 긴급 수정(hotfix)은 관리자만 main에 직접 반영할 수 있다. 데모·발표 직전 앱 실행 불가, 빌드·배포 장애에만 해당한다. push 전에 `pnpm typecheck` 통과를 확인한다.
 
 ## 코드 컨벤션
 
