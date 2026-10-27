@@ -103,12 +103,17 @@ Supabase CLI 명령어는 `backend/`에서 실행한다. CLI가 `supabase/` 폴�
 
 ## Git 규칙
 
-- `main`에 직접 push하지 않는다. 모든 변경은 PR → squash merge로 반영한다.
+팀원은 각자 담당 폴더(위 "레포 구조와 담당" 표)에서만 작업한다. 별도의 브랜치 보호 규칙 없이 아래 약속으로 운영한다.
+
+- 작업을 시작할 때 사용자의 담당 영역(FE, BE-A, BE-B, AI)을 모르면 먼저 묻고, 그 영역의 폴더만 수정한다.
+- 급한 수정은 main에 바로 반영할 수 있다. 반영 전에 `pnpm typecheck` 통과를 확인한다.
+- 하나의 주제로 작업량이 묶이는 변경은 브랜치를 만들어 작업하고 PR → merge commit으로 반영한다. squash merge는 쓰지 않는다.
+- 작업 범위를 제안할 때 main 직접 반영과 브랜치 작업 중 어느 쪽이 맞는지 함께 제시한다.
 - 브랜치: `feat/{fe|be|ai}-<설명>`, `fix/...`, `chore/...`, `docs/...` (예: `feat/fe-session-timer`)
+- 작업 시작 전 main을 최신으로 받고, 브랜치 작업이 길어지면 main을 merge해 최신 상태를 유지한다.
 - 커밋: Conventional Commits 형식, scope는 `fe`, `be`, `ai`, `shared`, `docs`, `ci` 중 하나 (예: `feat(fe): 타이머 화면 추가`)
 - 커밋 메시지와 PR 설명은 한국어로 쓴다.
-- `main`에 직접 push하지 않는다. 모든 변경은 PR → merge commit으로 반영한다.
-- 예외: 긴급 수정(hotfix)은 관리자만 main에 직접 반영할 수 있다. 데모·발표 직전 앱 실행 불가, 빌드·배포 장애에만 해당한다. push 전에 `pnpm typecheck` 통과를 확인한다.
+- main에 force push하지 않는다. `.env`는 커밋하지 않는다.
 
 ## 코드 컨벤션
 
