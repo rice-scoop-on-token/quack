@@ -1,0 +1,17 @@
+# 의존성
+node_modules/
+
+# 환경 변수: 예시 파일(.env.example)만 커밋한다
+.env
+.env.*
+!.env.example
+
+# 로그
+*.log
+
+# TypeScript
+*.tsbuildinfo
+
+# OS
+.DS_Store
+Thumbs.db
