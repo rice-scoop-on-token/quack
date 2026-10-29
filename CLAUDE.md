@@ -145,9 +145,9 @@ pnpm typecheck                        # 전체 타입 체크
 pnpm --filter @quack/frontend start   # 앱 실행
 
 # backend/
-supabase start                        # 로컬 Supabase 실행 (Docker 필요)
-supabase db reset                     # 마이그레이션 + seed 재적용
-supabase functions serve              # 함수 로컬 실행
+npx supabase@2.122.0 start            # 로컬 Supabase 실행 (Docker 필요)
+npx supabase@2.122.0 db reset         # 마이그레이션 + seed 재적용
+npx supabase@2.122.0 functions serve  # 함수 로컬 실행
 
 # backend/supabase/functions/api/ (함수 폴더의 deno.json을 읽어야 하므로 여기서 실행)
 deno check index.ts                   # 함수 타입 체크

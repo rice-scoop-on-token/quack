@@ -8,12 +8,12 @@ Supabase CLI는 명령어를 실행한 위치에서 `supabase/` 폴더(`supabase
 
 ```bash
 cd backend
-supabase start            # 로컬 Supabase 실행 (Docker 필요)
-supabase db reset         # 마이그레이션 + seed 재적용
-supabase functions serve  # 함수 로컬 실행
+npx supabase@2.122.0 start            # 로컬 Supabase 실행 (Docker 필요)
+npx supabase@2.122.0 db reset         # 마이그레이션 + seed 재적용
+npx supabase@2.122.0 functions serve  # 함수 로컬 실행
 ```
 
-CLI 설치 방법은 [Supabase CLI 시작하기](https://supabase.com/docs/guides/local-development/cli/getting-started)를 참고한다. 설치하지 않았다면 `npx supabase <명령어>`로도 실행할 수 있다. 이 프로젝트는 CLI 2.122.0으로 초기화했다.
+CLI는 설치하지 않고 `npx supabase@2.122.0`으로 실행한다. 팀원 모두 같은 버전을 쓰기 위해서다.
 
 ## API 함수 로컬 실행
 
@@ -21,11 +21,11 @@ CLI 설치 방법은 [Supabase CLI 시작하기](https://supabase.com/docs/guide
 
 ```bash
 cd backend
-supabase start            # 로컬 Supabase가 꺼져 있으면 먼저 실행
-supabase functions serve  # 함수 실행 (코드를 고치면 자동으로 다시 불러온다)
+npx supabase@2.122.0 start            # 로컬 Supabase가 꺼져 있으면 먼저 실행
+npx supabase@2.122.0 functions serve  # 함수 실행 (코드를 고치면 자동으로 다시 불러온다)
 ```
 
-다른 터미널에서 health 라우트로 동작을 확인한다. `<anon key>`는 `supabase status -o env`에 나오는 `ANON_KEY` 값이다. 함수 입구에서 JWT를 검사하므로 `sb_publishable_`로 시작하는 키를 Bearer로 넣으면 401이 난다.
+다른 터미널에서 health 라우트로 동작을 확인한다. `<anon key>`는 `npx supabase@2.122.0 status -o env`에 나오는 `ANON_KEY` 값이다. 함수 입구에서 JWT를 검사하므로 `sb_publishable_`로 시작하는 키를 Bearer로 넣으면 401이 난다.
 
 ```bash
 curl -H "Authorization: Bearer <anon key>" http://127.0.0.1:54321/functions/v1/api/health
