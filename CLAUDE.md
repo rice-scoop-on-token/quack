@@ -33,7 +33,7 @@
 | 경로                                                         | 역할                                   | 담당                   |
 | ------------------------------------------------------------ | -------------------------------------- | ---------------------- |
 | `frontend/`                                                  | Expo 앱                                | FE                     |
-| `backend/supabase/migrations/`, `seed.sql`                   | DB 스키마, RLS, 기본 데이터            | BE-A                   |
+| `backend/supabase/migrations/`, `seed.sql`                   | DB 스키마, RLS, 기본 데이터(마이그레이션), 로컬 샘플 데이터(seed) | BE-A                   |
 | `backend/supabase/functions/api/middleware/`                 | 공통 처리                              | BE-A                   |
 | `functions/api` 의 materials, reward (route·service)         | 자료 처리, 보상 지급                   | BE-A                   |
 | `functions/api` 의 speech, sessions, quizzes (route·service) | 세션 대화 흐름                         | BE-B                   |
@@ -87,6 +87,8 @@ Supabase CLI 명령어는 `backend/`에서 실행한다. CLI가 `supabase/` 폴�
 - 단순 CRUD(폴더, 자료 목록, 캐릭터 조회, 아이템 장착 등)는 Edge Function 없이 앱에서 supabase-js로 직접 처리하고, 권한은 RLS로 강제한다.
 - Edge Function은 두 경우에만 쓴다. 비밀 키가 필요한 일(LLM, STT 호출)과 클라이언트를 신뢰하면 안 되는 일(경험치·포인트 지급, 퀴즈 채점)이다.
 - 모든 테이블에 RLS를 켠다. RLS 없는 테이블은 만들지 않는다.
+- 앱 역할(`anon`, `authenticated`)의 테이블 권한은 모두 회수한 뒤 필요한 칸만 다시 GRANT한다. RLS는 어느 행에 접근할지만 막고 어느 칸을 바꿀지는 막지 못하기 때문이다.
+- 모든 환경에 있어야 하는 기본 데이터(동물, 아이템)는 마이그레이션으로 넣고, `seed.sql`에는 로컬 개발용 샘플 데이터만 둔다. 원격 반영(`db push`)은 seed를 기본으로 적용하지 않고, `--include-seed`를 써도 한 번 적용한 seed 파일은 고쳐도 다시 실행하지 않기 때문이다.
 - `functions/api`는 Hono 앱 하나다. 요청 흐름은 middleware → route → service → `_ai`/DB 한 방향이다.
     - **middleware**: CORS, 인증, 요청 검증(shared 스키마), 공통 에러 응답을 처리한다.
     - **route**: HTTP 입출력만 처리하고 service를 호출한다. 로직을 두지 않는다.
@@ -96,7 +98,7 @@ Supabase CLI 명령어는 `backend/`에서 실행한다. CLI가 `supabase/` 폴�
 - auth 미들웨어는 요청마다 사용자 토큰을 담은 DB 클라이언트와 확인된 사용자 id를 만들어 넘긴다. 조회와, 앱도 쓸 수 있는 테이블에 쓸 때는 이 클라이언트를 쓴다. Edge Function 안에서도 RLS가 적용되게 하기 위해서다.
 - 서버만 쓰는 테이블(앱 역할에 쓰기 권한이 없는 테이블)에 쓰거나 서버용 SQL 함수를 호출할 때는 service role 클라이언트를 쓴다. service role은 RLS를 우회하므로 이 두 경우에만 쓰고, 쓰는 곳에 이유를 주석으로 남긴다.
 - 서버가 DB에 쓰는 `user_id`는 항상 auth 미들웨어가 확인한 값만 사용한다. 요청 본문·경로·쿼리로 받은 값은 쓰지 않는다. service role은 RLS가 막아 주지 않아 다른 사용자의 행에도 쓸 수 있기 때문이다.
-- 서버용 SQL 함수(보상 지급, AI 사용량 차감, 아이템 구매 등)는 `server` 스키마에 둔다. 이 스키마의 USAGE와 함수의 EXECUTE는 `service_role`에만 주고 `public`·`anon`·`authenticated`에서는 회수한다. Postgres는 함수 실행 권한을 기본으로 모두(PUBLIC)에게 주기 때문이다. 함수에는 `set search_path = ''`를 붙인다.
+- 서버용 SQL 함수(보상 지급, AI 사용량 차감, 아이템 구매 등)는 `server` 스키마에 둔다. 이 스키마의 USAGE와 함수의 EXECUTE는 `service_role`에만 주고 `public`·`anon`·`authenticated`에서는 회수한다. Postgres는 함수 실행 권한을 기본으로 모두(PUBLIC)에게 주기 때문이다. 함수에는 `set search_path = ''`를 붙인다. 이 스키마에 함수를 추가하는 마이그레이션은 회수·부여 두 줄을 다시 실행한다. 스키마 단위 `alter default privileges`로는 PUBLIC 실행 권한을 회수할 수 없기 때문이다.
 - 경험치·포인트는 값을 덮어쓰지 않고 지급 내역(ledger)을 쌓는 방식으로 기록한다.
 
 ### AI
@@ -154,6 +156,10 @@ pnpm --filter @quack/frontend start   # 앱 실행
 npx supabase@2.122.0 start            # 로컬 Supabase 실행 (Docker 필요)
 npx supabase@2.122.0 db reset         # 마이그레이션 + seed 재적용
 npx supabase@2.122.0 functions serve  # 함수 로컬 실행
+
+# backend/ — 원격 반영 (사용자가 직접 실행. 순서와 대시보드 설정은 docs/decisions/0002-db-permissions.md)
+npx supabase@2.122.0 db push --linked # 마이그레이션을 원격에 적용. --linked가 없으면 다음 메이저 버전부터 로컬에 적용된다
+npx supabase@2.122.0 config diff      # 로컬 config.toml과 원격 설정 비교
 
 # backend/supabase/functions/api/ (함수 폴더의 deno.json을 읽어야 하므로 여기서 실행)
 deno check index.ts                   # 함수 타입 체크
