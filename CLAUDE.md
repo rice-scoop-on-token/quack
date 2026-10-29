@@ -15,7 +15,7 @@
 - 범위 밖 개선점은 손대지 않고 응답 마지막에 "다음 커밋 후보"로만 기록한다.
 - 담당 폴더 밖의 파일을 수정해야 하면 수정하지 말고 먼저 알린다.
 - 아래 "미정 사항"에 해당하는 내용은 임의로 정하지 않고 질문한다.
-- 작업을 마치면 `pnpm typecheck`를 실행해 통과를 확인한다.
+- 작업을 마치면 `pnpm typecheck`를 실행하고, `backend/supabase/functions`를 수정했다면 함수 폴더에서 `deno check`도 실행해 통과를 확인한다.
 - 커밋, push, PR 생성은 직접 하지 않는다. 작업을 마치면 Conventional Commits 형식의 커밋 메시지 초안과 변경 요약만 제시한다.
 - 전역 도구 설치처럼 레포 밖 환경을 바꾸는 작업은 직접 하지 않고 명령어를 알려준다.
 - 승인된 계획과 다른 명령어나 방법을 쓰게 되면 실행하기 전에 알리고 승인을 받는다.
@@ -41,6 +41,8 @@
 | `ai/evals/`                                                  | 프롬프트 평가 (배포되지 않는다)        | AI                     |
 | `shared/`                                                    | 앱·서버 계약                           | 공동 (변경 시 별도 PR) |
 | `docs/`                                                      | 기획, 설계 결정 기록                   | 공동                   |
+
+- 예외: BE-B는 자기 라우트 연결을 위해 `functions/api/index.ts`에 라우트 등록 줄만 추가할 수 있다.
 
 Supabase CLI 명령어는 `backend/`에서 실행한다. CLI가 `supabase/` 폴더 위치를 고정으로 기대하기 때문이다.
 
@@ -140,6 +142,9 @@ pnpm --filter @quack/frontend start   # 앱 실행
 supabase start                        # 로컬 Supabase 실행 (Docker 필요)
 supabase db reset                     # 마이그레이션 + seed 재적용
 supabase functions serve              # 함수 로컬 실행
+
+# backend/supabase/functions/api/ (함수 폴더의 deno.json을 읽어야 하므로 여기서 실행)
+deno check index.ts                   # 함수 타입 체크
 ```
 
 ## 미정 사항 (임의로 결정하지 않고 질문한다)
