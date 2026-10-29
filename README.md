@@ -37,3 +37,4 @@ pnpm install
 
 - 루트에서 `pnpm typecheck`: frontend와 shared를 검사한다.
 - 함수 코드를 고쳤다면 `backend/supabase/functions/api`에서 `deno check index.ts`도 실행한다.
+- main push와 PR마다 GitHub Actions(CI)가 위 검사를 실행한다. 강제는 아니므로, 커밋이나 PR 옆에 빨간 X가 보이면 눌러서 실패한 단계의 로그를 확인한다.
