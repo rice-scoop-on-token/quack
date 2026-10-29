@@ -41,8 +41,14 @@
 | `ai/evals/`                                                  | 프롬프트 평가 (배포되지 않는다)        | AI                     |
 | `shared/`                                                    | 앱·서버 계약                           | 공동 (변경 시 별도 PR) |
 | `docs/`                                                      | 기획, 설계 결정 기록                   | 공동                   |
+| `functions/api/index.ts`, `routes/health.ts`                 | API 함수 진입점, 동작 확인 라우트      | BE-A                   |
+| `functions/api/deno.json`, `deno.lock`                       | API 함수 의존성                        | BE-A                   |
+| `backend/supabase/functions/_shared/`                        | DB 클라이언트 생성, env                | BE-A                   |
+| `backend/supabase/config.toml`, `functions/.env.example`     | Supabase 로컬 설정, 함수 환경 변수 목록 | BE-A                   |
+| 루트 설정 파일 (`package.json`, `pnpm-workspace.yaml`, `.gitignore`, `.vscode/`, `README.md`) | 워크스페이스, 에디터 설정, 개발 환경 안내 | 공동 (변경 전에 팀에 공유) |
 
 - 예외: BE-B는 자기 라우트 연결을 위해 `functions/api/index.ts`에 라우트 등록 줄만 추가할 수 있다.
+- 예외: BE-B와 AI는 `functions/api/deno.json`과 `deno.lock`에 의존성 추가 줄만 수정할 수 있다.
 
 Supabase CLI 명령어는 `backend/`에서 실행한다. CLI가 `supabase/` 폴더 위치를 고정으로 기대하기 때문이다.
 
