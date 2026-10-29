@@ -97,6 +97,7 @@ Supabase CLI 명령어는 `backend/`에서 실행한다. CLI가 `supabase/` 폴�
 - route는 응답을 `respond(c, 스키마, 데이터)`로만 보내고, 에러는 `AppError`로 던진다. `respond`는 응답을 shared 스키마로 걸러 스키마에 없는 필드(퀴즈 정답 같은 서버 전용 값)가 앱으로 나가지 않게 한다.
 - 서버 로그에는 요청·응답의 값을 남기지 않는다. 검증에 실패하면 필드 경로와 에러 종류만 남긴다. 사용자의 설명 같은 개인 데이터가 들어 있기 때문이다.
 - auth 미들웨어는 요청마다 사용자 토큰을 담은 DB 클라이언트와 확인된 사용자 id를 만들어 넘긴다. 조회와, 앱도 쓸 수 있는 테이블에 쓸 때는 이 클라이언트를 쓴다. Edge Function 안에서도 RLS가 적용되게 하기 위해서다.
+- 라우트는 `c.var.userId`, `c.var.userDb`, `c.var.adminDb`만 쓰고, health 외의 라우트는 `index.ts`에서 auth 미들웨어 아래에 등록한다. DB·SQL 함수 에러는 `appErrorFromDb`로 바꿔 던진다.
 - 서버만 쓰는 테이블(앱 역할에 쓰기 권한이 없는 테이블)에 쓰거나 서버용 SQL 함수를 호출할 때는 service role 클라이언트를 쓴다. service role은 RLS를 우회하므로 이 두 경우에만 쓰고, 쓰는 곳에 이유를 주석으로 남긴다.
 - 서버가 DB에 쓰는 `user_id`는 항상 auth 미들웨어가 확인한 값만 사용한다. 요청 본문·경로·쿼리로 받은 값은 쓰지 않는다. service role은 RLS가 막아 주지 않아 다른 사용자의 행에도 쓸 수 있기 때문이다.
 - 서버용 SQL 함수(보상 지급, AI 사용량 차감, 아이템 구매 등)는 `server` 스키마에 둔다. 이 스키마의 USAGE와 함수의 EXECUTE는 `service_role`에만 주고 `public`·`anon`·`authenticated`에서는 회수한다. Postgres는 함수 실행 권한을 기본으로 모두(PUBLIC)에게 주기 때문이다. 함수에는 `set search_path = ''`를 붙인다. 이 스키마에 함수를 추가하는 마이그레이션은 회수·부여 두 줄을 다시 실행한다. 스키마 단위 `alter default privileges`로는 PUBLIC 실행 권한을 회수할 수 없기 때문이다.

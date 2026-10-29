@@ -2,7 +2,7 @@ import type { ErrorHandler, NotFoundHandler } from 'hono';
 import { HTTPException } from 'hono/http-exception';
 import type { z } from 'zod';
 
-import { ERROR_HTTP_STATUS, type ErrorCode, errorResponseSchema } from '@quack/shared';
+import { ERROR_HTTP_STATUS, type ErrorCode, errorCodeSchema, errorResponseSchema } from '@quack/shared';
 
 const DEFAULT_MESSAGES: Record<ErrorCode, string> = {
   UNAUTHORIZED: '로그인 정보를 확인하지 못했어요. 앱을 다시 시작해 주세요.',
@@ -27,6 +27,21 @@ export class AppError extends Error {
     this.name = 'AppError';
     this.code = code;
   }
+}
+
+// supabase-js가 돌려준 DB 에러를 AppError로 바꾼다. 서비스는 `if (error) throw appErrorFromDb(error);`로 쓴다.
+// server 스키마 함수는 shared ErrorCode 문자열을 메시지로 raise한다(Postgres 에러 코드 P0001).
+// 그 외의 에러는 모두 INTERNAL_ERROR로 처리한다. 원문 메시지에는 값이 섞일 수 있어 앱으로 보내지도, 로그에 남기지도 않는다.
+export function appErrorFromDb(error: { code?: string; message: string }): AppError {
+  if (error.code === 'P0001') {
+    const parsed = errorCodeSchema.safeParse(error.message);
+    if (parsed.success) {
+      return new AppError(parsed.data);
+    }
+  }
+
+  console.error('[api] DB 오류', error.code);
+  return new AppError('INTERNAL_ERROR');
 }
 
 // 요청·응답에는 사용자의 설명 같은 개인 데이터가 들어 있으므로 값은 남기지 않고 필드 경로와 에러 종류만 남긴다.

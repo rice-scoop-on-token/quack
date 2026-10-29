@@ -102,4 +102,8 @@ CORS preflight(OPTIONS)는 원격에서는 함수의 CORS 미들웨어가 응답
 ## 후속 작업
 
 1. **tsconfig 변경**: shared와 frontend tsconfig에 `allowImportingTsExtensions: true`를 켠다. 두 파일을 한 PR로 함께 바꾸고 FE 담당이 리뷰한다. shared가 여러 파일로 나뉘기 전에 반영해야 한다. 그 전에는 shared를 `index.ts` 한 파일로 유지한다.
-2. **auth 미들웨어**: 위 "인증 키와 verify_jwt" 내용을 바탕으로 사용자 JWT 확인 방법을 정한다.
+2. **auth 미들웨어**: **완료** (`functions/api/middleware/auth.ts`). `verify_jwt`는 켜 둔 채로, 미들웨어에서 `@supabase/server`(1.9.2로 고정)의 `createSupabaseContext(request, { auth: 'user' })`로 사용자 JWT를 확인한다.
+   - 공식 가이드([Securing Edge Functions](https://supabase.com/docs/guides/functions/auth))가 권장하는 SDK다. JWKS로 서명을 검증하고, 사용자 토큰 클라이언트(RLS 적용)와 service role 클라이언트를 함께 만든다.
+   - 같은 SDK의 Hono 어댑터(`@supabase/server/adapters/hono`)는 2026-12-01 삭제 예정(deprecated)이라 쓰지 않고, 공개 함수 하나만 써서 미들웨어를 직접 만들었다. 대안이던 supabase-js 직접 구현(`auth.getClaims`)보다 우리가 관리할 코드가 적다.
+   - 이 SDK는 예전 방식(HS256, 헤더에 `kid` 없음) 사용자 JWT를 거부한다. 로컬(CLI 2.122.0)과 원격(quack-dev) 모두 ES256 + `kid`로 발급되는 것을 확인했다.
+   - 자주 바뀌는 새 패키지라 정확한 버전으로 고정하고, 올릴 때는 변경 기록을 확인한다.
