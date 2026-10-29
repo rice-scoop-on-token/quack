@@ -15,7 +15,7 @@
 - 범위 밖 개선점은 손대지 않고 응답 마지막에 "다음 커밋 후보"로만 기록한다.
 - 담당 폴더 밖의 파일을 수정해야 하면 수정하지 말고 먼저 알린다.
 - 아래 "미정 사항"에 해당하는 내용은 임의로 정하지 않고 질문한다.
-- 작업을 마치면 `pnpm typecheck`를 실행하고, `backend/supabase/functions`를 수정했다면 함수 폴더에서 `deno check`도 실행해 통과를 확인한다. `backend/supabase/migrations`를 수정했다면 `backend/`에서 `db reset` 후 `test db`도 실행해 통과를 확인한다.
+- 작업을 마치면 `pnpm typecheck`를 실행하고, `backend/supabase/functions`를 수정했다면 함수 폴더에서 `deno check`도 실행해 통과를 확인한다.
 - 커밋, push, PR 생성은 직접 하지 않는다. 작업을 마치면 Conventional Commits 형식의 커밋 메시지 초안과 변경 요약만 제시한다.
 - 전역 도구 설치처럼 레포 밖 환경을 바꾸는 작업은 직접 하지 않고 명령어를 알려준다.
 - 승인된 계획과 다른 명령어나 방법을 쓰게 되면 실행하기 전에 알리고 승인을 받는다.
@@ -44,7 +44,6 @@
 | `functions/api/index.ts`, `routes/health.ts`                 | API 함수 진입점, 동작 확인 라우트      | BE-A                   |
 | `functions/api/deno.json`, `deno.lock`                       | API 함수 의존성                        | BE-A                   |
 | `backend/supabase/functions/_shared/`                        | DB 클라이언트 생성, env                | BE-A                   |
-| `backend/supabase/tests/`                                    | DB 권한·제약 시험 (pgTAP)              | BE-A                   |
 | `backend/supabase/config.toml`, `functions/.env.example`     | Supabase 로컬 설정, 함수 환경 변수 목록 | BE-A                   |
 | 루트 설정 파일 (`package.json`, `pnpm-workspace.yaml`, `.gitignore`, `.vscode/`, `.github/`, `README.md`) | 워크스페이스, 에디터 설정, CI, 개발 환경 안내 | 공동 (변경 전에 팀에 공유) |
 
@@ -88,7 +87,7 @@ Supabase CLI 명령어는 `backend/`에서 실행한다. CLI가 `supabase/` 폴�
 - 단순 CRUD(폴더, 자료 목록, 캐릭터 조회, 아이템 장착 등)는 Edge Function 없이 앱에서 supabase-js로 직접 처리하고, 권한은 RLS로 강제한다.
 - Edge Function은 두 경우에만 쓴다. 비밀 키가 필요한 일(LLM, STT 호출)과 클라이언트를 신뢰하면 안 되는 일(경험치·포인트 지급, 퀴즈 채점)이다.
 - 모든 테이블에 RLS를 켠다. RLS 없는 테이블은 만들지 않는다.
-- 앱 역할(`anon`, `authenticated`)의 테이블 권한은 모두 회수한 뒤 필요한 칸만 다시 GRANT한다. RLS는 어느 행에 접근할지만 막고 어느 칸을 바꿀지는 막지 못하기 때문이다. 권한을 바꾸면 `tests/database/01_app_permissions.test.sql`의 앱 권한 표 기대값과 `docs/decisions/0002-db-permissions.md`의 표를 함께 고친다.
+- 앱 역할(`anon`, `authenticated`)의 테이블 권한은 모두 회수한 뒤 필요한 칸만 다시 GRANT한다. RLS는 어느 행에 접근할지만 막고 어느 칸을 바꿀지는 막지 못하기 때문이다.
 - 모든 환경에 있어야 하는 기본 데이터(동물, 아이템)는 마이그레이션으로 넣고, `seed.sql`에는 로컬 개발용 샘플 데이터만 둔다. 원격 반영(`db push`)은 seed를 기본으로 적용하지 않고, `--include-seed`를 써도 한 번 적용한 seed 파일은 고쳐도 다시 실행하지 않기 때문이다.
 - `functions/api`는 Hono 앱 하나다. 요청 흐름은 middleware → route → service → `_ai`/DB 한 방향이다.
     - **middleware**: CORS, 인증, 요청 검증(shared 스키마), 공통 에러 응답을 처리한다.
@@ -156,7 +155,6 @@ pnpm --filter @quack/frontend start   # 앱 실행
 # backend/
 npx supabase@2.122.0 start            # 로컬 Supabase 실행 (Docker 필요)
 npx supabase@2.122.0 db reset         # 마이그레이션 + seed 재적용
-npx supabase@2.122.0 test db          # DB 권한·제약 시험 (pgTAP). --linked를 붙이면 원격 DB에서 실행되므로 붙이지 않는다
 npx supabase@2.122.0 functions serve  # 함수 로컬 실행
 
 # backend/ — 원격 반영 (사용자가 직접 실행. 순서와 대시보드 설정은 docs/decisions/0002-db-permissions.md)

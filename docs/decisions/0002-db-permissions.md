@@ -131,8 +131,6 @@ shared 계약은 `/report`를 여러 번 호출해도 첫 응답과 같은 보�
 
 익명 로그인 사용자를 만들어 앱과 같은 키·토큰으로 Data API에 요청했다. 앱이 쓸 수 없는 준비 데이터(아이템, 세션 상태, ledger)는 service role로 넣었고, 동시 요청은 `Promise.all`로 한꺼번에 보냈다. 시험 스크립트는 아직 레포 밖에 있다(후속 작업 1).
 
-DB 안에서 확인할 수 있는 시험(권한, RLS, 제약, view, 함수 동작)은 pgTAP으로 `backend/supabase/tests/database/`에 옮겼다. `backend/`에서 `npx supabase@2.122.0 test db`로 실행한다. 스키마 노출, 401·403 구분, 동시 요청은 pgTAP으로 시험할 수 없어 아직 아래 HTTP 시험 결과만 있다.
-
 ### 로컬: 테이블과 권한 (46개 통과)
 
 | 구분 | 결과 |
@@ -211,8 +209,8 @@ DB 안에서 확인할 수 있는 시험(권한, RLS, 제약, view, 함수 동�
 ## 후속 작업
 
 1. **권한 시험을 레포로 옮긴다** (`backend/supabase/tests/`, BE-A, 두 커밋)
-   - A. pgTAP(`supabase test db`): **완료** (`backend/supabase/tests/database/`). 권한, RLS, 제약, 함수 동작. `server` 스키마의 모든 함수를 훑어 `anon`·`authenticated`가 실행할 수 없는지 검사한다.
-   - B. HTTP 스크립트: 스키마 노출, 401·403, 동시 요청. 키는 `supabase status`에서 읽는다. **`server` 스키마 함수를 수정하는 작업보다 먼저 한다.** 사용자별 잠금(동시 요청 때 중복 지급·잔액 음수 방지)은 B로만 확인되기 때문이다.
+   - A. pgTAP(`supabase test db`): 권한, RLS, 제약, 함수 동작. `server` 스키마의 **모든 함수를 훑어** `anon`·`authenticated`가 실행할 수 없는지 검사해, 나중에 추가되는 함수도 자동으로 검사되게 한다.
+   - B. HTTP 스크립트: 스키마 노출, 401·403, 동시 요청. 키는 `supabase status`에서 읽는다.
 2. **SQL 에러 → `AppError`**: `ErrorCode` 목록에 없는 메시지는 `INTERNAL_ERROR`로 처리하고 원문은 앱에 보내지 않는다.
 3. **Storage**: 버킷·정책, 그리고 폴더·자료를 지울 때 Storage 파일도 지우는 방법을 자료 작업 때 정한다.
 4. **`analysis_results` 테이블**: AI 분석 결과 스키마(commit 3)가 정해진 뒤 만든다. 위 칸 단위 권한 규칙을 따른다.
