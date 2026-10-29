@@ -159,6 +159,8 @@ npx supabase@2.122.0 functions serve  # 함수 로컬 실행
 deno check index.ts                   # 함수 타입 체크
 ```
 
+`supabase start`와 `functions serve`는 사용자가 별도 터미널에서 직접 실행하고, Claude는 실행 중인지 확인한 뒤 요청만 보낸다. Windows에서 백그라운드로 띄운 serve 프로세스가 종료되지 않고 남기 때문이다.
+
 ## 미정 사항 (임의로 결정하지 않고 질문한다)
 
 - 꼬리 질문 최대 반복 횟수와 "넘어가기" 허용 여부
