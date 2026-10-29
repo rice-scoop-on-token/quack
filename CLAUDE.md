@@ -108,6 +108,8 @@ Supabase CLI 명령어는 `backend/`에서 실행한다. CLI가 `supabase/` 폴�
 
 - 앱과 서버가 주고받는 모든 데이터 타입과 zod 스키마는 `shared/`에 정의한다.
 - `shared/` 변경은 기능 PR과 섞지 않고 별도 PR로 올려 전원이 확인한다.
+- `shared/` 내부 import는 반드시 `.ts` 확장자를 붙인다(예: `./domain.ts`). 확장자가 없어도 `pnpm typecheck`는 통과하지만 Edge Function에서는 모듈을 찾지 못해 실행이 실패한다.
+- zod 버전은 `shared/package.json`과 `functions/api/deno.json` 두 곳을 함께 바꾼다.
 
 ## Git 규칙
 
@@ -165,4 +167,4 @@ deno check index.ts                   # 함수 타입 체크
 
 ## 검증 필요 사항
 
-- Edge Function(Deno)에서 `shared/`를 import했을 때 배포 번들에 포함되는지 아직 확인하지 않았다. 확인 전까지 Edge Function에서 `shared/`에 의존하는 코드를 늘리지 않는다. 포함되지 않으면 스키마를 `functions/_shared`로 옮기는 방안으로 전환한다.
+- (완료) Edge Function에서 `shared/` import: 로컬과 원격 배포 모두 동작함을 확인했고 `shared/`를 유지하기로 했다. 결과와 후속 작업은 `docs/decisions/0001-edge-function-shared-import.md`를 본다.
