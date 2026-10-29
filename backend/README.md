@@ -115,8 +115,51 @@ curl -H "Authorization: Bearer <access_token>" http://127.0.0.1:54321/functions/
 
 `GET /me`는 프로필을 만들기 전에는 404 `NOT_FOUND`가 정상이다. 토큰 없이 부르거나 잘못된 토큰을 넣으면 401이 난다.
 
-### 7. 검사를 실행한다
+### 7. HTTP 시험을 추가한다
+
+`supabase/tests/http/local/`에 시험을 추가한다. 라우트별로 `<도메인>.test.mjs` 파일을 새로 만들고, `quizzes.test.mjs`(BE-B 라우트 시험 예시)를 본보기로 삼는다. 아래 "HTTP 시험"의 도우미(`lib.mjs`)를 쓰고, 도우미가 더 필요하면 BE-A에게 요청한다.
+
+### 8. 검사를 실행한다
 
 - 함수 폴더(`supabase/functions/api`)에서 `deno check index.ts`
 - 레포 루트에서 `pnpm typecheck`
+- `backend/`에서 HTTP 시험 (아래 "HTTP 시험")
 - 마이그레이션을 바꿨다면 `backend/`에서 `npx supabase@2.122.0 db reset` 후 `npx supabase@2.122.0 test db`
+
+## HTTP 시험
+
+DB 권한·제약 시험(`supabase/tests/database`, pgTAP)으로 확인할 수 없는 것을 실제 HTTP 요청으로 확인한다. Node 내장 시험 도구(`node:test`)로 실행하고, 따로 설치할 것은 없다.
+
+| 파일 | 시험 | 필요한 것 |
+| --- | --- | --- |
+| `local/data-api.test.mjs` | `server` 스키마 노출, 401(로그인 전)·403(권한 없음) 구분, 익명 가입 | `supabase start` |
+| `local/concurrency.test.mjs` | 동시 요청: 사용량 한도, 보상 중복 지급, 구매 잔액. `server` 스키마 함수를 바꾸면 먼저 돌린다 | `supabase start` |
+| `local/functions.test.mjs` | api 함수 공통 처리: auth 미들웨어, `GET /me` (BE-A) | api 함수가 응답해야 함 |
+| `local/quizzes.test.mjs` | 퀴즈 API (BE-B). 라우트 시험 예시 | api 함수가 응답해야 함 |
+| `remote/remote.test.mjs` | 원격 프로젝트 반영 확인 | 아래 환경 변수 |
+
+`supabase start`와 `functions serve`는 직접 별도 터미널에서 띄운다. 이 환경(CLI 2.122.0)에서는 `supabase start`만으로도 api 함수가 뜬다. 함수를 개발하거나 PR을 시험할 때는 CLAUDE.md 규칙대로 `functions serve`를 띄운 상태에서 실행한다. api 함수가 응답하지 않으면 해당 시험 파일은 안내 메시지와 함께 멈춘다.
+
+### 로컬
+
+```bash
+cd backend
+node --test "supabase/tests/http/local/*.test.mjs"
+```
+
+- 주소와 키는 시험이 `npx supabase@2.122.0 status`에서 읽는다. 파일에 키를 적지 않는다.
+- 시험마다 익명 사용자를 새로 만들고, 끝나면 지운다. 사용자를 지우면 그 사용자의 폴더·세션·퀴즈 등이 함께 지워진다. 시험이 실패해도 지운다.
+- 실행을 강제로 멈춰서(Ctrl+C 등) 데이터가 남았다면 `npx supabase@2.122.0 db reset`으로 정리한다.
+
+### 원격
+
+원격 주소와 publishable key(대시보드 → Project Settings → API Keys)를 환경 변수로 넣고 실행한다. secret key는 넣지 않는다.
+
+```powershell
+cd backend
+$env:REMOTE_SUPABASE_URL = "https://<project-ref>.supabase.co"
+$env:REMOTE_SUPABASE_PUBLISHABLE_KEY = "sb_publishable_..."
+node --test supabase/tests/http/remote/remote.test.mjs
+```
+
+원격 시험은 secret key를 쓰지 않아 시험 사용자를 스스로 지우지 못한다. 끝에 출력되는 사용자 id를 대시보드 → Authentication → Users에서 지운다.

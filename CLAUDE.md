@@ -50,6 +50,7 @@
 
 - 예외: BE-B는 자기 라우트 연결을 위해 `functions/api/index.ts`에 라우트 등록 줄만 추가할 수 있다.
 - 예외: BE-B와 AI는 `functions/api/deno.json`과 `deno.lock`에 의존성 추가 줄만 수정할 수 있다.
+- 예외: BE-B는 자기 라우트의 HTTP 시험을 `backend/supabase/tests/http/local/`에 추가할 수 있다. 공통 도우미 `tests/http/lib.mjs`는 BE-A 담당이므로, 도우미 추가가 필요하면 BE-A에게 요청한다.
 
 Supabase CLI 명령어는 `backend/`에서 실행한다. CLI가 `supabase/` 폴더 위치를 고정으로 기대하기 때문이다.
 
@@ -159,6 +160,8 @@ npx supabase@2.122.0 start            # 로컬 Supabase 실행 (Docker 필요)
 npx supabase@2.122.0 db reset         # 마이그레이션 + seed 재적용
 npx supabase@2.122.0 test db          # DB 권한·제약 시험 (pgTAP). --linked를 붙이면 원격 DB에서 실행되므로 붙이지 않는다
 npx supabase@2.122.0 functions serve  # 함수 로컬 실행
+node --test "supabase/tests/http/local/*.test.mjs"   # HTTP 시험 (supabase start 필요. 함수를 개발하거나 PR을 시험할 때는 functions serve도 띄운다)
+node --test supabase/tests/http/remote/remote.test.mjs  # 원격 HTTP 시험 (주소·publishable key는 환경 변수로. backend/README.md "HTTP 시험")
 
 # backend/ — 원격 반영 (사용자가 직접 실행. 순서와 대시보드 설정은 docs/decisions/0002-db-permissions.md)
 npx supabase@2.122.0 db push --linked # 마이그레이션을 원격에 적용. --linked가 없으면 다음 메이저 버전부터 로컬에 적용된다
