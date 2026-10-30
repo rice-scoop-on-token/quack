@@ -30,23 +30,27 @@ test('동물 3종이 있다', async () => {
 });
 
 test('server 함수: 노출되어 있고, 익명 토큰 403·로그인 전 401로 막힌다', async () => {
-  const args = { p_user_id: NIL, p_item_id: 'x' };
-  let res = await remote.rpc(user, 'purchase_item', args);
+  // 인자 이름이 맞아야 Data API가 함수를 찾고 권한 검사까지 간다. 한도 0이면 실행되어도 사용량을 쓰지 않는다.
+  const args = { p_user_id: NIL, p_kind: 'analysis', p_daily_limit: 0 };
+  let res = await remote.rpc(user, 'consume_ai_quota', args);
   assert.equal(res.status, 403);
   assert.equal(res.body.message, 'permission denied for schema server');
 
-  res = await remote.rpc('anon', 'purchase_item', args);
+  res = await remote.rpc('anon', 'consume_ai_quota', args);
   assert.equal(res.status, 401);
   assert.equal(res.body.message, 'permission denied for schema server');
 });
 
 test('금지된 칸·테이블은 403', async () => {
   await remote.rest(user, 'POST', 'profiles', { id: user.id, display_name: '원격시험' });
-  const folder = await remote.rest(user, 'POST', 'folders', { user_id: user.id, name: '원격 폴더' });
+  const folder = await remote.rest(user, 'POST', 'folders', { user_id: user.id, name: '원격 폴더', species_id: 'rubber_duck' });
   const session = await remote.rest(user, 'POST', 'sessions', { user_id: user.id, folder_id: folder.body[0].id, goal: '목표' });
   assert.equal(session.body[0].status, 'active');
 
-  let res = await remote.rest(user, 'PATCH', `sessions?id=eq.${session.body[0].id}`, { status: 'reported' });
+  // 폴더의 동물은 만든 뒤 바꿀 수 없다.
+  let res = await remote.rest(user, 'PATCH', `folders?id=eq.${folder.body[0].id}`, { species_id: 'cat' });
+  assert.equal(res.status, 403);
+  res = await remote.rest(user, 'PATCH', `sessions?id=eq.${session.body[0].id}`, { status: 'reported' });
   assert.equal(res.status, 403);
   res = await remote.rest(user, 'POST', 'xp_ledger', { user_id: user.id, amount: 9999, reason: 'session_reward' });
   assert.equal(res.status, 403);

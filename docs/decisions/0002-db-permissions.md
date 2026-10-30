@@ -6,9 +6,9 @@
 
 ## 배경
 
-폴더, 자료 목록, 캐릭터 조회, 아이템 장착 같은 단순 CRUD는 Edge Function 없이 앱이 supabase-js로 DB에 직접 쓴다. 앱 코드는 사용자가 고칠 수 있으므로, "자기 데이터만", "바꿔도 되는 칸만", "보상은 서버만"이라는 약속은 앱이 아니라 DB가 강제해야 한다.
+폴더, 자료 목록, 캐릭터 조회 같은 단순 CRUD는 Edge Function 없이 앱이 supabase-js로 DB에 직접 쓴다. 앱 코드는 사용자가 고칠 수 있으므로, "자기 데이터만", "바꿔도 되는 칸만", "보상은 서버만"이라는 약속은 앱이 아니라 DB가 강제해야 한다.
 
-경험치·포인트 지급, 아이템 구매, AI 사용량 차감처럼 클라이언트를 믿으면 안 되는 일은 서버(Edge Function)가 한다. 이 일들은 여러 테이블을 한 번에 바꾸고 동시에 들어온 요청에도 틀어지면 안 되는데, supabase-js로는 여러 문장을 묶은 트랜잭션을 실행할 수 없다.
+경험치 지급, AI 사용량 차감처럼 클라이언트를 믿으면 안 되는 일은 서버(Edge Function)가 한다. 이 일들은 여러 테이블을 한 번에 바꾸고 동시에 들어온 요청에도 틀어지면 안 되는데, supabase-js로는 여러 문장을 묶은 트랜잭션을 실행할 수 없다.
 
 ## 결정 요약
 
@@ -18,7 +18,7 @@
 | --- | --- | --- |
 | RLS 정책 | 어느 **행**에 접근하는가 | 다른 사용자의 폴더를 조회·수정·삭제할 수 없다 |
 | 칸 단위 GRANT | 어느 **칸**을 쓰는가 | 자기 세션이어도 `status`는 바꿀 수 없다 |
-| `server` 스키마의 SQL 함수 | 서버만 하는 일 | 보상 지급, 아이템 구매, AI 사용량 차감 |
+| `server` 스키마의 SQL 함수 | 서버만 하는 일 | 보상 지급, AI 사용량 차감 |
 
 - 모든 테이블에 RLS를 켜고, 앱 역할(`anon`, `authenticated`)의 테이블 권한을 모두 회수한 뒤 필요한 칸만 다시 GRANT한다. Supabase는 `public`에 새로 만든 테이블에 앱 역할 권한을 넓게 주기 때문에 회수부터 해야 한다.
 - 익명 로그인 사용자도 `authenticated` 역할이다. `anon`(로그인 전)에는 아무 권한도 주지 않는다.
@@ -31,17 +31,16 @@
 | 테이블 | 조회 | 추가할 수 있는 칸 | 수정할 수 있는 칸 | 삭제 |
 | --- | --- | --- | --- | --- |
 | profiles | 자기 행 | `id`, `display_name` | `display_name`, `onboarding_completed_at` | 불가 |
-| species, items | 전체 | 불가 | 불가 | 불가 |
-| characters | 자기 행 | `user_id`, `species_id` | 불가 | 불가 |
-| user_items | 자기 행 | 불가 | `equipped` | 불가 |
-| folders | 자기 행 | `user_id`, `name` | `name` | 자기 행 |
+| species | 전체 | 불가 | 불가 | 불가 |
+| folders | 자기 행 | `user_id`, `name`, `species_id` | `name` | 자기 행 |
 | materials | 자기 행 | `user_id`, `folder_id`, `kind`, `title`, `storage_path` | `title` | 자기 행 |
 | sessions | 자기 행 | `user_id`, `folder_id`, `goal` | 불가 | 불가 |
 | explanation_turns, quizzes, quiz_attempts, reports | 자기 세션의 행 | 불가 | 불가 | 불가 |
-| xp_ledger, point_ledger | 자기 행 | 불가 | 불가 | 불가 |
+| xp_ledger | 자기 행 | 불가 | 불가 | 불가 |
 | character_stats (view) | 자기 행 | - | - | - |
 | material_contents, quiz_questions, ai_usage | **불가** (서버 전용) | 불가 | 불가 | 불가 |
 
+- `folders.species_id`(폴더 캐릭터의 동물)는 만들 때만 넣고 바꿀 수 없다(docs/decisions/0003).
 - `sessions.status`, `materials.status`·`key_concepts`, 보상 관련 행은 서버만 바꾼다. 기본값(`status = 'active'` 등)은 DB가 채운다.
 - `quiz_questions`에는 정답이 있어서 앱이 조회조차 할 수 없다. 앱은 API 응답(정답 제외)으로만 문항을 받는다.
 - 테이블 조회 권한은 칸이 아니라 테이블 전체에 준다. 그래서 앱이 `reports`를 직접 조회하면 서버용 칸 `xp_before`도 보인다. 지급 당시 경험치라 노출돼도 문제가 없어 그대로 두었다. API 응답에서는 `respond`가 shared 스키마로 걸러 낸다.
@@ -53,25 +52,26 @@
 | 제약 | 막는 것 |
 | --- | --- |
 | sessions·materials의 복합 외래키 `(folder_id, user_id)` → `folders (id, user_id)` | 내 `user_id`로 다른 사용자의 폴더에 세션·자료를 만드는 것. RLS는 새 행의 `user_id`만 보기 때문에 이 제약이 필요하다 |
-| `characters.user_id` unique | 캐릭터를 두 개 만드는 것 |
-| ledger의 부분 unique 인덱스 (`session_id`, `reason = 'session_reward'`일 때) | 같은 세션의 보상을 두 번 지급하는 것. service role도 막힌다 |
+| `folders.species_id` not null, `species` 외래키 | 동물(캐릭터) 없는 폴더. 같은 동물을 여러 폴더에서 고를 수 있어 unique는 두지 않는다 |
+| `xp_ledger`의 복합 외래키 `(folder_id, user_id)` → `folders (id, user_id)` | service role이 다른 사용자의 폴더에 경험치를 쓰는 것 |
+| `xp_ledger.amount >= 0` | 음수 경험치. 포인트 차감처럼 음수로 기록하는 내역이 없다 |
+| `xp_ledger`의 부분 unique 인덱스 (`session_id`, `reason = 'session_reward'`일 때) | 같은 세션의 보상을 두 번 지급하는 것. service role도 막힌다 |
 | `quiz_attempts.quiz_id` unique | 퀴즈를 두 번 제출하는 것. 다시 풀기는 새 퀴즈를 만든다 |
 | `reports.session_id` unique | 세션 하나에 리포트가 두 개 생기는 것 |
 
 **삭제할 때**
 
 - 폴더를 지우면 그 폴더의 자료와 세션이 지워지고, 세션에 딸린 설명·퀴즈·리포트도 함께 지워진다(`on delete cascade`).
-- 경험치·포인트 지급 내역은 남고 세션 연결만 비워진다(`on delete set null`). 그래서 폴더를 지워도 레벨과 포인트는 줄지 않는다.
-- 보상으로 받은 아이템도 남고 `user_items.session_id`만 비워진다.
+- 그 폴더의 경험치 내역도 함께 지워진다(`xp_ledger.folder_id`의 `on delete cascade`). 캐릭터가 폴더와 함께 사라지기 때문이다(docs/decisions/0003). 내역의 `session_id`는 `on delete set null`이지만, 앱은 세션만 따로 지울 수 없어 실제로는 폴더와 함께 지워진다.
 - DB cascade는 Storage 파일을 지우지 않는다. 자료 작업 때 따로 정한다.
 
 ## `character_stats` view와 `security_invoker`
 
-`character_stats`는 ledger를 합산해 `total_xp`, `points_balance`를 보여 준다. 레벨은 shared의 `levelFromXp`로 계산하고 DB에는 두지 않는다(식이 두 곳으로 갈라지지 않게).
+`character_stats`는 폴더(캐릭터)마다 한 행으로 `folder_id`, `user_id`, `species_id`, 그 폴더의 `xp_ledger` 합계 `total_xp`를 보여 준다. 레벨은 shared의 `levelFromXp`로 계산하고 DB에는 두지 않는다(식이 두 곳으로 갈라지지 않게).
 
 - view는 기본으로 **만든 사람(소유자)의 권한**으로 실행되어 RLS를 건너뛴다. 그러면 다른 사용자의 합계까지 보일 수 있다.
-- 그래서 `with (security_invoker = true)`로 만들어 **조회하는 사람의 권한**으로 ledger를 읽게 했다.
-- 그 결과 앱 역할에 ledger의 자기 행 조회 권한이 있어야 한다. 쓰기 권한은 없다.
+- 그래서 `with (security_invoker = true)`로 만들어 **조회하는 사람의 권한**으로 folders와 ledger를 읽게 했다.
+- 그 결과 앱 역할에 folders와 ledger의 자기 행 조회 권한이 있어야 한다. ledger 쓰기 권한은 없다.
 
 ## 서버용 SQL 함수
 
@@ -92,32 +92,30 @@
 | 함수 | 하는 일 |
 | --- | --- |
 | `consume_ai_quota(user_id, kind, daily_limit)` | 서울 시간 기준 오늘 사용량을 1 올리고 `true`. 한도에 닿았으면 올리지 않고 `false`. 한도 값은 인자로 받는다(D22 결정 전) |
-| `grant_session_reward(user_id, session_id, xp, points, item_ids, 리포트 칸들)` | 경험치·포인트 내역, 보상 아이템, 리포트, 세션 상태(`reported`)를 한 트랜잭션으로 기록한다. `finished` 세션에만 지급한다 |
-| `purchase_item(user_id, item_id)` | 포인트 확인, 차감(음수 내역), 아이템 추가를 한 트랜잭션으로 처리한다 |
+| `grant_session_reward(user_id, session_id, xp, 리포트 칸들)` | 경험치 내역, 리포트, 세션 상태(`reported`)를 한 트랜잭션으로 기록한다. `finished` 세션에만 지급한다. 경험치는 세션이 속한 폴더에 쌓고, 폴더는 인자로 받지 않고 세션에서 읽는다 |
 | `lock_user(user_id)` | 아래 사용자별 잠금 |
 
 - 모든 함수에 `set search_path = ''`를 붙이고, 함수 안에서는 `public.xp_ledger`처럼 스키마 이름을 붙여 쓴다.
 - 함수는 security invoker(기본값)다. 호출하는 `service_role`이 원래 테이블 권한을 갖고 있어 security definer가 필요 없고, definer는 권한이 잘못 열렸을 때 위험이 더 크다.
-- 경험치·포인트 양(D8)과 보상 아이템(D9)은 서비스가 인자로 넘긴다. 함수는 두 결정과 무관하게 동작한다.
+- 경험치 양(D8)은 서비스가 인자로 넘긴다. 함수는 양이 정해지지 않아도 동작한다.
 
 ### 에러 전달
 
-함수는 shared `ErrorCode` 문자열을 메시지로 `raise exception`한다(`NOT_FOUND`, `INVALID_STATE`, `ALREADY_OWNED`, `INSUFFICIENT_POINTS`). Data API는 이것을 HTTP 400, `code: 'P0001'`, `message: 'ALREADY_OWNED'`로 돌려준다. 서비스는 `message`를 보고 `AppError`로 바꾼다. 서버 코드의 잘못(예: 음수 경험치)은 `ErrorCode`가 아닌 문장으로 raise해서 `INTERNAL_ERROR`가 되게 한다.
+함수는 shared `ErrorCode` 문자열을 메시지로 `raise exception`한다(`NOT_FOUND`, `INVALID_STATE`). Data API는 이것을 HTTP 400, `code: 'P0001'`, `message: 'INVALID_STATE'`로 돌려준다. 서비스는 `message`를 보고 `AppError`로 바꾼다. 서버 코드의 잘못(예: 음수 경험치)은 `ErrorCode`가 아닌 문장으로 raise해서 `INTERNAL_ERROR`가 되게 한다.
 
 ### 동시 요청
 
 - `consume_ai_quota`는 `insert … on conflict do update … where count < 한도` 한 문장으로 확인과 증가를 함께 한다.
-- 보상 지급과 아이템 구매는 같은 사용자별 잠금(`pg_advisory_xact_lock`)을 쓴다. 잠금이 없으면 동시에 들어온 두 구매가 같은 잔액을 보고 둘 다 통과하거나, 두 세션의 보상이 같은 "지급 전 경험치"를 보게 된다. 잠금은 같은 사용자 안에서만 걸리고 트랜잭션이 끝나면 풀린다.
+- 보상 지급은 사용자별 잠금(`pg_advisory_xact_lock`)을 쓴다. 잠금이 없으면 같은 폴더의 두 세션 보상이 동시에 들어왔을 때 같은 "지급 전 경험치"를 보게 된다. 사용자 단위 잠금이라 같은 폴더의 지급도 한 번에 하나씩 처리된다. 잠금은 같은 사용자 안에서만 걸리고 트랜잭션이 끝나면 풀린다.
 - 보상 지급은 세션 행도 `for update`로 잠근다. ledger의 부분 unique 인덱스가 마지막 안전장치다.
 
 ### 재요청에도 같은 응답
 
-shared 계약은 `/report`를 여러 번 호출해도 첫 응답과 같은 보상을 돌려준다고 약속한다. 이를 위해 칸 두 개를 추가했다.
+shared 계약은 `/report`를 여러 번 호출해도 첫 응답과 같은 보상을 돌려준다고 약속한다. 이를 위해 칸을 추가했다.
 
-- `user_items.session_id`: 보상 아이템이 어느 세션에서 왔는지. 구매한 아이템은 null이다. 이미 가진 아이템은 건너뛰므로 session_id가 붙지 않는다.
-- `reports.xp_before`: 지급 직전 경험치 합계. `created_at`은 트랜잭션 시작 시각이라 잠금 대기 순서와 어긋날 수 있어서, 나중에 시각으로 "이 보상 이전 합계"를 계산할 수 없다. 지급 시점의 값을 기록하면 나중에 경험치를 쌓는 다른 경로가 생겨도 틀어지지 않는다.
+- `reports.xp_before`: 지급 직전 그 폴더의 경험치 합계. `created_at`은 트랜잭션 시작 시각이라 잠금 대기 순서와 어긋날 수 있어서, 나중에 시각으로 "이 보상 이전 합계"를 계산할 수 없다. 지급 시점의 값을 기록하면 나중에 경험치를 쌓는 다른 경로가 생겨도 틀어지지 않는다.
 
-`grant_session_reward`는 첫 지급과 재요청 모두 **저장된 행에서 값을 읽어** `{ granted, report_id, xp, points, xp_before, xp_after, item_ids }`를 돌려준다. 재요청에서 다른 인자를 넘겨도 무시된다.
+`grant_session_reward`는 첫 지급과 재요청 모두 **저장된 행에서 값을 읽어** `{ granted, report_id, xp, xp_before, xp_after }`를 돌려준다. 재요청에서 다른 인자를 넘겨도 무시된다.
 
 ### 함수 실행 권한의 함정
 
@@ -135,6 +133,8 @@ shared 계약은 `/report`를 여러 번 호출해도 첫 응답과 같은 보�
 
 - DB 안에서 확인할 수 있는 시험(권한, RLS, 제약, view, 함수 동작)은 pgTAP으로 `backend/supabase/tests/database/`에 두고, `backend/`에서 `npx supabase@2.122.0 test db`로 실행한다.
 - 스키마 노출, 401·403 구분, 동시 요청, 익명 가입, api 함수 요청은 HTTP 시험으로 `backend/supabase/tests/http/`에 두었다. 실행 방법은 `backend/README.md`의 "HTTP 시험"을 본다.
+
+아래 표는 0003(꾸미기·포인트 제외, 폴더별 캐릭터) 반영 전의 결과다. 아이템·포인트 항목(구매, 보상 아이템, `user_items`, `point_ledger`)과 캐릭터 테이블(`characters`) 항목은 시험과 함께 지웠고, 폴더 삭제 시 경험치 동작은 바뀌었다. 지금 기대값은 `backend/supabase/tests/`의 시험이 기준이다.
 
 ### 로컬: 테이블과 권한 (46개 통과)
 
@@ -202,7 +202,7 @@ shared 계약은 `/report`를 여러 번 호출해도 첫 응답과 같은 보�
 
 ### 기본 데이터 원칙
 
-위 seed 동작 때문에 seed로는 나중에 추가한 기본 데이터가 원격에 들어가지 않는다. 그래서 **모든 환경에 있어야 하는 기본 데이터(동물, 아이템)는 마이그레이션으로 넣고, `seed.sql`에는 로컬 개발용 샘플 데이터만 둔다**(CLAUDE.md에 규칙으로 넣음). 처음에 `seed.sql`로 넣은 동물 3종은 `20261029124648_seed_species.sql`로 옮겼다. 원격에는 이미 seed로 들어간 행이 있어서 `on conflict (id) do nothing`으로 건너뛰게 했다.
+위 seed 동작 때문에 seed로는 나중에 추가한 기본 데이터가 원격에 들어가지 않는다. 그래서 **모든 환경에 있어야 하는 기본 데이터(동물 등)는 마이그레이션으로 넣고, `seed.sql`에는 로컬 개발용 샘플 데이터만 둔다**(CLAUDE.md에 규칙으로 넣음). 처음에 `seed.sql`로 넣은 동물 3종은 `20261029124648_seed_species.sql`로 옮겼다. 원격에는 이미 seed로 들어간 행이 있어서 `on conflict (id) do nothing`으로 건너뛰게 했다.
 
 ## 알려진 한계와 주의
 
@@ -219,5 +219,4 @@ shared 계약은 `/report`를 여러 번 호출해도 첫 응답과 같은 보�
 2. **SQL 에러 → `AppError`**: `ErrorCode` 목록에 없는 메시지는 `INTERNAL_ERROR`로 처리하고 원문은 앱에 보내지 않는다.
 3. **Storage**: 버킷·정책, 그리고 폴더·자료를 지울 때 Storage 파일도 지우는 방법을 자료 작업 때 정한다.
 4. **`analysis_results` 테이블**: AI 분석 결과 스키마(commit 3)가 정해진 뒤 만든다. 위 칸 단위 권한 규칙을 따른다.
-5. **아이템 기본 데이터**: D9 결정 후 마이그레이션으로 넣는다.
-6. **로컬·원격 auth 설정**: `site_url`, 리다이렉트 주소, 이메일 확인을 이메일·소셜 로그인 도입 때 맞춘다.
+5. **로컬·원격 auth 설정**: `site_url`, 리다이렉트 주소, 이메일 확인을 이메일·소셜 로그인 도입 때 맞춘다.
