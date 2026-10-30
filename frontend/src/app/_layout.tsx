@@ -1,5 +1,11 @@
 import { Stack } from 'expo-router';
 
+import { TempStoreProvider } from '@/api/mock/tempStore';
+
 export default function RootLayout() {
-  return <Stack screenOptions={{ headerShown: false }} />;
+  return (
+    <TempStoreProvider>
+      <Stack screenOptions={{ headerShown: false }} />
+    </TempStoreProvider>
+  );
 }
