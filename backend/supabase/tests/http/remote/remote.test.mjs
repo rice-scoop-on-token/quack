@@ -43,11 +43,14 @@ test('server 함수: 노출되어 있고, 익명 토큰 403·로그인 전 401�
 
 test('금지된 칸·테이블은 403', async () => {
   await remote.rest(user, 'POST', 'profiles', { id: user.id, display_name: '원격시험' });
-  const folder = await remote.rest(user, 'POST', 'folders', { user_id: user.id, name: '원격 폴더' });
+  const folder = await remote.rest(user, 'POST', 'folders', { user_id: user.id, name: '원격 폴더', species_id: 'rubber_duck' });
   const session = await remote.rest(user, 'POST', 'sessions', { user_id: user.id, folder_id: folder.body[0].id, goal: '목표' });
   assert.equal(session.body[0].status, 'active');
 
-  let res = await remote.rest(user, 'PATCH', `sessions?id=eq.${session.body[0].id}`, { status: 'reported' });
+  // 폴더의 동물은 만든 뒤 바꿀 수 없다.
+  let res = await remote.rest(user, 'PATCH', `folders?id=eq.${folder.body[0].id}`, { species_id: 'cat' });
+  assert.equal(res.status, 403);
+  res = await remote.rest(user, 'PATCH', `sessions?id=eq.${session.body[0].id}`, { status: 'reported' });
   assert.equal(res.status, 403);
   res = await remote.rest(user, 'POST', 'xp_ledger', { user_id: user.id, amount: 9999, reason: 'session_reward' });
   assert.equal(res.status, 403);

@@ -4,8 +4,8 @@
 --
 -- 고정 id
 --   사용자 A aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa, 사용자 B bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb
---   A 폴더 aaaaaaaa-0000-4000-8000-0000000000f1, B 폴더 bbbbbbbb-0000-4000-8000-0000000000f1
---   A 세션 aaaaaaaa-0000-4000-8000-0000000000a1, B 세션 bbbbbbbb-0000-4000-8000-0000000000a1
+--   A 폴더 aaaaaaaa-0000-4000-8000-0000000000f1·f2(둘 다 오리), B 폴더 bbbbbbbb-0000-4000-8000-0000000000f1
+--   A 세션 aaaaaaaa-0000-4000-8000-0000000000a1(f1)·a2(f2), B 세션 bbbbbbbb-0000-4000-8000-0000000000a1
 --   A 자료 aaaaaaaa-0000-4000-8000-0000000000b1, A 퀴즈 aaaaaaaa-0000-4000-8000-0000000000c1
 
 begin;
@@ -23,14 +23,14 @@ insert into public.profiles (id, display_name) values
   ('aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa', '에이'),
   ('bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb', '비');
 
-insert into public.characters (user_id, species_id) values ('aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa', 'rubber_duck');
-
-insert into public.folders (id, user_id, name) values
-  ('aaaaaaaa-0000-4000-8000-0000000000f1', 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa', 'A 폴더'),
-  ('bbbbbbbb-0000-4000-8000-0000000000f1', 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb', 'B 폴더');
+insert into public.folders (id, user_id, name, species_id) values
+  ('aaaaaaaa-0000-4000-8000-0000000000f1', 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa', 'A 폴더', 'rubber_duck'),
+  ('aaaaaaaa-0000-4000-8000-0000000000f2', 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa', 'A 둘째 폴더', 'rubber_duck'),
+  ('bbbbbbbb-0000-4000-8000-0000000000f1', 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb', 'B 폴더', 'raccoon');
 
 insert into public.sessions (id, user_id, folder_id, goal) values
   ('aaaaaaaa-0000-4000-8000-0000000000a1', 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa', 'aaaaaaaa-0000-4000-8000-0000000000f1', '목표'),
+  ('aaaaaaaa-0000-4000-8000-0000000000a2', 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa', 'aaaaaaaa-0000-4000-8000-0000000000f2', '목표'),
   ('bbbbbbbb-0000-4000-8000-0000000000a1', 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb', 'bbbbbbbb-0000-4000-8000-0000000000f1', '목표');
 
 insert into public.materials (id, user_id, folder_id, kind, title) values
@@ -49,9 +49,10 @@ insert into public.reports (session_id, xp_before, summary, duration_seconds, tu
   ('aaaaaaaa-0000-4000-8000-0000000000a1', 0, '요약', 1, 1);
 
 -- 서버가 service role로 쓰는 지급 내역. 이 파일은 postgres 권한이라 RLS 없이 바로 넣는다.
-insert into public.xp_ledger (user_id, amount, reason, session_id) values
-  ('aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa', 50, 'session_reward', 'aaaaaaaa-0000-4000-8000-0000000000a1'),
-  ('bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb', 30, 'session_reward', 'bbbbbbbb-0000-4000-8000-0000000000a1');
+insert into public.xp_ledger (user_id, folder_id, amount, reason, session_id) values
+  ('aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa', 'aaaaaaaa-0000-4000-8000-0000000000f1', 50, 'session_reward', 'aaaaaaaa-0000-4000-8000-0000000000a1'),
+  ('aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa', 'aaaaaaaa-0000-4000-8000-0000000000f2', 20, 'session_reward', 'aaaaaaaa-0000-4000-8000-0000000000a2'),
+  ('bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb', 'bbbbbbbb-0000-4000-8000-0000000000f1', 30, 'session_reward', 'bbbbbbbb-0000-4000-8000-0000000000a1');
 
 -- 다른 사용자의 폴더 (사용자 A로)
 
@@ -68,46 +69,77 @@ select throws_ok(
      values ('aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa', 'bbbbbbbb-0000-4000-8000-0000000000f1', 'text', '남의 폴더') $$,
   '23503', null, 'A는 B의 폴더에 자료를 만들 수 없다 (복합 외래키)'
 );
-select throws_ok(
-  $$ insert into public.characters (user_id, species_id) values ('aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa', 'cat') $$,
-  '23505', null, '캐릭터는 사용자당 하나다'
-);
 
--- character_stats: 각자 자기 합계만
+-- character_stats: 폴더(캐릭터)마다 한 행, 자기 폴더만
 
 select results_eq(
-  $$ select user_id, total_xp from public.character_stats $$,
-  $$ values ('aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa'::uuid, 50) $$,
-  'A는 자기 합계 한 행만 본다'
+  $$ select folder_id, user_id, species_id, total_xp from public.character_stats order by folder_id $$,
+  $$ values ('aaaaaaaa-0000-4000-8000-0000000000f1'::uuid, 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa'::uuid, 'rubber_duck', 50),
+            ('aaaaaaaa-0000-4000-8000-0000000000f2'::uuid, 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa'::uuid, 'rubber_duck', 20) $$,
+  'A는 자기 폴더마다 경험치 합계를 본다'
 );
 select results_eq(
-  $$ select user_id from public.xp_ledger $$,
-  $$ values ('aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa'::uuid) $$,
+  $$ select count(*)::int from public.xp_ledger where user_id <> 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa' $$,
+  $$ values (0) $$,
   'A는 자기 경험치 내역만 본다'
+);
+
+-- 폴더의 동물
+
+select throws_ok(
+  $$ insert into public.folders (user_id, name) values ('aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa', '동물 없는 폴더') $$,
+  '23502', null, '폴더는 동물 없이 만들 수 없다'
+);
+select throws_ok(
+  $$ insert into public.folders (user_id, name, species_id) values ('aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa', '없는 동물', 'dragon') $$,
+  '23503', null, '없는 동물로는 폴더를 만들 수 없다'
+);
+select lives_ok(
+  $$ insert into public.folders (user_id, name, species_id) values ('aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa', '셋째 오리 폴더', 'rubber_duck') $$,
+  '같은 동물을 여러 폴더에서 고를 수 있다'
+);
+select results_eq(
+  $$ select total_xp from public.character_stats where species_id = 'rubber_duck' and folder_id not in
+       ('aaaaaaaa-0000-4000-8000-0000000000f1', 'aaaaaaaa-0000-4000-8000-0000000000f2') $$,
+  $$ values (0) $$,
+  '새 폴더의 캐릭터는 경험치 0으로 보인다'
 );
 
 set local request.jwt.claims = '{"sub": "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb", "role": "authenticated"}';
 
 select results_eq(
-  $$ select user_id, total_xp from public.character_stats $$,
-  $$ values ('bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb'::uuid, 30) $$,
-  'B는 자기 합계 한 행만 본다'
+  $$ select folder_id, species_id, total_xp from public.character_stats $$,
+  $$ values ('bbbbbbbb-0000-4000-8000-0000000000f1'::uuid, 'raccoon', 30) $$,
+  'B는 자기 폴더의 합계만 본다'
 );
 
 reset role;
 
--- 한 번만 생기는 행 (서버가 쓰는 테이블이라 postgres 권한으로 시험한다)
+-- 경험치 내역 (서버가 쓰는 테이블이라 postgres 권한으로 시험한다)
 
 select throws_ok(
-  $$ insert into public.xp_ledger (user_id, amount, reason, session_id)
-     values ('aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa', 50, 'session_reward', 'aaaaaaaa-0000-4000-8000-0000000000a1') $$,
+  $$ insert into public.xp_ledger (user_id, folder_id, amount, reason, session_id)
+     values ('aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa', 'aaaaaaaa-0000-4000-8000-0000000000f1', 50, 'session_reward', 'aaaaaaaa-0000-4000-8000-0000000000a1') $$,
   '23505', null, '같은 세션의 경험치 보상은 한 번만 기록된다'
 );
 select throws_ok(
-  $$ insert into public.xp_ledger (user_id, amount, reason)
-     values ('aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa', 10, 'item_purchase') $$,
+  $$ insert into public.xp_ledger (user_id, folder_id, amount, reason)
+     values ('aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa', 'aaaaaaaa-0000-4000-8000-0000000000f1', 10, 'item_purchase') $$,
   '23514', null, '경험치 내역의 사유는 session_reward뿐이다'
 );
+select throws_ok(
+  $$ insert into public.xp_ledger (user_id, folder_id, amount, reason)
+     values ('aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa', 'aaaaaaaa-0000-4000-8000-0000000000f1', -10, 'session_reward') $$,
+  '23514', null, '음수 경험치는 기록할 수 없다'
+);
+select throws_ok(
+  $$ insert into public.xp_ledger (user_id, folder_id, amount, reason)
+     values ('aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa', 'bbbbbbbb-0000-4000-8000-0000000000f1', 10, 'session_reward') $$,
+  '23503', null, 'A의 경험치를 B의 폴더에 기록할 수 없다 (복합 외래키)'
+);
+
+-- 한 번만 생기는 행
+
 select throws_ok(
   $$ insert into public.quiz_attempts (quiz_id, answers, correct_count, total_count)
      values ('aaaaaaaa-0000-4000-8000-0000000000c1', '[]', 0, 0) $$,
@@ -139,15 +171,17 @@ select is_empty($$ select id from public.quizzes where session_id = 'aaaaaaaa-00
 select is_empty($$ select id from public.quiz_attempts where quiz_id = 'aaaaaaaa-0000-4000-8000-0000000000c1' $$, '퀴즈 제출이 함께 지워진다');
 select is_empty($$ select id from public.reports where session_id = 'aaaaaaaa-0000-4000-8000-0000000000a1' $$, '세션의 리포트가 함께 지워진다');
 
+-- 폴더의 캐릭터가 사라지므로 경험치 내역도 함께 지워진다(docs/decisions/0003).
 select results_eq(
-  $$ select amount, session_id from public.xp_ledger where user_id = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa' $$,
-  $$ values (50, null::uuid) $$,
-  '경험치 내역은 남고 세션 연결만 비워진다'
+  $$ select folder_id, amount from public.xp_ledger where user_id = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa' $$,
+  $$ values ('aaaaaaaa-0000-4000-8000-0000000000f2'::uuid, 20) $$,
+  '지운 폴더의 경험치 내역은 지워지고 다른 폴더의 내역은 남는다'
 );
 select results_eq(
-  $$ select total_xp from public.character_stats where user_id = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa' $$,
-  $$ values (50) $$,
-  '폴더를 지워도 경험치 합계는 그대로다'
+  $$ select folder_id, total_xp from public.character_stats
+     where folder_id in ('aaaaaaaa-0000-4000-8000-0000000000f1', 'aaaaaaaa-0000-4000-8000-0000000000f2') $$,
+  $$ values ('aaaaaaaa-0000-4000-8000-0000000000f2'::uuid, 20) $$,
+  '지운 폴더의 캐릭터 행은 없어지고 다른 폴더의 경험치는 그대로다'
 );
 
 select * from finish();

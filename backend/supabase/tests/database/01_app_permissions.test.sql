@@ -25,10 +25,10 @@ insert into auth.users (id) values
 
 insert into public.profiles (id, display_name) values ('bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb', '비');
 
-insert into public.folders (id, user_id, name) values
-  ('aaaaaaaa-0000-4000-8000-0000000000f1', 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa', 'A 폴더'),
-  ('aaaaaaaa-0000-4000-8000-0000000000f2', 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa', '지울 폴더'),
-  ('bbbbbbbb-0000-4000-8000-0000000000f1', 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb', 'B 폴더');
+insert into public.folders (id, user_id, name, species_id) values
+  ('aaaaaaaa-0000-4000-8000-0000000000f1', 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa', 'A 폴더', 'rubber_duck'),
+  ('aaaaaaaa-0000-4000-8000-0000000000f2', 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa', '지울 폴더', 'cat'),
+  ('bbbbbbbb-0000-4000-8000-0000000000f1', 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb', 'B 폴더', 'raccoon');
 
 insert into public.sessions (id, user_id, folder_id, goal) values
   ('aaaaaaaa-0000-4000-8000-0000000000a1', 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa', 'aaaaaaaa-0000-4000-8000-0000000000f1', '목표');
@@ -87,11 +87,9 @@ select results_eq(
      order by table_name collate "C", privilege collate "C" $$,
   $$ values
        ('character_stats', 'SELECT', '*'),
-       ('characters', 'INSERT', 'species_id,user_id'),
-       ('characters', 'SELECT', '*'),
        ('explanation_turns', 'SELECT', '*'),
        ('folders', 'DELETE', '*'),
-       ('folders', 'INSERT', 'name,user_id'),
+       ('folders', 'INSERT', 'name,species_id,user_id'),
        ('folders', 'SELECT', '*'),
        ('folders', 'UPDATE', 'name'),
        ('materials', 'DELETE', '*'),
@@ -133,12 +131,8 @@ select results_eq(
   'A는 동물 3종을 조회할 수 있다'
 );
 select lives_ok(
-  $$ insert into public.characters (user_id, species_id) values ('aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa', 'rubber_duck') $$,
-  'A는 캐릭터를 만들 수 있다'
-);
-select lives_ok(
-  $$ insert into public.folders (user_id, name) values ('aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa', '새 폴더') $$,
-  'A는 폴더를 만들 수 있다'
+  $$ insert into public.folders (user_id, name, species_id) values ('aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa', '새 폴더', 'raccoon') $$,
+  'A는 동물을 골라 폴더를 만들 수 있다'
 );
 select results_eq(
   $$ update public.folders set name = 'A 폴더 수정' where id = 'aaaaaaaa-0000-4000-8000-0000000000f1' returning name $$,
@@ -173,6 +167,10 @@ select results_eq(
 
 -- 거절: 앱이 쓸 수 없는 칸과 테이블 (42501 권한 없음)
 
+select throws_ok(
+  $$ update public.folders set species_id = 'cat' where id = 'aaaaaaaa-0000-4000-8000-0000000000f1' $$,
+  '42501', null, 'folders.species_id(폴더의 동물)는 바꿀 수 없다'
+);
 select throws_ok(
   $$ update public.sessions set status = 'reported' where id = 'aaaaaaaa-0000-4000-8000-0000000000a1' $$,
   '42501', null, 'sessions.status는 바꿀 수 없다'

@@ -107,13 +107,35 @@ foreign key (folder_id, user_id) references public.folders (id, user_id) on dele
 | 대상 | 상태 |
 | --- | --- |
 | shared 계약 | 완료 (PR #12) |
-| 이 문서, CLAUDE.md (MVP 흐름, Backend 규칙, AI 페르소나 규칙, 미정 사항) | 이 커밋 |
-| DB 마이그레이션, pgTAP·HTTP 시험, 0002 | BE-A PR 예정. 커밋 두 개로 나눈다: 꾸미기·포인트 삭제, 캐릭터·경험치를 폴더별로 |
-| 원격 DB | 마이그레이션 PR 머지 후 `db push`. 그 전에 원격 `user_items`·`point_ledger`·`characters`에 지켜야 할 행이 없는지 확인한다 |
+| 이 문서, CLAUDE.md (MVP 흐름, Backend 규칙, AI 페르소나 규칙, 미정 사항) | 완료 |
+| DB 마이그레이션, pgTAP·HTTP 시험, 0002 | `feat/be-folder-character` PR. `20261030061301_remove_cosmetics_points.sql`(꾸미기·포인트 삭제), `20261030062236_folder_characters.sql`(캐릭터·경험치를 폴더별로) |
+| 원격 DB | 마이그레이션 PR 머지 후 아래 절차로 `db push` |
 | FE | mock 데이터, 온보딩(동물 선택을 폴더 만들기에 합침), 폴더 삭제 경고 |
 | AI | 페르소나를 폴더의 동물로 고른다 |
 
-마이그레이션 PR이 머지되기 전까지 DB는 이전 구조다. FE는 그때까지 mock 모드로 개발한다.
+마이그레이션이 원격에 반영되기 전까지 원격 DB는 이전 구조다. FE는 그때까지 mock 모드로 개발한다.
+
+### 원격 push 전 확인
+
+`folders.species_id`와 `xp_ledger.folder_id`는 기존 행에 값을 채우지 않고 `not null`로 추가한다. 동물을 임의로 고르지 않기 위해서다. 그래서 원격에 폴더나 경험치 내역이 남아 있으면 `20261030062236_folder_characters.sql`이 실패한다. push 전에 대시보드 → SQL Editor에서 아래를 실행한다.
+
+```sql
+select
+  (select count(*) from public.folders) as folders,
+  (select count(*) from public.xp_ledger) as xp_ledger,
+  (select count(*) from public.characters) as characters,
+  (select count(*) from public.items) as items,
+  (select count(*) from public.user_items) as user_items,
+  (select count(*) from public.point_ledger) as point_ledger;
+```
+
+1. 모두 0이면 바로 push한다.
+2. 0이 아니면 그 행이 시험 데이터인지 확인한다. 지켜야 할 데이터가 있으면 push하지 않고 팀과 상의한다.
+3. 시험 데이터라면 대시보드 → Authentication → Users에서 그 시험 사용자를 지운다. 사용자를 지우면 폴더, 경험치 내역, 캐릭터, 아이템 보유, 포인트 내역이 cascade로 함께 지워진다.
+   - `items`는 사용자에 딸리지 않아 남는다. 아이템 기본 데이터를 넣은 적이 없어 0이어야 하고, 남아 있어도 마이그레이션이 테이블째 지운다.
+4. 위 쿼리를 다시 실행해 `folders`, `xp_ledger`가 0인지 확인한다.
+5. `backend/`에서 `npx supabase@2.122.0 db push --linked --dry-run`으로 두 마이그레이션이 적용 대상인지 확인한 뒤 `npx supabase@2.122.0 db push --linked`
+6. push 뒤 원격 HTTP 시험(`supabase/tests/http/remote/remote.test.mjs`)을 실행한다. 실행 방법과 시험 사용자 정리는 `backend/README.md`의 "HTTP 시험"을 본다.
 
 ## 꾸미기를 다시 넣을 때
 

@@ -7,8 +7,8 @@
 --
 -- 고정 id
 --   사용자 A aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa, 사용자 B bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb
---   A 폴더 aaaaaaaa-0000-4000-8000-0000000000f1, B 폴더 bbbbbbbb-0000-4000-8000-0000000000f1
---   A 세션: 진행 중 ...a0, 종료 ...a1 / B 세션: 종료 bbbbbbbb-0000-4000-8000-0000000000a1
+--   A 폴더 aaaaaaaa-0000-4000-8000-0000000000f1·f2, B 폴더 bbbbbbbb-0000-4000-8000-0000000000f1
+--   A 세션: f1 진행 중 ...a0, f1 종료 ...a1·a2, f2 종료 ...a3 / B 세션: 종료 bbbbbbbb-0000-4000-8000-0000000000a1
 
 begin;
 create extension if not exists pgtap with schema extensions;
@@ -57,18 +57,20 @@ insert into auth.users (id) values
   ('aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa'),
   ('bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb');
 
--- character_stats는 profiles를 기준으로 합계 행을 만든다.
 insert into public.profiles (id, display_name) values
   ('aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa', '에이'),
   ('bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb', '비');
 
-insert into public.folders (id, user_id, name) values
-  ('aaaaaaaa-0000-4000-8000-0000000000f1', 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa', 'A 폴더'),
-  ('bbbbbbbb-0000-4000-8000-0000000000f1', 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb', 'B 폴더');
+insert into public.folders (id, user_id, name, species_id) values
+  ('aaaaaaaa-0000-4000-8000-0000000000f1', 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa', 'A 폴더', 'rubber_duck'),
+  ('aaaaaaaa-0000-4000-8000-0000000000f2', 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa', 'A 둘째 폴더', 'cat'),
+  ('bbbbbbbb-0000-4000-8000-0000000000f1', 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb', 'B 폴더', 'raccoon');
 
 insert into public.sessions (id, user_id, folder_id, goal, status) values
   ('aaaaaaaa-0000-4000-8000-0000000000a0', 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa', 'aaaaaaaa-0000-4000-8000-0000000000f1', '진행 중', 'active'),
   ('aaaaaaaa-0000-4000-8000-0000000000a1', 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa', 'aaaaaaaa-0000-4000-8000-0000000000f1', '종료', 'finished'),
+  ('aaaaaaaa-0000-4000-8000-0000000000a2', 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa', 'aaaaaaaa-0000-4000-8000-0000000000f1', '종료', 'finished'),
+  ('aaaaaaaa-0000-4000-8000-0000000000a3', 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa', 'aaaaaaaa-0000-4000-8000-0000000000f2', '종료', 'finished'),
   ('bbbbbbbb-0000-4000-8000-0000000000a1', 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb', 'bbbbbbbb-0000-4000-8000-0000000000f1', '종료', 'finished');
 
 -- 앱 역할은 함수를 직접 부를 수 없다
@@ -150,6 +152,11 @@ select results_eq(
   $$ select (r ->> 'report_id')::uuid, 0 from first_reward $$,
   '리포트가 저장되고 xp_before가 기록된다'
 );
+select results_eq(
+  $$ select folder_id from public.xp_ledger where session_id = 'aaaaaaaa-0000-4000-8000-0000000000a1' $$,
+  $$ values ('aaaaaaaa-0000-4000-8000-0000000000f1'::uuid) $$,
+  '경험치는 세션이 속한 폴더에 기록된다'
+);
 
 set local role service_role;
 
@@ -177,6 +184,22 @@ select results_eq(
 
 set local role service_role;
 
+-- 지급 전 경험치(xp_before)는 폴더별로 센다. f1에는 위에서 120을 지급했다.
+select is(
+  (select server.grant_session_reward(
+     'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa', 'aaaaaaaa-0000-4000-8000-0000000000a2',
+     30, '요약', '{}', '{}', 1, 1, null, null) - 'granted' - 'report_id'),
+  '{"xp": 30, "xp_before": 120, "xp_after": 150}'::jsonb,
+  '같은 폴더의 다른 세션은 그 폴더의 경험치에 이어서 쌓인다'
+);
+select is(
+  (select server.grant_session_reward(
+     'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa', 'aaaaaaaa-0000-4000-8000-0000000000a3',
+     50, '요약', '{}', '{}', 1, 1, null, null) - 'granted' - 'report_id'),
+  '{"xp": 50, "xp_before": 0, "xp_after": 50}'::jsonb,
+  '다른 폴더의 세션은 0부터 쌓인다'
+);
+
 select throws_ok(
   $$ select server.grant_session_reward(
        'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa', 'bbbbbbbb-0000-4000-8000-0000000000a1',
@@ -194,10 +217,11 @@ select throws_ok(
 reset role;
 
 select results_eq(
-  $$ select total_xp from public.character_stats
-     where user_id = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa' $$,
-  $$ values (120) $$,
-  '합계가 지급을 반영한다'
+  $$ select folder_id, total_xp from public.character_stats
+     where user_id = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa' order by folder_id $$,
+  $$ values ('aaaaaaaa-0000-4000-8000-0000000000f1'::uuid, 150),
+            ('aaaaaaaa-0000-4000-8000-0000000000f2'::uuid, 50) $$,
+  '폴더별 합계가 지급을 반영한다'
 );
 
 select * from finish();
