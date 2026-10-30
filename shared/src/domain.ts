@@ -4,10 +4,10 @@ import { z } from 'zod';
 // zod 기본 옵션은 이 형식을 거절하므로 offset을 허용한다.
 const timestamp = z.iso.datetime({ offset: true });
 
-// 사용자가 만드는 행의 id는 uuid, 기본 데이터(동물, 아이템)의 id는 읽기 쉬운 영문 slug를 쓴다.
+// 사용자가 만드는 행의 id는 uuid, 기본 데이터(동물)의 id는 읽기 쉬운 영문 slug를 쓴다.
 const id = z.uuid();
 
-// 프로필과 캐릭터
+// 프로필과 동물
 
 export const profileSchema = z.object({
   id,
@@ -29,61 +29,29 @@ export const speciesSchema = z.object({
 });
 export type Species = z.infer<typeof speciesSchema>;
 
-export const characterSchema = z.object({
-  id,
-  user_id: id,
-  species_id: speciesIdSchema,
-  created_at: timestamp,
-});
-export type Character = z.infer<typeof characterSchema>;
-
-// 경험치와 포인트는 지급 내역(ledger)의 합계다. 레벨은 level.ts의 levelFromXp로 계산한다.
-export const characterStatsSchema = z.object({
-  user_id: id,
-  total_xp: z.int().min(0),
-  points_balance: z.int().min(0),
-});
-export type CharacterStats = z.infer<typeof characterStatsSchema>;
-
-// 아이템
-
-export const itemSlotSchema = z.enum(['head', 'face', 'body', 'accessory']);
-export type ItemSlot = z.infer<typeof itemSlotSchema>;
-
-// 획득 방식은 팀 결정(D9) 전이라 추천안(레벨 조건 또는 포인트 구매) 기준이다.
-export const itemUnlockSchema = z.discriminatedUnion('type', [
-  z.object({ type: z.literal('level'), level: z.int().min(1) }),
-  z.object({ type: z.literal('points'), price: z.int().min(1) }),
-]);
-export type ItemUnlock = z.infer<typeof itemUnlockSchema>;
-
-export const itemSchema = z.object({
-  id: z.string().min(1),
-  name: z.string().min(1),
-  slot: itemSlotSchema,
-  asset_key: z.string().min(1),
-  unlock: itemUnlockSchema,
-});
-export type Item = z.infer<typeof itemSchema>;
-
-export const userItemSchema = z.object({
-  user_id: id,
-  item_id: z.string().min(1),
-  source: z.enum(['reward', 'purchase']),
-  equipped: z.boolean(),
-  acquired_at: timestamp,
-});
-export type UserItem = z.infer<typeof userItemSchema>;
-
-// 폴더와 자료
+// 폴더와 캐릭터
+// 캐릭터는 과목 폴더마다 한 마리다. 따로 테이블을 두지 않고 폴더의 동물과 경험치로 나타낸다.
 
 export const folderSchema = z.object({
   id,
   user_id: id,
   name: z.string().min(1),
+  // 폴더를 만들 때 고르고 이후 바꿀 수 없다. 같은 동물을 여러 폴더에서 고를 수 있다.
+  species_id: speciesIdSchema,
   created_at: timestamp,
 });
 export type Folder = z.infer<typeof folderSchema>;
+
+// 경험치는 폴더의 지급 내역(ledger) 합계다. 레벨은 level.ts의 levelFromXp로 계산한다.
+export const characterStatsSchema = z.object({
+  folder_id: id,
+  user_id: id,
+  species_id: speciesIdSchema,
+  total_xp: z.int().min(0),
+});
+export type CharacterStats = z.infer<typeof characterStatsSchema>;
+
+// 자료
 
 export const materialSchema = z.object({
   id,
@@ -175,19 +143,20 @@ export const reportSchema = z.object({
 });
 export type Report = z.infer<typeof reportSchema>;
 
-// 지급 내역
+// 경험치 지급 내역
 
-// 포인트 차감(아이템 구매)은 음수 amount로 기록한다.
-export const ledgerReasonSchema = z.enum(['session_reward', 'item_purchase']);
+// 세션 보상은 활동별(세션 완료, 충분 판정 개념, 퀴즈 정답)로 나누지 않고 세션마다 한 줄로 쌓는다.
+export const ledgerReasonSchema = z.enum(['session_reward']);
 export type LedgerReason = z.infer<typeof ledgerReasonSchema>;
 
 export const ledgerEntrySchema = z.object({
   id,
   user_id: id,
+  // 폴더를 지우면 그 폴더의 내역도 함께 지워진다.
+  folder_id: id,
   amount: z.int(),
   reason: ledgerReasonSchema,
   session_id: id.nullable(),
   created_at: timestamp,
 });
 export type XpLedgerEntry = z.infer<typeof ledgerEntrySchema>;
-export type PointLedgerEntry = z.infer<typeof ledgerEntrySchema>;
