@@ -85,7 +85,7 @@ BE-B는 `index.ts`에서 이 등록 줄만 추가할 수 있다(CLAUDE.md 예외
 | --- | --- |
 | 자기 데이터 조회, 앱도 쓸 수 있는 칸에 쓰기 | `c.var.userDb` (RLS 적용) |
 | 서버만 쓰는 테이블·칸에 쓰기 (`explanation_turns`, `quizzes`, `quiz_questions`, `sessions.status` 등) | `c.var.adminDb` |
-| `server` 스키마 함수 호출 (`grant_session_reward`, `consume_ai_quota`, `purchase_item`) | `c.var.adminDb.schema('server').rpc(...)` |
+| `server` 스키마 함수 호출 (`grant_session_reward`, `consume_ai_quota`) | `c.var.adminDb.schema('server').rpc(...)` |
 
 앱이 어떤 테이블·칸을 쓸 수 있는지는 `docs/decisions/0002-db-permissions.md`의 "앱 역할 권한" 표를 본다.
 

@@ -71,16 +71,6 @@ insert into public.sessions (id, user_id, folder_id, goal, status) values
   ('aaaaaaaa-0000-4000-8000-0000000000a1', 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa', 'aaaaaaaa-0000-4000-8000-0000000000f1', '종료', 'finished'),
   ('bbbbbbbb-0000-4000-8000-0000000000a1', 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb', 'bbbbbbbb-0000-4000-8000-0000000000f1', '종료', 'finished');
 
-insert into public.items (id, name, slot, asset_key, unlock) values
-  ('t_rw_hat', '보상 모자', 'head', 'x', '{"type": "level", "level": 1}'),
-  ('t_rw_glasses', '보상 안경', 'face', 'x', '{"type": "level", "level": 2}'),
-  ('t_shop_a', '상점 A', 'body', 'x', '{"type": "points", "price": 30}'),
-  ('t_shop_c', '상점 C', 'accessory', 'x', '{"type": "points", "price": 30}');
-
--- 이미 가진 보상 아이템은 건너뛰는지 보기 위해 미리 하나 준다.
-insert into public.user_items (user_id, item_id, source) values
-  ('aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa', 't_rw_glasses', 'reward');
-
 -- 앱 역할은 함수를 직접 부를 수 없다
 
 set local role authenticated;
@@ -95,7 +85,9 @@ set local role anon;
 set local request.jwt.claims = '{"role": "anon"}';
 
 select throws_ok(
-  $$ select server.purchase_item('aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa', 't_shop_a') $$,
+  $$ select server.grant_session_reward(
+       'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa', 'aaaaaaaa-0000-4000-8000-0000000000a1',
+       9999, '요약', '{}', '{}', 1, 1, null, null) $$,
   '42501', null, '로그인 전에는 server 함수를 호출할 수 없다'
 );
 
@@ -128,7 +120,7 @@ select is(
 select throws_ok(
   $$ select server.grant_session_reward(
        'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa', 'aaaaaaaa-0000-4000-8000-0000000000a0',
-       120, 50, array['t_rw_hat'], '요약', '{}', '{}', 600, 3, null, null) $$,
+       120, '요약', '{}', '{}', 600, 3, null, null) $$,
   'P0001', 'INVALID_STATE', '진행 중(active) 세션에는 지급하지 않는다'
 );
 
@@ -136,13 +128,13 @@ select throws_ok(
 create temp table first_reward as
 select server.grant_session_reward(
   'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa', 'aaaaaaaa-0000-4000-8000-0000000000a1',
-  120, 50, array['t_rw_hat', 't_rw_glasses'], '요약', '{개념1}', '{}', 600, 3, 2, 3) as r;
+  120, '요약', '{개념1}', '{}', 600, 3, 2, 3) as r;
 
 select is((select r -> 'granted' from first_reward), 'true'::jsonb, '종료된 세션에 지급한다');
 select is(
   (select r - 'granted' - 'report_id' from first_reward),
-  '{"xp": 120, "points": 50, "xp_before": 0, "xp_after": 120, "item_ids": ["t_rw_hat"]}'::jsonb,
-  '지급 값이 맞고, 이미 가진 아이템은 빠진다'
+  '{"xp": 120, "xp_before": 0, "xp_after": 120}'::jsonb,
+  '지급 값이 맞다'
 );
 
 -- 저장된 값 확인은 RLS 없이 보려고 postgres로 돌아간다.
@@ -158,13 +150,6 @@ select results_eq(
   $$ select (r ->> 'report_id')::uuid, 0 from first_reward $$,
   '리포트가 저장되고 xp_before가 기록된다'
 );
-select results_eq(
-  $$ select item_id, source, session_id from public.user_items
-     where user_id = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa' order by item_id $$,
-  $$ values ('t_rw_glasses', 'reward', null::uuid),
-            ('t_rw_hat', 'reward', 'aaaaaaaa-0000-4000-8000-0000000000a1'::uuid) $$,
-  '새로 받은 보상 아이템에만 session_id가 기록된다'
-);
 
 set local role service_role;
 
@@ -172,7 +157,7 @@ set local role service_role;
 create temp table again_reward as
 select server.grant_session_reward(
   'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa', 'aaaaaaaa-0000-4000-8000-0000000000a1',
-  999, 999, array['t_shop_a'], '다른 요약', '{}', '{}', 1, 1, null, null) as r;
+  999, '다른 요약', '{}', '{}', 1, 1, null, null) as r;
 
 select is((select r -> 'granted' from again_reward), 'false'::jsonb, '재요청은 granted = false');
 select is(
@@ -185,14 +170,9 @@ reset role;
 
 select results_eq(
   $$ select (select count(*) from public.xp_ledger where session_id = 'aaaaaaaa-0000-4000-8000-0000000000a1')::int,
-            (select count(*) from public.point_ledger where session_id = 'aaaaaaaa-0000-4000-8000-0000000000a1')::int,
             (select count(*) from public.reports where session_id = 'aaaaaaaa-0000-4000-8000-0000000000a1')::int $$,
-  $$ values (1, 1, 1) $$,
+  $$ values (1, 1) $$,
   '재요청 후에도 내역과 리포트는 하나씩이다'
-);
-select is_empty(
-  $$ select item_id from public.user_items where item_id = 't_shop_a' $$,
-  '재요청 인자의 아이템은 지급되지 않는다'
 );
 
 set local role service_role;
@@ -200,62 +180,24 @@ set local role service_role;
 select throws_ok(
   $$ select server.grant_session_reward(
        'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa', 'bbbbbbbb-0000-4000-8000-0000000000a1',
-       10, 10, '{}', '요약', '{}', '{}', 1, 1, null, null) $$,
+       10, '요약', '{}', '{}', 1, 1, null, null) $$,
   'P0001', 'NOT_FOUND', '다른 사용자의 세션은 NOT_FOUND'
 );
 -- ErrorCode가 아닌 메시지라 서비스에서 INTERNAL_ERROR가 된다(서버 코드의 잘못).
 select throws_ok(
   $$ select server.grant_session_reward(
        'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb', 'bbbbbbbb-0000-4000-8000-0000000000a1',
-       -1, 10, '{}', '요약', '{}', '{}', 1, 1, null, null) $$,
-  'P0001', 'p_xp와 p_points는 0 이상이어야 한다', '음수 경험치는 거절한다'
-);
-
--- purchase_item (A의 포인트는 위 보상으로 50, B는 0)
-
-select throws_ok(
-  $$ select server.purchase_item('bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb', 't_shop_a') $$,
-  'P0001', 'INSUFFICIENT_POINTS', '포인트가 모자라면 살 수 없다'
-);
-select throws_ok(
-  $$ select server.purchase_item('bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb', 't_rw_hat') $$,
-  'P0001', 'INVALID_STATE', '레벨로 얻는 아이템은 살 수 없다'
-);
-select throws_ok(
-  $$ select server.purchase_item('bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb', 't_nothing') $$,
-  'P0001', 'NOT_FOUND', '없는 아이템은 NOT_FOUND'
-);
-
-create temp table purchase_result as
-select server.purchase_item('aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa', 't_shop_c') as r;
-
-select is((select (r ->> 'points_balance')::int from purchase_result), 20, '구매하면 잔액이 가격만큼 준다 (50 → 20)');
-select is(
-  (select r -> 'user_item' -> 'source' from purchase_result),
-  '"purchase"'::jsonb,
-  '구매한 아이템은 source = purchase'
-);
-select is(
-  (select r -> 'user_item' -> 'session_id' from purchase_result),
-  'null'::jsonb,
-  '구매한 아이템은 session_id가 없다'
-);
-select throws_ok(
-  $$ select server.purchase_item('aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa', 't_shop_c') $$,
-  'P0001', 'ALREADY_OWNED', '이미 가진 아이템은 다시 살 수 없다'
-);
-select throws_ok(
-  $$ select server.purchase_item('aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa', 't_shop_a') $$,
-  'P0001', 'INSUFFICIENT_POINTS', '잔액 20으로 30짜리는 살 수 없다'
+       -1, '요약', '{}', '{}', 1, 1, null, null) $$,
+  'P0001', 'p_xp는 0 이상이어야 한다', '음수 경험치는 거절한다'
 );
 
 reset role;
 
 select results_eq(
-  $$ select total_xp, points_balance from public.character_stats
+  $$ select total_xp from public.character_stats
      where user_id = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa' $$,
-  $$ values (120, 20) $$,
-  '합계가 지급과 구매를 반영한다'
+  $$ values (120) $$,
+  '합계가 지급을 반영한다'
 );
 
 select * from finish();

@@ -48,19 +48,10 @@ insert into public.quiz_attempts (quiz_id, answers, correct_count, total_count) 
 insert into public.reports (session_id, xp_before, summary, duration_seconds, turn_count) values
   ('aaaaaaaa-0000-4000-8000-0000000000a1', 0, '요약', 1, 1);
 
-insert into public.items (id, name, slot, asset_key, unlock) values
-  ('t_hat', '시험 모자', 'head', 't_hat', '{"type": "level", "level": 1}');
-
-insert into public.user_items (user_id, item_id, source, session_id) values
-  ('aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa', 't_hat', 'reward', 'aaaaaaaa-0000-4000-8000-0000000000a1');
-
 -- 서버가 service role로 쓰는 지급 내역. 이 파일은 postgres 권한이라 RLS 없이 바로 넣는다.
 insert into public.xp_ledger (user_id, amount, reason, session_id) values
   ('aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa', 50, 'session_reward', 'aaaaaaaa-0000-4000-8000-0000000000a1'),
   ('bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb', 30, 'session_reward', 'bbbbbbbb-0000-4000-8000-0000000000a1');
-insert into public.point_ledger (user_id, amount, reason, session_id) values
-  ('aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa', 20, 'session_reward', 'aaaaaaaa-0000-4000-8000-0000000000a1'),
-  ('bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb', 70, 'session_reward', 'bbbbbbbb-0000-4000-8000-0000000000a1');
 
 -- 다른 사용자의 폴더 (사용자 A로)
 
@@ -85,8 +76,8 @@ select throws_ok(
 -- character_stats: 각자 자기 합계만
 
 select results_eq(
-  $$ select user_id, total_xp, points_balance from public.character_stats $$,
-  $$ values ('aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa'::uuid, 50, 20) $$,
+  $$ select user_id, total_xp from public.character_stats $$,
+  $$ values ('aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa'::uuid, 50) $$,
   'A는 자기 합계 한 행만 본다'
 );
 select results_eq(
@@ -98,8 +89,8 @@ select results_eq(
 set local request.jwt.claims = '{"sub": "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb", "role": "authenticated"}';
 
 select results_eq(
-  $$ select user_id, total_xp, points_balance from public.character_stats $$,
-  $$ values ('bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb'::uuid, 30, 70) $$,
+  $$ select user_id, total_xp from public.character_stats $$,
+  $$ values ('bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb'::uuid, 30) $$,
   'B는 자기 합계 한 행만 본다'
 );
 
@@ -113,14 +104,9 @@ select throws_ok(
   '23505', null, '같은 세션의 경험치 보상은 한 번만 기록된다'
 );
 select throws_ok(
-  $$ insert into public.point_ledger (user_id, amount, reason, session_id)
-     values ('aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa', 20, 'session_reward', 'aaaaaaaa-0000-4000-8000-0000000000a1') $$,
-  '23505', null, '같은 세션의 포인트 보상은 한 번만 기록된다'
-);
-select lives_ok(
-  $$ insert into public.point_ledger (user_id, amount, reason)
-     values ('aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa', -10, 'item_purchase') $$,
-  '구매 내역(세션 없음)은 여러 번 기록할 수 있다'
+  $$ insert into public.xp_ledger (user_id, amount, reason)
+     values ('aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa', 10, 'item_purchase') $$,
+  '23514', null, '경험치 내역의 사유는 session_reward뿐이다'
 );
 select throws_ok(
   $$ insert into public.quiz_attempts (quiz_id, answers, correct_count, total_count)
@@ -157,11 +143,6 @@ select results_eq(
   $$ select amount, session_id from public.xp_ledger where user_id = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa' $$,
   $$ values (50, null::uuid) $$,
   '경험치 내역은 남고 세션 연결만 비워진다'
-);
-select results_eq(
-  $$ select item_id, session_id from public.user_items where user_id = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa' $$,
-  $$ values ('t_hat', null::uuid) $$,
-  '보상 아이템은 남고 세션 연결만 비워진다'
 );
 select results_eq(
   $$ select total_xp from public.character_stats where user_id = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa' $$,

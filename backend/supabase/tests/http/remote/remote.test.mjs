@@ -30,12 +30,13 @@ test('동물 3종이 있다', async () => {
 });
 
 test('server 함수: 노출되어 있고, 익명 토큰 403·로그인 전 401로 막힌다', async () => {
-  const args = { p_user_id: NIL, p_item_id: 'x' };
-  let res = await remote.rpc(user, 'purchase_item', args);
+  // 인자 이름이 맞아야 Data API가 함수를 찾고 권한 검사까지 간다. 한도 0이면 실행되어도 사용량을 쓰지 않는다.
+  const args = { p_user_id: NIL, p_kind: 'analysis', p_daily_limit: 0 };
+  let res = await remote.rpc(user, 'consume_ai_quota', args);
   assert.equal(res.status, 403);
   assert.equal(res.body.message, 'permission denied for schema server');
 
-  res = await remote.rpc('anon', 'purchase_item', args);
+  res = await remote.rpc('anon', 'consume_ai_quota', args);
   assert.equal(res.status, 401);
   assert.equal(res.body.message, 'permission denied for schema server');
 });
