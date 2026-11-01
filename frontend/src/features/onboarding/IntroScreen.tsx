@@ -1,12 +1,18 @@
 import { router } from 'expo-router';
-import { Button, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Button, StyleSheet, Text, View } from 'react-native';
 
+import { BottomActionLayout } from '@/components/ui/BottomActionLayout';
 import { CharacterBox } from '@/components/ui/CharacterBox';
 
 // O-01 소개
 export function IntroScreen() {
   return (
-    <ScrollView contentContainerStyle={styles.container}>
+    <BottomActionLayout
+      actions={
+        // 시작 버튼
+        <Button title="나의 학습 친구 만나기" onPress={() => router.push('/name')} />
+      }
+    >
       {/* 온보딩 단계 표시 */}
       <Text>1 / 5</Text>
       {/* 소개 배지 */}
@@ -28,18 +34,11 @@ export function IntroScreen() {
         <Text>02 친구의 질문으로 빈틈 발견하기</Text>
         <Text>03 이해를 쌓고, 함께 성장하기</Text>
       </View>
-
-      {/* 시작 버튼 */}
-      <Button title="나의 학습 친구 만나기" onPress={() => router.push('/name')} />
-    </ScrollView>
+    </BottomActionLayout>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    gap: 16,
-    padding: 24,
-  },
   row: {
     flexDirection: 'row',
     justifyContent: 'center',

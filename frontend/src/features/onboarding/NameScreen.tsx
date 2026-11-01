@@ -1,8 +1,9 @@
 import { router } from 'expo-router';
 import { useState } from 'react';
-import { Button, ScrollView, StyleSheet, Text, TextInput } from 'react-native';
+import { Button, StyleSheet, Text, TextInput } from 'react-native';
 
 import { useTempStore } from '@/api/mock/tempStore';
+import { BottomActionLayout } from '@/components/ui/BottomActionLayout';
 
 // O-05 이름 입력 (프로토타입에 없는 화면)
 export function NameScreen() {
@@ -22,7 +23,12 @@ export function NameScreen() {
   }
 
   return (
-    <ScrollView contentContainerStyle={styles.container}>
+    <BottomActionLayout
+      actions={
+        // 다음 버튼
+        <Button title="다음" onPress={handleNext} />
+      }
+    >
       {/* 온보딩 단계 표시 */}
       <Text>2 / 5</Text>
       {/* 화면 제목과 설명 */}
@@ -38,18 +44,11 @@ export function NameScreen() {
 
       {/* 익명 로그인 안내: 계정 없이 기기에만 묶여 있어서 앱을 지우면 되찾을 방법이 없다 */}
       <Text>로그인 없이 바로 시작해요. 앱을 삭제하면 이름과 공부 기록이 모두 사라져요.</Text>
-
-      {/* 다음 버튼 */}
-      <Button title="다음" onPress={handleNext} />
-    </ScrollView>
+    </BottomActionLayout>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    gap: 12,
-    padding: 24,
-  },
   input: {
     borderWidth: 1,
     padding: 12,

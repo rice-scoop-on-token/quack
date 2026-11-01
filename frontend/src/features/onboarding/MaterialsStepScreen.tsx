@@ -1,7 +1,8 @@
 import { router, useLocalSearchParams } from 'expo-router';
-import { Button, ScrollView, StyleSheet, Text } from 'react-native';
+import { Button, Text } from 'react-native';
 
 import { useTempStore } from '@/api/mock/tempStore';
+import { BottomActionLayout } from '@/components/ui/BottomActionLayout';
 import { MaterialUpload } from '@/features/folder/MaterialUpload';
 
 // O-04 자료 추가 (온보딩 마지막 단계)
@@ -16,29 +17,37 @@ export function MaterialsStepScreen() {
     setOnboarded(true);
   }
 
+  if (!folder) {
+    return (
+      <BottomActionLayout
+        actions={
+          // 과목 만들기로 돌아가는 버튼
+          <Button title="과목 만들러 가기" onPress={() => router.replace('/subject')} />
+        }
+      >
+        {/* 온보딩 단계 표시 */}
+        <Text>5 / 5</Text>
+        {/* 과목 없음 안내 (주소로 바로 들어오거나 새로고침한 경우) */}
+        <Text>자료를 넣을 과목이 없어요. 과목을 먼저 만들어 주세요.</Text>
+      </BottomActionLayout>
+    );
+  }
+
   return (
-    <ScrollView contentContainerStyle={styles.container}>
+    <BottomActionLayout
+      actions={
+        <>
+          {/* 완료 버튼 */}
+          <Button title="이제 시작하기" onPress={finish} />
+          {/* 건너뛰기 버튼 */}
+          <Button title="나중에 추가할게요" onPress={finish} />
+        </>
+      }
+    >
       {/* 온보딩 단계 표시 */}
       <Text>5 / 5</Text>
-
-      {folder ? (
-        // 자료 추가 영역
-        <MaterialUpload folder={folder} doneLabel="이제 시작하기" onDone={finish} onSkip={finish} />
-      ) : (
-        <>
-          {/* 과목 없음 안내 (주소로 바로 들어오거나 새로고침한 경우) */}
-          <Text>자료를 넣을 과목이 없어요. 과목을 먼저 만들어 주세요.</Text>
-          {/* 과목 만들기로 돌아가는 버튼 */}
-          <Button title="과목 만들러 가기" onPress={() => router.replace('/subject')} />
-        </>
-      )}
-    </ScrollView>
+      {/* 자료 추가 영역 */}
+      <MaterialUpload folder={folder} />
+    </BottomActionLayout>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    gap: 12,
-    padding: 24,
-  },
-});

@@ -17,13 +17,11 @@ const SAMPLE_TITLE = '3주차_스택과큐.pdf';
 
 type Props = {
   folder: TempFolder;
-  doneLabel: string;
-  onDone: () => void;
-  onSkip: () => void;
 };
 
 // 자료 추가. 온보딩 마지막 단계(O-04)와 과목 상세의 자료 추가에서 같이 쓴다.
-export function MaterialUpload({ folder, doneLabel, onDone, onSkip }: Props) {
+// 완료·건너뛰기 버튼은 화면마다 다음 이동이 달라서 각 화면의 하단 고정 영역에 둔다.
+export function MaterialUpload({ folder }: Props) {
   const { materials, addMaterial, setMaterialStatus } = useTempStore();
   const demo = useDemoVariant();
   const folderMaterials = materials.filter((m) => m.folder_id === folder.id);
@@ -99,10 +97,6 @@ export function MaterialUpload({ folder, doneLabel, onDone, onSkip }: Props) {
 
       {/* 샘플 자료 추가 버튼 */}
       <Button title="샘플 자료로 체험" onPress={addSample} />
-      {/* 완료 버튼 */}
-      <Button title={doneLabel} onPress={onDone} />
-      {/* 건너뛰기 버튼 */}
-      <Button title="나중에 추가할게요" onPress={onSkip} />
     </View>
   );
 }
