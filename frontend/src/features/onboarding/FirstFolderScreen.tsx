@@ -3,9 +3,9 @@ import { useState } from 'react';
 import { Button, StyleSheet, Text, View } from 'react-native';
 
 import { useTempStore } from '@/api/mock/tempStore';
-import { BottomActionLayout } from '@/components/ui/BottomActionLayout';
 import { CharacterBox } from '@/components/ui/CharacterBox';
 import { FolderNameForm, validateFolderName } from '@/features/folder/FolderNameForm';
+import { OnboardingStepLayout } from '@/features/onboarding/OnboardingStepLayout';
 
 // O-03 첫 과목 만들기
 export function FirstFolderScreen() {
@@ -28,14 +28,13 @@ export function FirstFolderScreen() {
   }
 
   return (
-    <BottomActionLayout
+    <OnboardingStepLayout
+      step={4}
       actions={
         // 과목 만들기 버튼
         <Button title="과목 만들기" onPress={handleSubmit} />
       }
     >
-      {/* 온보딩 단계 표시 */}
-      <Text>4 / 5</Text>
       {/* 화면 제목과 설명 */}
       <Text>첫 번째 공부를 담을 서랍을 만들어요.</Text>
       <Text>과목별로 자료와 학습 기록을 모아둘게요.</Text>
@@ -48,7 +47,7 @@ export function FirstFolderScreen() {
 
       {/* 과목 이름 입력 폼 */}
       <FolderNameForm value={name} onChangeText={setName} error={error} />
-    </BottomActionLayout>
+    </OnboardingStepLayout>
   );
 }
 

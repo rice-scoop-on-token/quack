@@ -1,7 +1,5 @@
-import type { Material, SpeciesId } from '@quack/shared';
+import type { CharacterStats, Folder, Material, SpeciesId } from '@quack/shared';
 import { createContext, useContext, useState, type ReactNode } from 'react';
-
-import type { TempFolder } from '@/api/tempContract';
 
 // QuackApi가 생기기 전까지 화면끼리 함께 쓰는 임시 상태다.
 // 메모리에만 있으므로 새로고침하면 처음 상태로 돌아간다.
@@ -13,8 +11,10 @@ type TempStore = {
   // 온보딩에서 고른 동물. 첫 과목을 만들 때 그 과목의 선생님이 된다.
   draftSpeciesId: SpeciesId;
   setDraftSpeciesId: (value: SpeciesId) => void;
-  folders: TempFolder[];
-  createFolder: (name: string, speciesId: SpeciesId) => TempFolder;
+  folders: Folder[];
+  // BE의 character_stats 처럼 폴더마다 한 줄씩 둔다.
+  characterStats: CharacterStats[];
+  createFolder: (name: string, speciesId: SpeciesId) => Folder;
   materials: Material[];
   addMaterial: (material: Material) => void;
   setMaterialStatus: (id: string, status: Material['status']) => void;
@@ -33,23 +33,28 @@ export function tempId(): string {
 const TempStoreContext = createContext<TempStore | null>(null);
 
 export function TempStoreProvider({ children }: { children: ReactNode }) {
-  // QuackApi 교체 지점: 아래 값은 모두 profile, folders, materials 조회 결과로 바뀐다.
+  // QuackApi 교체 지점: 아래 값은 모두 profile, folders, character_stats, materials 조회 결과로 바뀐다.
   const [onboarded, setOnboarded] = useState(false);
   const [displayName, setDisplayName] = useState('');
   const [draftSpeciesId, setDraftSpeciesId] = useState<SpeciesId>('rubber_duck');
-  const [folders, setFolders] = useState<TempFolder[]>([]);
+  const [folders, setFolders] = useState<Folder[]>([]);
+  const [characterStats, setCharacterStats] = useState<CharacterStats[]>([]);
   const [materials, setMaterials] = useState<Material[]>([]);
 
-  function createFolder(name: string, speciesId: SpeciesId): TempFolder {
-    const folder: TempFolder = {
+  function createFolder(name: string, speciesId: SpeciesId): Folder {
+    const folder: Folder = {
       id: tempId(),
       user_id: TEMP_USER_ID,
       name,
-      created_at: new Date().toISOString(),
       species_id: speciesId,
-      total_xp: 0,
+      created_at: new Date().toISOString(),
     };
     setFolders((prev) => [...prev, folder]);
+    // DB의 character_stats는 폴더마다 경험치 0부터 시작하는 view라 폴더와 함께 만든다.
+    setCharacterStats((prev) => [
+      ...prev,
+      { folder_id: folder.id, user_id: TEMP_USER_ID, species_id: speciesId, total_xp: 0 },
+    ]);
     return folder;
   }
 
@@ -71,6 +76,7 @@ export function TempStoreProvider({ children }: { children: ReactNode }) {
         draftSpeciesId,
         setDraftSpeciesId,
         folders,
+        characterStats,
         createFolder,
         materials,
         addMaterial,

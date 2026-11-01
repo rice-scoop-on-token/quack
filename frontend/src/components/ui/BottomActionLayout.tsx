@@ -6,17 +6,21 @@ type Props = {
   children: ReactNode;
   // 하단에 고정할 버튼. 여러 개면 넣은 순서대로 세로로 쌓인다.
   actions: ReactNode;
+  // 내용이 짧으면 세로 중앙에 둔다. 길면 그대로 스크롤된다.
+  centered?: boolean;
 };
 
 // 화면 내용은 위에서 스크롤되고, 다음 단계 버튼은 화면 맨 아래에 고정되는 레이아웃이다.
-export function BottomActionLayout({ children, actions }: Props) {
+export function BottomActionLayout({ children, actions, centered = false }: Props) {
   const insets = useSafeAreaInsets();
   const keyboardHeight = useKeyboardHeight();
 
   return (
     <View style={styles.screen}>
       {/* 스크롤되는 화면 내용 */}
-      <ScrollView contentContainerStyle={styles.content}>{children}</ScrollView>
+      <ScrollView contentContainerStyle={[styles.content, centered && styles.centered]}>
+        {children}
+      </ScrollView>
 
       {/* 하단 고정 버튼 영역 */}
       {/* 키보드가 열려 있으면 키보드 높이만큼, 아니면 아이폰 홈 바 영역만큼 띄운다.
@@ -58,6 +62,11 @@ const styles = StyleSheet.create({
   content: {
     gap: 12,
     padding: 24,
+  },
+  // flexGrow로 스크롤 영역을 화면 높이만큼 채워야 그 안에서 세로 중앙에 둘 수 있다
+  centered: {
+    flexGrow: 1,
+    justifyContent: 'center',
   },
   actions: {
     gap: 8,

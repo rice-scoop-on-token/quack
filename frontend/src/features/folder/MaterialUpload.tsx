@@ -1,10 +1,9 @@
-import type { Material } from '@quack/shared';
+import type { Folder, Material } from '@quack/shared';
 import { router } from 'expo-router';
-import { ActivityIndicator, Button, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Button, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { TEMP_USER_ID, tempId, useTempStore } from '@/api/mock/tempStore';
 import { useDemoVariant } from '@/api/mock/useDemoVariant';
-import type { TempFolder } from '@/api/tempContract';
 
 const STATUS_LABEL: Record<Material['status'], string> = {
   uploaded: '올리는 중',
@@ -13,32 +12,31 @@ const STATUS_LABEL: Record<Material['status'], string> = {
   failed: '읽기 실패',
 };
 
-const SAMPLE_TITLE = '3주차_스택과큐.pdf';
-
 type Props = {
-  folder: TempFolder;
+  folder: Folder;
+  // 넘기면 업로드 버튼 아래에 "나중에 추가할게요"를 보여 준다. 온보딩에서만 쓴다.
+  onSkip?: () => void;
 };
 
 // 자료 추가. 온보딩 마지막 단계(O-04)와 과목 상세의 자료 추가에서 같이 쓴다.
 // 완료·건너뛰기 버튼은 화면마다 다음 이동이 달라서 각 화면의 하단 고정 영역에 둔다.
-export function MaterialUpload({ folder }: Props) {
+export function MaterialUpload({ folder, onSkip }: Props) {
   const { materials, addMaterial, setMaterialStatus } = useTempStore();
   const demo = useDemoVariant();
   const folderMaterials = materials.filter((m) => m.folder_id === folder.id);
   const loading = demo === 'loading' || folderMaterials.some((m) => m.status === 'processing');
   const failed = demo === 'error' || folderMaterials.some((m) => m.status === 'failed');
 
-  function addSample() {
-    if (folderMaterials.some((m) => m.title === SAMPLE_TITLE)) {
-      return;
-    }
-    // QuackApi 교체 지점: Storage 업로드 후 POST /materials/:id/process 를 호출한다.
+  // 실제 파일 선택 교체 지점: 파일을 고르게 하고, Storage 업로드 후 POST /materials/:id/process 를 호출한다.
+  // ponytail: supabase 구현이 아직 없어 mock 모드인지 검사하지 않고 항상 가짜 자료를 넣는다.
+  function upload() {
     const material: Material = {
       id: tempId(),
       user_id: TEMP_USER_ID,
       folder_id: folder.id,
       kind: 'pdf',
-      title: SAMPLE_TITLE,
+      // 누를 때마다 하나씩 추가되도록 번호를 붙인다
+      title: `샘플자료_${folderMaterials.length + 1}.pdf`,
       storage_path: null,
       status: 'processing',
       key_concepts: [],
@@ -62,8 +60,14 @@ export function MaterialUpload({ folder }: Props) {
         <Text>과목 폴더</Text>
       </View>
 
-      {/* 학습 자료 선택 버튼 (실제 파일 선택은 아직 연결하지 않았다) */}
-      <Button title="학습 자료 선택 (준비 중)" disabled onPress={() => {}} />
+      {/* 자료 업로드 버튼 */}
+      <Button title="자료 업로드" onPress={upload} />
+      {onSkip ? (
+        // 나중에 추가하기 버튼 (작은 글씨)
+        <Pressable onPress={onSkip} accessibilityRole="button">
+          <Text style={styles.skip}>나중에 추가할게요</Text>
+        </Pressable>
+      ) : null}
       {/* 자료 형식 안내 */}
       <Text>PDF · 텍스트 · 이미지 자료를 올릴 수 있어요.</Text>
 
@@ -94,9 +98,6 @@ export function MaterialUpload({ folder }: Props) {
           <Text>{STATUS_LABEL[m.status]}</Text>
         </View>
       ))}
-
-      {/* 샘플 자료 추가 버튼 */}
-      <Button title="샘플 자료로 체험" onPress={addSample} />
     </View>
   );
 }
@@ -109,5 +110,8 @@ const styles = StyleSheet.create({
     gap: 4,
     padding: 12,
     borderWidth: 1,
+  },
+  skip: {
+    fontSize: 12,
   },
 });

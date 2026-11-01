@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { Button, StyleSheet, Text, TextInput } from 'react-native';
 
 import { useTempStore } from '@/api/mock/tempStore';
-import { BottomActionLayout } from '@/components/ui/BottomActionLayout';
+import { OnboardingStepLayout } from '@/features/onboarding/OnboardingStepLayout';
 
 // O-05 이름 입력 (프로토타입에 없는 화면)
 export function NameScreen() {
@@ -23,14 +23,13 @@ export function NameScreen() {
   }
 
   return (
-    <BottomActionLayout
+    <OnboardingStepLayout
+      step={2}
       actions={
         // 다음 버튼
         <Button title="다음" onPress={handleNext} />
       }
     >
-      {/* 온보딩 단계 표시 */}
-      <Text>2 / 5</Text>
       {/* 화면 제목과 설명 */}
       <Text>뭐라고 부르면 될까요?</Text>
       <Text>선생님이 이 이름으로 불러 줘요.</Text>
@@ -44,7 +43,7 @@ export function NameScreen() {
 
       {/* 익명 로그인 안내: 계정 없이 기기에만 묶여 있어서 앱을 지우면 되찾을 방법이 없다 */}
       <Text>로그인 없이 바로 시작해요. 앱을 삭제하면 이름과 공부 기록이 모두 사라져요.</Text>
-    </BottomActionLayout>
+    </OnboardingStepLayout>
   );
 }
 
