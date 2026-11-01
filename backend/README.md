@@ -85,7 +85,7 @@ BE-B는 `index.ts`에서 이 등록 줄만 추가할 수 있다(CLAUDE.md 예외
 | --- | --- |
 | 자기 데이터 조회, 앱도 쓸 수 있는 칸에 쓰기 | `c.var.userDb` (RLS 적용) |
 | 서버만 쓰는 테이블·칸에 쓰기 (`explanation_turns`, `quizzes`, `quiz_questions`, `sessions.status` 등) | `c.var.adminDb` |
-| `server` 스키마 함수 호출 (`grant_session_reward`, `consume_ai_quota`, `purchase_item`) | `c.var.adminDb.schema('server').rpc(...)` |
+| `server` 스키마 함수 호출 (`grant_session_reward`, `consume_ai_quota`) | `c.var.adminDb.schema('server').rpc(...)` |
 
 앱이 어떤 테이블·칸을 쓸 수 있는지는 `docs/decisions/0002-db-permissions.md`의 "앱 역할 권한" 표를 본다.
 
@@ -136,6 +136,7 @@ DB 권한·제약 시험(`supabase/tests/database`, pgTAP)으로 확인할 수 �
 | `local/concurrency.test.mjs` | 동시 요청: 사용량 한도, 보상 중복 지급, 구매 잔액. `server` 스키마 함수를 바꾸면 먼저 돌린다 | `supabase start` |
 | `local/functions.test.mjs` | api 함수 공통 처리: auth 미들웨어, `GET /me` (BE-A) | api 함수가 응답해야 함 |
 | `local/quizzes.test.mjs` | 퀴즈 API (BE-B). 라우트 시험 예시 | api 함수가 응답해야 함 |
+| `local/sessions.test.mjs` | 세션 종료 API (BE-B) | api 함수가 응답해야 함 |
 | `remote/remote.test.mjs` | 원격 프로젝트 반영 확인 | 아래 환경 변수 |
 
 `supabase start`와 `functions serve`는 직접 별도 터미널에서 띄운다. 이 환경(CLI 2.122.0)에서는 `supabase start`만으로도 api 함수가 뜬다. 함수를 개발하거나 PR을 시험할 때는 CLAUDE.md 규칙대로 `functions serve`를 띄운 상태에서 실행한다. api 함수가 응답하지 않으면 해당 시험 파일은 안내 메시지와 함께 멈춘다.

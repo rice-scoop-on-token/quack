@@ -6,8 +6,6 @@ export const errorCodeSchema = z.enum([
   // 대상이 없을 때뿐 아니라 다른 사용자의 것일 때도 쓴다. 존재 여부를 알리지 않기 위해서다.
   'NOT_FOUND',
   'INVALID_STATE',
-  'ALREADY_OWNED',
-  'INSUFFICIENT_POINTS',
   'FILE_TOO_LARGE',
   'AI_QUOTA_EXCEEDED',
   'AI_FAILED',
@@ -22,8 +20,6 @@ export const ERROR_HTTP_STATUS = {
   VALIDATION_FAILED: 400,
   NOT_FOUND: 404,
   INVALID_STATE: 409,
-  ALREADY_OWNED: 409,
-  INSUFFICIENT_POINTS: 409,
   FILE_TOO_LARGE: 413,
   AI_QUOTA_EXCEEDED: 429,
   AI_FAILED: 502,

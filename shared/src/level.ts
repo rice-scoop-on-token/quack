@@ -8,6 +8,7 @@ export type LevelInfo = {
   xp_for_next: number;
 };
 
+// 레벨은 폴더(캐릭터)별 경험치로 계산한다. 사용자 전체 레벨은 없다.
 // 서버(보상 지급 전후 레벨)와 앱(경험치 바)이 같은 식을 쓰도록 shared에 둔다.
 export function levelFromXp(total_xp: number): LevelInfo {
   let remaining = Number.isFinite(total_xp) ? Math.max(0, Math.floor(total_xp)) : 0;

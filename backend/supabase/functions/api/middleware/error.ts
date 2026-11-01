@@ -9,8 +9,6 @@ const DEFAULT_MESSAGES: Record<ErrorCode, string> = {
   VALIDATION_FAILED: '요청 내용이 올바르지 않아요.',
   NOT_FOUND: '찾을 수 없어요.',
   INVALID_STATE: '지금은 할 수 없는 요청이에요.',
-  ALREADY_OWNED: '이미 가지고 있는 아이템이에요.',
-  INSUFFICIENT_POINTS: '포인트가 부족해요.',
   FILE_TOO_LARGE: '파일이 너무 커요.',
   AI_QUOTA_EXCEEDED: '오늘 사용할 수 있는 횟수를 모두 썼어요. 내일 다시 해 주세요.',
   AI_FAILED: '답변을 만들지 못했어요. 잠시 후 다시 시도해 주세요.',

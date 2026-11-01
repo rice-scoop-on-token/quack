@@ -25,22 +25,16 @@ insert into auth.users (id) values
 
 insert into public.profiles (id, display_name) values ('bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb', '비');
 
-insert into public.folders (id, user_id, name) values
-  ('aaaaaaaa-0000-4000-8000-0000000000f1', 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa', 'A 폴더'),
-  ('aaaaaaaa-0000-4000-8000-0000000000f2', 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa', '지울 폴더'),
-  ('bbbbbbbb-0000-4000-8000-0000000000f1', 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb', 'B 폴더');
+insert into public.folders (id, user_id, name, species_id) values
+  ('aaaaaaaa-0000-4000-8000-0000000000f1', 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa', 'A 폴더', 'rubber_duck'),
+  ('aaaaaaaa-0000-4000-8000-0000000000f2', 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa', '지울 폴더', 'cat'),
+  ('bbbbbbbb-0000-4000-8000-0000000000f1', 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb', 'B 폴더', 'raccoon');
 
 insert into public.sessions (id, user_id, folder_id, goal) values
   ('aaaaaaaa-0000-4000-8000-0000000000a1', 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa', 'aaaaaaaa-0000-4000-8000-0000000000f1', '목표');
 
 insert into public.materials (id, user_id, folder_id, kind, title) values
   ('aaaaaaaa-0000-4000-8000-0000000000b1', 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa', 'aaaaaaaa-0000-4000-8000-0000000000f1', 'text', '자료');
-
-insert into public.items (id, name, slot, asset_key, unlock) values
-  ('t_hat', '시험 모자', 'head', 't_hat', '{"type": "level", "level": 1}');
-
-insert into public.user_items (user_id, item_id, source) values
-  ('aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa', 't_hat', 'reward');
 
 insert into public.reports (session_id, xp_before, summary, duration_seconds, turn_count) values
   ('aaaaaaaa-0000-4000-8000-0000000000a1', 0, '요약', 1, 1);
@@ -93,19 +87,15 @@ select results_eq(
      order by table_name collate "C", privilege collate "C" $$,
   $$ values
        ('character_stats', 'SELECT', '*'),
-       ('characters', 'INSERT', 'species_id,user_id'),
-       ('characters', 'SELECT', '*'),
        ('explanation_turns', 'SELECT', '*'),
        ('folders', 'DELETE', '*'),
-       ('folders', 'INSERT', 'name,user_id'),
+       ('folders', 'INSERT', 'name,species_id,user_id'),
        ('folders', 'SELECT', '*'),
        ('folders', 'UPDATE', 'name'),
-       ('items', 'SELECT', '*'),
        ('materials', 'DELETE', '*'),
        ('materials', 'INSERT', 'folder_id,kind,storage_path,title,user_id'),
        ('materials', 'SELECT', '*'),
        ('materials', 'UPDATE', 'title'),
-       ('point_ledger', 'SELECT', '*'),
        ('profiles', 'INSERT', 'display_name,id'),
        ('profiles', 'SELECT', '*'),
        ('profiles', 'UPDATE', 'display_name,onboarding_completed_at'),
@@ -115,8 +105,6 @@ select results_eq(
        ('sessions', 'INSERT', 'folder_id,goal,user_id'),
        ('sessions', 'SELECT', '*'),
        ('species', 'SELECT', '*'),
-       ('user_items', 'SELECT', '*'),
-       ('user_items', 'UPDATE', 'equipped'),
        ('xp_ledger', 'SELECT', '*') $$,
   'authenticated의 권한이 앱 권한 표와 같다'
 );
@@ -143,12 +131,8 @@ select results_eq(
   'A는 동물 3종을 조회할 수 있다'
 );
 select lives_ok(
-  $$ insert into public.characters (user_id, species_id) values ('aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa', 'rubber_duck') $$,
-  'A는 캐릭터를 만들 수 있다'
-);
-select lives_ok(
-  $$ insert into public.folders (user_id, name) values ('aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa', '새 폴더') $$,
-  'A는 폴더를 만들 수 있다'
+  $$ insert into public.folders (user_id, name, species_id) values ('aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa', '새 폴더', 'raccoon') $$,
+  'A는 동물을 골라 폴더를 만들 수 있다'
 );
 select results_eq(
   $$ update public.folders set name = 'A 폴더 수정' where id = 'aaaaaaaa-0000-4000-8000-0000000000f1' returning name $$,
@@ -180,14 +164,13 @@ select results_eq(
   $$ values ('자료 수정') $$,
   'A는 자료 제목을 바꿀 수 있다'
 );
-select results_eq(
-  $$ update public.user_items set equipped = true where item_id = 't_hat' returning equipped $$,
-  $$ values (true) $$,
-  'A는 아이템 장착 여부를 바꿀 수 있다'
-);
 
 -- 거절: 앱이 쓸 수 없는 칸과 테이블 (42501 권한 없음)
 
+select throws_ok(
+  $$ update public.folders set species_id = 'cat' where id = 'aaaaaaaa-0000-4000-8000-0000000000f1' $$,
+  '42501', null, 'folders.species_id(폴더의 동물)는 바꿀 수 없다'
+);
 select throws_ok(
   $$ update public.sessions set status = 'reported' where id = 'aaaaaaaa-0000-4000-8000-0000000000a1' $$,
   '42501', null, 'sessions.status는 바꿀 수 없다'
@@ -201,24 +184,8 @@ select throws_ok(
   '42501', null, 'materials.key_concepts는 바꿀 수 없다'
 );
 select throws_ok(
-  $$ insert into public.user_items (user_id, item_id, source) values ('aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa', 't_hat', 'purchase') $$,
-  '42501', null, 'user_items에 행을 추가할 수 없다'
-);
-select throws_ok(
-  $$ update public.user_items set source = 'purchase' where item_id = 't_hat' $$,
-  '42501', null, 'user_items.source는 바꿀 수 없다'
-);
-select throws_ok(
-  $$ update public.user_items set session_id = null where item_id = 't_hat' $$,
-  '42501', null, 'user_items.session_id는 바꿀 수 없다'
-);
-select throws_ok(
   $$ insert into public.xp_ledger (user_id, amount, reason) values ('aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa', 9999, 'session_reward') $$,
   '42501', null, 'xp_ledger에 행을 추가할 수 없다'
-);
-select throws_ok(
-  $$ insert into public.point_ledger (user_id, amount, reason) values ('aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa', 9999, 'session_reward') $$,
-  '42501', null, 'point_ledger에 행을 추가할 수 없다'
 );
 select throws_ok(
   $$ insert into public.reports (session_id, xp_before, summary, duration_seconds, turn_count)

@@ -23,11 +23,10 @@ after(() => local.deleteCreatedUsers());
 const serverFunctionArgs = {
   consume_ai_quota: { p_user_id: NIL, p_kind: 'analysis', p_daily_limit: 0 },
   grant_session_reward: {
-    p_user_id: NIL, p_session_id: NIL, p_xp: 0, p_points: 0, p_item_ids: [],
+    p_user_id: NIL, p_session_id: NIL, p_xp: 0,
     p_summary: 'x', p_covered_concepts: [], p_weak_concepts: [],
     p_duration_seconds: 0, p_turn_count: 0, p_quiz_correct: null, p_quiz_total: null,
   },
-  purchase_item: { p_user_id: NIL, p_item_id: 'x' },
   lock_user: { p_user_id: NIL },
 };
 

@@ -2,14 +2,12 @@ import { z } from 'zod';
 
 import {
   explanationTurnSchema,
-  itemSchema,
   materialSchema,
   quizAttemptSchema,
   quizQuestionPublicSchema,
   quizSchema,
   reportSchema,
   sessionSchema,
-  userItemSchema,
 } from './domain.ts';
 
 // 함수 api의 요청·응답 모양이다. 주소는 {SUPABASE_URL}/functions/v1/api 뒤에 붙는 경로다.
@@ -18,10 +16,6 @@ import {
 
 export const uuidParamSchema = z.object({ id: z.uuid() });
 export type UuidParam = z.infer<typeof uuidParamSchema>;
-
-// 아이템 id는 uuid가 아니라 영문 slug다.
-export const itemIdParamSchema = z.object({ id: z.string().min(1) });
-export type ItemIdParam = z.infer<typeof itemIdParamSchema>;
 
 // POST /materials/:id/process (요청 본문 없음)
 
@@ -103,12 +97,11 @@ export type SubmitQuizResponse = z.infer<typeof submitQuizResponseSchema>;
 
 // POST /sessions/:id/report (요청 본문 없음)
 // 여러 번 호출해도 보상은 한 번만 지급되고, 이미 만든 리포트를 그대로 돌려준다.
+// 경험치는 세션이 속한 폴더의 캐릭터에 쌓인다.
 
 export const rewardGrantSchema = z.object({
   xp: z.int().min(0),
-  points: z.int().min(0),
-  items: z.array(itemSchema),
-  // level.ts의 levelFromXp로 계산한 지급 전후 레벨
+  // level.ts의 levelFromXp로 계산한 폴더(캐릭터)의 지급 전후 레벨
   level_before: z.int().min(1),
   level_after: z.int().min(1),
 });
@@ -119,11 +112,3 @@ export const createReportResponseSchema = z.object({
   rewards: rewardGrantSchema,
 });
 export type CreateReportResponse = z.infer<typeof createReportResponseSchema>;
-
-// POST /items/:id/purchase (요청 본문 없음)
-
-export const purchaseItemResponseSchema = z.object({
-  user_item: userItemSchema,
-  points_balance: z.int().min(0),
-});
-export type PurchaseItemResponse = z.infer<typeof purchaseItemResponseSchema>;

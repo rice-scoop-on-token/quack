@@ -21,7 +21,7 @@ let answers;
 // 퀴즈와 문항은 앱이 만들 수 없어(서버 전용) secret key('service')로 넣는다.
 // seq를 3, 1, 2 순서로 넣어 정렬을 확인한다. 정답은 1번 문항 0, 2번 1, 3번 2다.
 async function makeQuiz(user) {
-  const folder = await local.rest(user, 'POST', 'folders', { user_id: user.id, name: '퀴즈 폴더' });
+  const folder = await local.rest(user, 'POST', 'folders', { user_id: user.id, name: '퀴즈 폴더', species_id: 'rubber_duck' });
   const session = await local.rest(user, 'POST', 'sessions', { user_id: user.id, folder_id: folder.body[0].id, goal: '목표' });
   const created = await local.rest('service', 'POST', 'quizzes', { session_id: session.body[0].id });
   const questions = await local.rest('service', 'POST', 'quiz_questions', [3, 1, 2].map((seq) => ({
