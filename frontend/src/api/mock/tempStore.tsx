@@ -2,7 +2,6 @@ import {
   characterStatsSchema,
   folderSchema,
   materialSchema,
-  speciesIdSchema,
   type CharacterStats,
   type Folder,
   type Material,
@@ -19,9 +18,6 @@ type TempStore = {
   setOnboarded: (value: boolean) => void;
   displayName: string;
   setDisplayName: (value: string) => void;
-  // 온보딩에서 고른 동물. 첫 과목을 만들 때 그 과목의 선생님이 된다.
-  draftSpeciesId: SpeciesId;
-  setDraftSpeciesId: (value: SpeciesId) => void;
   folders: Folder[];
   // BE의 character_stats 처럼 폴더마다 한 줄씩 둔다.
   characterStats: CharacterStats[];
@@ -47,7 +43,8 @@ export function tempId(): string {
 const PERSIST_ON = Platform.OS === 'web' && process.env.EXPO_PUBLIC_USE_MOCK === 'true';
 const STORAGE_KEY = 'quack.tempStore';
 
-type Saved = Pick<TempStore, 'onboarded' | 'displayName' | 'draftSpeciesId' | 'folders' | 'characterStats' | 'materials'>;
+// 예전(5단계 온보딩) 저장값에 남은 draftSpeciesId 같은 칸은 검사하지 않고 무시한다.
+type Saved = Pick<TempStore, 'onboarded' | 'displayName' | 'folders' | 'characterStats' | 'materials'>;
 
 // 저장된 값을 읽는다. 없거나, 깨져 있거나, localStorage를 쓸 수 없으면 null(빈 상태로 시작)
 // 주소에 ?demo=reset 이 있으면 저장된 값을 지우고 처음부터 시작한다.
@@ -69,7 +66,6 @@ function loadSaved(): Saved | null {
     const valid =
       typeof data.onboarded === 'boolean' &&
       typeof data.displayName === 'string' &&
-      speciesIdSchema.safeParse(data.draftSpeciesId).success &&
       folderSchema.array().safeParse(data.folders).success &&
       characterStatsSchema.array().safeParse(data.characterStats).success &&
       materialSchema.array().safeParse(data.materials).success;
@@ -93,7 +89,6 @@ export function TempStoreProvider({ children }: { children: ReactNode }) {
   // QuackApi 교체 지점: 아래 값은 모두 profile, folders, character_stats, materials 조회 결과로 바뀐다.
   const [onboarded, setOnboarded] = useState(false);
   const [displayName, setDisplayName] = useState('');
-  const [draftSpeciesId, setDraftSpeciesId] = useState<SpeciesId>('rubber_duck');
   const [folders, setFolders] = useState<Folder[]>([]);
   const [characterStats, setCharacterStats] = useState<CharacterStats[]>([]);
   const [materials, setMaterials] = useState<Material[]>([]);
@@ -109,7 +104,6 @@ export function TempStoreProvider({ children }: { children: ReactNode }) {
     if (saved) {
       setOnboarded(saved.onboarded);
       setDisplayName(saved.displayName);
-      setDraftSpeciesId(saved.draftSpeciesId);
       setFolders(saved.folders);
       setCharacterStats(saved.characterStats);
       setMaterials(saved.materials);
@@ -122,13 +116,13 @@ export function TempStoreProvider({ children }: { children: ReactNode }) {
     if (!PERSIST_ON || !loaded || typeof window === 'undefined') {
       return;
     }
-    const saved: Saved = { onboarded, displayName, draftSpeciesId, folders, characterStats, materials };
+    const saved: Saved = { onboarded, displayName, folders, characterStats, materials };
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(saved));
     } catch {
       // 저장 공간이 없거나 막혀 있으면 메모리 상태만 쓴다.
     }
-  }, [loaded, onboarded, displayName, draftSpeciesId, folders, characterStats, materials]);
+  }, [loaded, onboarded, displayName, folders, characterStats, materials]);
 
   function createFolder(name: string, speciesId: SpeciesId): Folder {
     const folder: Folder = {
@@ -169,8 +163,6 @@ export function TempStoreProvider({ children }: { children: ReactNode }) {
         setOnboarded,
         displayName,
         setDisplayName,
-        draftSpeciesId,
-        setDraftSpeciesId,
         folders,
         characterStats,
         createFolder,

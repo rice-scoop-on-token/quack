@@ -22,7 +22,7 @@ export function MaterialsStepScreen() {
   if (!folder) {
     return (
       <OnboardingStepLayout
-        step={5}
+        step={4}
         actions={
           // 과목 만들기로 돌아가는 버튼
           <Button title="과목 만들러 가기" onPress={() => router.replace('/subject')} />
@@ -36,7 +36,7 @@ export function MaterialsStepScreen() {
 
   return (
     <OnboardingStepLayout
-      step={5}
+      step={4}
       actions={
         // 완료 버튼 (등록된 자료가 있어야 누를 수 있다)
         <Button title="이제 시작할게요" disabled={!hasReadyMaterial} onPress={finish} />

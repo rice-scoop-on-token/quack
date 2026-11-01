@@ -19,7 +19,7 @@ export function NameScreen() {
     }
     // QuackApi 교체 지점: profiles.display_name 에 저장한다.
     setDisplayName(trimmed);
-    router.push('/character');
+    router.push('/subject');
   }
 
   return (

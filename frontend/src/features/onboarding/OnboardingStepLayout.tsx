@@ -3,7 +3,8 @@ import { StyleSheet, Text, View } from 'react-native';
 
 import { BottomActionLayout } from '@/components/ui/BottomActionLayout';
 
-const TOTAL_STEPS = 5;
+// docs/decisions/0003: 소개 → 이름 → 첫 과목(이름 + 선생님) → 자료
+const TOTAL_STEPS = 4;
 
 type Props = {
   step: number;

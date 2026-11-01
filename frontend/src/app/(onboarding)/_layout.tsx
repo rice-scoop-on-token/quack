@@ -16,8 +16,7 @@ export default function OnboardingLayout() {
     <Stack>
       <Stack.Screen name="intro" options={{ title: '' }} />
       <Stack.Screen name="name" options={{ title: '이름 정하기' }} />
-      <Stack.Screen name="character" options={{ title: '첫 과목 선생님' }} />
-      <Stack.Screen name="subject" options={{ title: '과목 만들기' }} />
+      <Stack.Screen name="subject" options={{ title: '첫 과목 만들기' }} />
       <Stack.Screen name="materials" options={{ title: '자료 추가' }} />
     </Stack>
   );

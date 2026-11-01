@@ -10,3 +10,15 @@ export const STAGE_XP = {
   child: 100,
   adult: 300,
 } as const;
+
+// 선생님 성격. 말투 예시는 AI 페르소나(_ai/personas)가 정해지기 전까지 프로토타입 문구를 쓴다.
+export type PersonaLine = 'idle' | 'listen' | 'surprised' | 'thinking' | 'praise' | 'question';
+
+export type TeacherPersona = {
+  label: string;
+  tags: string[];
+  lines: Record<PersonaLine, string>;
+};
+
+// 선생님 반응 모션. 에셋이 들어오면 모션마다 동작 이미지가 붙는다.
+export type TeacherMotion = 'reading' | 'listening' | 'surprised' | 'thinking' | 'celebrate' | 'writing';

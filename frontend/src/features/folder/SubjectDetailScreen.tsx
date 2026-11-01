@@ -6,6 +6,7 @@ import { SPECIES } from '@/api/mock/data/species';
 import { useTempStore } from '@/api/mock/tempStore';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { CharacterGrowth } from '@/features/character/CharacterGrowth';
+import { TeacherIntroCard } from '@/features/character/TeacherIntroCard';
 
 const STATUS_LABEL = {
   uploaded: '올리는 중',
@@ -50,7 +51,7 @@ export function SubjectDetailScreen() {
       {/* 상단 헤더 제목을 과목 이름으로 바꾼다 */}
       <Stack.Screen options={{ title: folder.name }} />
 
-      {/* 선생님 요약 (선생님 소개 카드는 다음 커밋에서 만든다) */}
+      {/* 선생님 요약 */}
       <Text>
         {folder.name} 선생님 · {species?.name}
       </Text>
@@ -65,6 +66,9 @@ export function SubjectDetailScreen() {
 
       {/* 이 과목 공부하기 버튼 (공부 준비 화면은 다음 커밋에서 만든다) */}
       <Button title="이 과목 공부하기 (준비 중)" disabled onPress={() => {}} />
+
+      {/* 선생님 소개 카드 (T-01) */}
+      <TeacherIntroCard folder={folder} />
 
       {/* 학습 자료 제목과 자료 추가 버튼 */}
       <View style={styles.row}>

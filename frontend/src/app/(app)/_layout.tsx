@@ -19,6 +19,8 @@ export default function AppLayout() {
       <Stack.Screen name="subjects/[id]/index" options={{ title: '과목' }} />
       {/* 자료 추가 화면 헤더 */}
       <Stack.Screen name="subjects/[id]/materials" options={{ title: '자료 추가' }} />
+      {/* 반응 모션 화면 헤더 */}
+      <Stack.Screen name="subjects/[id]/motions" options={{ title: '반응 모션' }} />
     </Stack>
   );
 }
