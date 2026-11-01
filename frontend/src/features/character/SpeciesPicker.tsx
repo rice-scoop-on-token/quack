@@ -20,10 +20,11 @@ export function SpeciesPicker({ value, onChange }: Props) {
           // 동물 선택 카드
           <Pressable
             key={species.id}
-            style={styles.card}
+            style={[styles.card, selected && styles.selected]}
             onPress={() => onChange(species.id)}
+            // radio 역할로 누를 수 있는 선택지임을, checked로 지금 선택됐는지를 알린다
             accessibilityRole="radio"
-            accessibilityState={{ selected }}
+            accessibilityState={{ checked: selected }}
           >
             {/* 선택 화면은 성체 모습으로 보여 준다 */}
             <CharacterBox speciesId={species.id} stage="adult" size={72} />
@@ -32,8 +33,6 @@ export function SpeciesPicker({ value, onChange }: Props) {
               <Text>{species.name}</Text>
               <Text>{species.description}</Text>
             </View>
-            {/* 선택 표시 */}
-            <Text>{selected ? '●' : '○'}</Text>
           </Pressable>
         );
       })}
@@ -51,6 +50,10 @@ const styles = StyleSheet.create({
     gap: 12,
     padding: 12,
     borderWidth: 1,
+  },
+  // 선택된 카드 강조 (임시 스타일, 디자인 작업 때 바꾼다)
+  selected: {
+    borderWidth: 3,
   },
   text: {
     flex: 1,

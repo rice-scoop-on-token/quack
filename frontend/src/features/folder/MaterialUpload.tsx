@@ -64,7 +64,7 @@ export function MaterialUpload({ folder, onSkip }: Props) {
       <Button title="자료 업로드" onPress={upload} />
       {onSkip ? (
         // 나중에 추가하기 버튼 (작은 글씨)
-        <Pressable onPress={onSkip} accessibilityRole="button">
+        <Pressable style={styles.skipButton} onPress={onSkip} accessibilityRole="button">
           <Text style={styles.skip}>나중에 추가할게요</Text>
         </Pressable>
       ) : null}
@@ -110,6 +110,10 @@ const styles = StyleSheet.create({
     gap: 4,
     padding: 12,
     borderWidth: 1,
+  },
+  // 버튼이 가로 전체로 늘어나지 않게 하고 가로 중앙에 둔다
+  skipButton: {
+    alignSelf: 'center',
   },
   skip: {
     fontSize: 12,
