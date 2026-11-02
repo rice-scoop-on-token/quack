@@ -2,11 +2,11 @@ import { router, Stack, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
 import { Button, ScrollView, StyleSheet, Text, View } from 'react-native';
 
+import { PERSONAS } from '@/api/mock/data/personas';
 import { SPECIES } from '@/api/mock/data/species';
 import { useTempStore } from '@/api/mock/tempStore';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { CharacterGrowth } from '@/features/character/CharacterGrowth';
-import { TeacherIntroCard } from '@/features/character/TeacherIntroCard';
 
 const STATUS_LABEL = {
   uploaded: '올리는 중',
@@ -34,6 +34,7 @@ export function SubjectDetailScreen() {
   }
 
   const species = SPECIES.find((s) => s.id === folder.species_id);
+  const persona = PERSONAS[folder.species_id];
   const folderMaterials = materials.filter((m) => m.folder_id === folder.id);
 
   const addMaterials = () =>
@@ -51,11 +52,22 @@ export function SubjectDetailScreen() {
       {/* 상단 헤더 제목을 과목 이름으로 바꾼다 */}
       <Stack.Screen options={{ title: folder.name }} />
 
-      {/* 선생님 요약 */}
-      <Text>
-        {folder.name} 선생님 · {species?.name}
-      </Text>
-      <Text>{species?.description}</Text>
+      {/* 선생님 소개 카드 (선생님은 바꿀 수 없어서 성격만 보여 준다) */}
+      <View style={styles.card}>
+        <Text>
+          {folder.name} 선생님 · {species?.name}
+        </Text>
+        <Text>{persona.label}</Text>
+        {/* 성격 태그 목록 */}
+        <View style={styles.tags}>
+          {persona.tags.map((tag) => (
+            // 성격 태그
+            <Text key={tag} style={styles.tag}>
+              {tag}
+            </Text>
+          ))}
+        </View>
+      </View>
 
       {/* 과목 이름 */}
       <Text>나의 과목</Text>
@@ -66,9 +78,6 @@ export function SubjectDetailScreen() {
 
       {/* 이 과목 공부하기 버튼 (공부 준비 화면은 다음 커밋에서 만든다) */}
       <Button title="이 과목 공부하기 (준비 중)" disabled onPress={() => {}} />
-
-      {/* 선생님 소개 카드 (T-01) */}
-      <TeacherIntroCard folder={folder} />
 
       {/* 학습 자료 제목과 자료 추가 버튼 */}
       <View style={styles.row}>
@@ -126,6 +135,16 @@ const styles = StyleSheet.create({
   card: {
     gap: 4,
     padding: 12,
+    borderWidth: 1,
+  },
+  tags: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  tag: {
+    paddingHorizontal: 8,
+    paddingVertical: 4,
     borderWidth: 1,
   },
 });

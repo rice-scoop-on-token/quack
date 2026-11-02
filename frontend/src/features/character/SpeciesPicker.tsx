@@ -29,10 +29,8 @@ export function SpeciesPicker({ value, onChange }: Props) {
             {/* 선택 화면은 성체 모습으로 보여 준다 */}
             <CharacterBox speciesId={species.id} stage="adult" size={72} />
             {/* 동물 이름과 소개 */}
-            <View style={styles.text}>
-              <Text>{species.name}</Text>
-              <Text>{species.description}</Text>
-            </View>
+            <Text style={styles.text}>{species.name}</Text>
+            <Text style={styles.text}>{species.description}</Text>
           </Pressable>
         );
       })}
@@ -41,14 +39,16 @@ export function SpeciesPicker({ value, onChange }: Props) {
 }
 
 const styles = StyleSheet.create({
+  // 카드 3장을 가로로 나눠 놓는다
   list: {
-    gap: 12,
+    flexDirection: 'row',
+    gap: 8,
   },
   card: {
-    flexDirection: 'row',
+    flex: 1,
     alignItems: 'center',
-    gap: 12,
-    padding: 12,
+    gap: 4,
+    padding: 8,
     borderWidth: 1,
   },
   // 선택된 카드 강조 (임시 스타일, 디자인 작업 때 바꾼다)
@@ -56,7 +56,6 @@ const styles = StyleSheet.create({
     borderWidth: 3,
   },
   text: {
-    flex: 1,
-    gap: 4,
+    textAlign: 'center',
   },
 });

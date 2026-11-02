@@ -14,12 +14,10 @@ type Props = {
   speciesId: SpeciesId;
   stage?: GrowthStage;
   size?: number;
-  // 반응 모션 이름. 에셋이 들어오면 이 값으로 동작 이미지를 고른다.
-  motionLabel?: string;
 };
 
 // 캐릭터 이미지 자리다. 에셋이 들어오면 이 파일 안만 이미지로 바꾸면 모든 화면에 반영된다.
-export function CharacterBox({ speciesId, stage = 'child', size = 120, motionLabel }: Props) {
+export function CharacterBox({ speciesId, stage = 'child', size = 120 }: Props) {
   const name = SPECIES.find((s) => s.id === speciesId)?.name ?? speciesId;
 
   return (
@@ -27,7 +25,6 @@ export function CharacterBox({ speciesId, stage = 'child', size = 120, motionLab
     <View style={[styles.box, { width: size, height: size }]}>
       <Text>{name}</Text>
       <Text>{STAGE_LABEL[stage]}</Text>
-      {motionLabel ? <Text>{motionLabel}</Text> : null}
     </View>
   );
 }
