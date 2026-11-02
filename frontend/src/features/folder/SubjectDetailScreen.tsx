@@ -2,11 +2,10 @@ import { router, Stack, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
 import { Button, ScrollView, StyleSheet, Text, View } from 'react-native';
 
-import { PERSONAS } from '@/api/mock/data/personas';
-import { SPECIES } from '@/api/mock/data/species';
 import { useTempStore } from '@/api/mock/tempStore';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { CharacterGrowth } from '@/features/character/CharacterGrowth';
+import { TeacherSummary } from '@/features/character/TeacherSummary';
 
 const STATUS_LABEL = {
   uploaded: '올리는 중',
@@ -18,7 +17,7 @@ const STATUS_LABEL = {
 // L-02 과목·자료 상세
 export function SubjectDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
-  const { folders, materials, deleteFolder } = useTempStore();
+  const { folders, materials, deleteFolder, setSelectedFolderId } = useTempStore();
   const [confirmingDelete, setConfirmingDelete] = useState(false);
   const folder = folders.find((f) => f.id === id);
 
@@ -33,12 +32,16 @@ export function SubjectDetailScreen() {
     );
   }
 
-  const species = SPECIES.find((s) => s.id === folder.species_id);
-  const persona = PERSONAS[folder.species_id];
   const folderMaterials = materials.filter((m) => m.folder_id === folder.id);
 
   const addMaterials = () =>
     router.push({ pathname: '/subjects/[id]/materials', params: { id: folder.id } });
+
+  // 이 과목을 고른 과목으로 바꾸고 공부 준비로 간다. 홈의 과목 선택도 이 과목으로 바뀐다.
+  const startStudy = () => {
+    setSelectedFolderId(folder.id);
+    router.push('/session/setup');
+  };
 
   const handleDelete = () => {
     // QuackApi 교체 지점: folders에서 이 행을 지운다. 캐릭터와 경험치 내역은 DB가 함께 지운다.
@@ -53,21 +56,7 @@ export function SubjectDetailScreen() {
       <Stack.Screen options={{ title: folder.name }} />
 
       {/* 선생님 소개 카드 (선생님은 바꿀 수 없어서 성격만 보여 준다) */}
-      <View style={styles.card}>
-        <Text>
-          {folder.name} 선생님 · {species?.name}
-        </Text>
-        <Text>{persona.label}</Text>
-        {/* 성격 태그 목록 */}
-        <View style={styles.tags}>
-          {persona.tags.map((tag) => (
-            // 성격 태그
-            <Text key={tag} style={styles.tag}>
-              {tag}
-            </Text>
-          ))}
-        </View>
-      </View>
+      <TeacherSummary folder={folder} />
 
       {/* 과목 이름 */}
       <Text>나의 과목</Text>
@@ -76,8 +65,8 @@ export function SubjectDetailScreen() {
       {/* 캐릭터와 성장 표시 */}
       <CharacterGrowth folder={folder} />
 
-      {/* 이 과목 공부하기 버튼 (공부 준비 화면은 다음 커밋에서 만든다) */}
-      <Button title="이 과목 공부하기 (준비 중)" disabled onPress={() => {}} />
+      {/* 이 과목 공부하기 버튼 */}
+      <Button title="이 과목 공부하기" onPress={startStudy} />
 
       {/* 학습 자료 제목과 자료 추가 버튼 */}
       <View style={styles.row}>
@@ -113,7 +102,7 @@ export function SubjectDetailScreen() {
       <ConfirmDialog
         visible={confirmingDelete}
         title={`'${folder.name}' 과목을 삭제할까요?`}
-        message="이 과목의 캐릭터와 성장 기록도 함께 사라져요. 자료도 모두 지워지고 되돌릴 수 없어요."
+        message="이 과목의 캐릭터와 성장 기록도 함께 사라져요. 자료와 공부 기록도 모두 지워지고 되돌릴 수 없어요."
         confirmLabel="삭제"
         onConfirm={handleDelete}
         onCancel={() => setConfirmingDelete(false)}
@@ -135,16 +124,6 @@ const styles = StyleSheet.create({
   card: {
     gap: 4,
     padding: 12,
-    borderWidth: 1,
-  },
-  tags: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
-  },
-  tag: {
-    paddingHorizontal: 8,
-    paddingVertical: 4,
     borderWidth: 1,
   },
 });

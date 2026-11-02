@@ -2,6 +2,7 @@ import {
   characterStatsSchema,
   folderSchema,
   materialSchema,
+  sessionSchema,
   type CharacterStats,
   type Folder,
   type Material,
@@ -9,6 +10,8 @@ import {
 } from '@quack/shared';
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
 import { Platform } from 'react-native';
+
+import type { StudySession } from '@/api/tempContract';
 
 // QuackApi가 생기기 전까지 화면끼리 함께 쓰는 임시 상태다.
 // 앱(iOS/Android)에서는 메모리에만 있어서 앱을 다시 켜면 처음 상태로 돌아간다.
@@ -26,6 +29,14 @@ type TempStore = {
   materials: Material[];
   addMaterial: (material: Material) => void;
   setMaterialStatus: (id: string, status: Material['status']) => void;
+  // 홈과 공부 준비에서 같이 쓰는 지금 고른 과목
+  selectedFolderId: string | null;
+  // 고른 과목. 고른 적이 없거나 지워졌으면 첫 과목, 과목이 없으면 undefined
+  selectedFolder: Folder | undefined;
+  setSelectedFolderId: (id: string) => void;
+  // 끝낸 공부 세션 기록
+  sessions: StudySession[];
+  addSession: (session: StudySession) => void;
 };
 
 // 익명 로그인 연동 전이라 모든 임시 데이터를 이 사용자 것으로 만든다.
@@ -44,7 +55,18 @@ const PERSIST_ON = Platform.OS === 'web' && process.env.EXPO_PUBLIC_USE_MOCK ===
 const STORAGE_KEY = 'quack.tempStore';
 
 // 예전(5단계 온보딩) 저장값에 남은 draftSpeciesId 같은 칸은 검사하지 않고 무시한다.
-type Saved = Pick<TempStore, 'onboarded' | 'displayName' | 'folders' | 'characterStats' | 'materials'>;
+type Saved = Pick<
+  TempStore,
+  'onboarded' | 'displayName' | 'folders' | 'characterStats' | 'materials' | 'selectedFolderId' | 'sessions'
+>;
+
+// StudySession은 shared에 스키마가 없어서 Session 스키마에 공부 시간 검사만 더한다.
+function isStudySession(value: unknown): boolean {
+  return (
+    sessionSchema.safeParse(value).success &&
+    typeof (value as { study_seconds?: unknown }).study_seconds === 'number'
+  );
+}
 
 // 저장된 값을 읽는다. 없거나, 깨져 있거나, localStorage를 쓸 수 없으면 null(빈 상태로 시작)
 // 주소에 ?demo=reset 이 있으면 저장된 값을 지우고 처음부터 시작한다.
@@ -69,7 +91,14 @@ function loadSaved(): Saved | null {
       folderSchema.array().safeParse(data.folders).success &&
       characterStatsSchema.array().safeParse(data.characterStats).success &&
       materialSchema.array().safeParse(data.materials).success;
-    if (!valid) {
+    // 세션 기록과 고른 과목은 커밋 5에서 생겼다. 그 전 저장값에는 없으므로 빈 값으로 채운다.
+    data.sessions ??= [];
+    data.selectedFolderId ??= null;
+    const validSessions =
+      Array.isArray(data.sessions) &&
+      data.sessions.every(isStudySession) &&
+      (data.selectedFolderId === null || typeof data.selectedFolderId === 'string');
+    if (!valid || !validSessions) {
       return null;
     }
     const saved = data as Saved;
@@ -86,12 +115,15 @@ function loadSaved(): Saved | null {
 const TempStoreContext = createContext<TempStore | null>(null);
 
 export function TempStoreProvider({ children }: { children: ReactNode }) {
-  // QuackApi 교체 지점: 아래 값은 모두 profile, folders, character_stats, materials 조회 결과로 바뀐다.
+  // QuackApi 교체 지점: 아래 값은 모두 profile, folders, character_stats, materials, sessions 조회 결과로 바뀐다.
+  // selectedFolderId는 서버에 두지 않는 화면 상태라 QuackApi로 바꿔도 FE에 남는다.
   const [onboarded, setOnboarded] = useState(false);
   const [displayName, setDisplayName] = useState('');
   const [folders, setFolders] = useState<Folder[]>([]);
   const [characterStats, setCharacterStats] = useState<CharacterStats[]>([]);
   const [materials, setMaterials] = useState<Material[]>([]);
+  const [selectedFolderId, setSelectedFolderId] = useState<string | null>(null);
+  const [sessions, setSessions] = useState<StudySession[]>([]);
   // 웹 저장: 저장된 값을 불러오기 전에는 화면을 그리지 않는다. 그리면 빈 상태로 판단해 /intro로 보내 버린다.
   // 브라우저에서만 읽도록 화면을 그린 뒤(useEffect) 불러온다.
   const [loaded, setLoaded] = useState(!PERSIST_ON);
@@ -107,6 +139,8 @@ export function TempStoreProvider({ children }: { children: ReactNode }) {
       setFolders(saved.folders);
       setCharacterStats(saved.characterStats);
       setMaterials(saved.materials);
+      setSelectedFolderId(saved.selectedFolderId);
+      setSessions(saved.sessions);
     }
     setLoaded(true);
   }, []);
@@ -116,13 +150,21 @@ export function TempStoreProvider({ children }: { children: ReactNode }) {
     if (!PERSIST_ON || !loaded || typeof window === 'undefined') {
       return;
     }
-    const saved: Saved = { onboarded, displayName, folders, characterStats, materials };
+    const saved: Saved = {
+      onboarded,
+      displayName,
+      folders,
+      characterStats,
+      materials,
+      selectedFolderId,
+      sessions,
+    };
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(saved));
     } catch {
       // 저장 공간이 없거나 막혀 있으면 메모리 상태만 쓴다.
     }
-  }, [loaded, onboarded, displayName, folders, characterStats, materials]);
+  }, [loaded, onboarded, displayName, folders, characterStats, materials, selectedFolderId, sessions]);
 
   function createFolder(name: string, speciesId: SpeciesId): Folder {
     const folder: Folder = {
@@ -141,11 +183,12 @@ export function TempStoreProvider({ children }: { children: ReactNode }) {
     return folder;
   }
 
-  // DB는 폴더를 지우면 그 폴더의 자료와 경험치 내역도 함께 지운다(on delete cascade). mock도 같게 맞춘다.
+  // DB는 폴더를 지우면 그 폴더의 자료, 세션, 경험치 내역도 함께 지운다(on delete cascade). mock도 같게 맞춘다.
   function deleteFolder(id: string) {
     setFolders((prev) => prev.filter((f) => f.id !== id));
     setCharacterStats((prev) => prev.filter((c) => c.folder_id !== id));
     setMaterials((prev) => prev.filter((m) => m.folder_id !== id));
+    setSessions((prev) => prev.filter((s) => s.folder_id !== id));
   }
 
   function addMaterial(material: Material) {
@@ -154,6 +197,10 @@ export function TempStoreProvider({ children }: { children: ReactNode }) {
 
   function setMaterialStatus(id: string, status: Material['status']) {
     setMaterials((prev) => prev.map((m) => (m.id === id ? { ...m, status } : m)));
+  }
+
+  function addSession(session: StudySession) {
+    setSessions((prev) => [...prev, session]);
   }
 
   return (
@@ -170,6 +217,11 @@ export function TempStoreProvider({ children }: { children: ReactNode }) {
         materials,
         addMaterial,
         setMaterialStatus,
+        selectedFolderId,
+        selectedFolder: folders.find((f) => f.id === selectedFolderId) ?? folders[0],
+        setSelectedFolderId,
+        sessions,
+        addSession,
       }}
     >
       {loaded ? children : null}
