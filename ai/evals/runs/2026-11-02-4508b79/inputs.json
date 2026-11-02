@@ -1,0 +1,455 @@
+{
+  "commit": "4508b7969a9ccbb88f3c06eaa08db21dd90db5fd",
+  "model": "gpt-6.1-sol",
+  "max_output_tokens": 4096,
+  "timeout_ms": 30000,
+  "retries": 0,
+  "entries": [
+    {
+      "id": "binary-search-01-sufficient",
+      "input": {
+        "learning_goal": "이진 탐색의 전제, 동작 원리, 종료 조건과 시간 복잡도를 설명한다. 코드 작성이나 구체적인 탐색 과정 추적은 이번 목표에 포함하지 않는다.",
+        "user_message": "정렬된 데이터에서 중간값을 타겟과 비교하는 방법이야. 오름차순이면 타겟이 중간값보다 작을 때 왼쪽만 남기고, 크면 오른쪽만 남겨. 정렬되어 있으니까 버리는 쪽에는 타겟이 없다고 판단할 수 있어. 같으면 찾은 거고, 찾기 전에 탐색 범위가 없어지면 없는 거야. 범위가 매번 절반 정도로 줄어서 평균과 최악의 시간 복잡도는 O(log N)이야.",
+        "reference_materials": [
+          {
+            "material_id": "binary-search-lecture-fixture",
+            "title": "평가를 위해 구성한 가상 강의 자료",
+            "content": "이진 탐색은 정렬된 배열에서 중간 원소를 찾으려는 값과 비교하고, 남은 탐색 범위를 매 단계 절반 정도로 좁히는 알고리즘이다. 오름차순 배열에서는 찾는 값이 중간값보다 작으면 왼쪽 범위를, 크면 오른쪽 범위를 남긴다. 정렬되어 있으므로 제외하는 범위에는 찾는 값이 없다고 판단할 수 있다. 값이 같으면 탐색에 성공하고, 찾기 전에 탐색 범위가 비면 값이 없는 것으로 종료한다. 중간 원소 접근과 비교가 상수 시간인 배열에서 평균 및 최악의 시간 복잡도는 O(log N)이며, N은 원소의 개수다."
+          }
+        ],
+        "conversation_history": [],
+        "species_id": "rubber_duck"
+      },
+      "notes": [
+        "cases.json 입력만 변환. expected는 전송하지 않음."
+      ]
+    },
+    {
+      "id": "binary-search-02-missing-precondition",
+      "input": {
+        "learning_goal": "이진 탐색의 전제, 동작 원리, 종료 조건과 시간 복잡도를 설명한다. 코드 작성이나 구체적인 탐색 과정 추적은 이번 목표에 포함하지 않는다.",
+        "user_message": "중간값을 찾는 값과 비교해서, 찾는 값이 작으면 왼쪽만 남기고 크면 오른쪽만 남겨. 남은 범위에서 반복하다 같으면 찾은 거고, 범위가 없어지면 없는 거야. 매번 절반 정도로 줄어서 O(log N)이야.",
+        "reference_materials": [
+          {
+            "material_id": "binary-search-lecture-fixture",
+            "title": "평가를 위해 구성한 가상 강의 자료",
+            "content": "이진 탐색은 정렬된 배열에서 중간 원소를 찾으려는 값과 비교하고, 남은 탐색 범위를 매 단계 절반 정도로 좁히는 알고리즘이다. 오름차순 배열에서는 찾는 값이 중간값보다 작으면 왼쪽 범위를, 크면 오른쪽 범위를 남긴다. 정렬되어 있으므로 제외하는 범위에는 찾는 값이 없다고 판단할 수 있다. 값이 같으면 탐색에 성공하고, 찾기 전에 탐색 범위가 비면 값이 없는 것으로 종료한다. 중간 원소 접근과 비교가 상수 시간인 배열에서 평균 및 최악의 시간 복잡도는 O(log N)이며, N은 원소의 개수다."
+          }
+        ],
+        "conversation_history": [],
+        "species_id": "rubber_duck"
+      },
+      "notes": [
+        "cases.json 입력만 변환. expected는 전송하지 않음."
+      ]
+    },
+    {
+      "id": "binary-search-03-wrong-direction",
+      "input": {
+        "learning_goal": "이진 탐색의 전제, 동작 원리, 종료 조건과 시간 복잡도를 설명한다. 코드 작성이나 구체적인 탐색 과정 추적은 이번 목표에 포함하지 않는다.",
+        "reference_materials": [
+          {
+            "material_id": "binary-search-lecture-fixture",
+            "title": "평가를 위해 구성한 가상 강의 자료",
+            "content": "이진 탐색은 정렬된 배열에서 중간 원소를 찾으려는 값과 비교하고, 남은 탐색 범위를 매 단계 절반 정도로 좁히는 알고리즘이다. 오름차순 배열에서는 찾는 값이 중간값보다 작으면 왼쪽 범위를, 크면 오른쪽 범위를 남긴다. 정렬되어 있으므로 제외하는 범위에는 찾는 값이 없다고 판단할 수 있다. 값이 같으면 탐색에 성공하고, 찾기 전에 탐색 범위가 비면 값이 없는 것으로 종료한다. 중간 원소 접근과 비교가 상수 시간인 배열에서 평균 및 최악의 시간 복잡도는 O(log N)이며, N은 원소의 개수다."
+          }
+        ],
+        "user_message": "정렬된 배열에서 중간값과 찾는 값을 비교해. 오름차순이면 찾는 값이 중간값보다 클 때 왼쪽만 남기고, 작으면 오른쪽만 남겨. 남은 범위에서 반복하다 같으면 찾은 거고, 범위가 없어지면 없는 거야. 매번 절반 정도로 줄어서 O(log N)이야.",
+        "conversation_history": [],
+        "species_id": "rubber_duck"
+      },
+      "notes": [
+        "cases.json 입력만 변환. expected는 전송하지 않음."
+      ]
+    },
+    {
+      "id": "binary-search-04-ambiguous-rule",
+      "input": {
+        "learning_goal": "이진 탐색의 전제, 동작 원리, 종료 조건과 시간 복잡도를 설명한다. 코드 작성이나 구체적인 탐색 과정 추적은 이번 목표에 포함하지 않는다.",
+        "user_message": "이진 탐색은 정렬된 배열에서 가운데 값을 보고, 적당한 쪽으로 범위를 절반씩 줄이는 방법이야. 찾으면 끝내고, 더 볼 범위가 없어져도 끝내. 매번 절반 정도로 줄어서 O(log N)이야.",
+        "reference_materials": [
+          {
+            "material_id": "binary-search-lecture-fixture",
+            "title": "평가를 위해 구성한 가상 강의 자료",
+            "content": "이진 탐색은 정렬된 배열에서 중간 원소를 찾으려는 값과 비교하고, 남은 탐색 범위를 매 단계 절반 정도로 좁히는 알고리즘이다. 오름차순 배열에서는 찾는 값이 중간값보다 작으면 왼쪽 범위를, 크면 오른쪽 범위를 남긴다. 정렬되어 있으므로 제외하는 범위에는 찾는 값이 없다고 판단할 수 있다. 값이 같으면 탐색에 성공하고, 찾기 전에 탐색 범위가 비면 값이 없는 것으로 종료한다. 중간 원소 접근과 비교가 상수 시간인 배열에서 평균 및 최악의 시간 복잡도는 O(log N)이며, N은 원소의 개수다."
+          }
+        ],
+        "conversation_history": [],
+        "species_id": "rubber_duck"
+      },
+      "notes": [
+        "cases.json 입력만 변환. expected는 전송하지 않음."
+      ]
+    },
+    {
+      "id": "binary-search-05-term-list",
+      "input": {
+        "learning_goal": "이진 탐색의 동작 원리를 설명한다. 용어 이름을 기억하는 것만이 목표는 아니다.",
+        "user_message": "이진 탐색은 정렬, 중간값, 절반, 로그 시간 복잡도가 핵심이야.",
+        "reference_materials": [
+          {
+            "material_id": "binary-search-lecture-fixture",
+            "title": "평가를 위해 구성한 가상 강의 자료",
+            "content": "이진 탐색은 정렬된 배열에서 중간 원소를 찾으려는 값과 비교하고, 남은 탐색 범위를 매 단계 절반 정도로 좁히는 알고리즘이다. 오름차순 배열에서는 찾는 값이 중간값보다 작으면 왼쪽 범위를, 크면 오른쪽 범위를 남긴다. 정렬되어 있으므로 제외하는 범위에는 찾는 값이 없다고 판단할 수 있다. 값이 같으면 탐색에 성공하고, 찾기 전에 탐색 범위가 비면 값이 없는 것으로 종료한다. 중간 원소 접근과 비교가 상수 시간인 배열에서 평균 및 최악의 시간 복잡도는 O(log N)이며, N은 원소의 개수다."
+          }
+        ],
+        "conversation_history": [],
+        "species_id": "rubber_duck"
+      },
+      "notes": [
+        "cases.json 입력만 변환. expected는 전송하지 않음."
+      ]
+    },
+    {
+      "id": "binary-search-06-application-needed",
+      "input": {
+        "learning_goal": "이진 탐색의 원리를 설명하고, 구체적인 배열에서 탐색 범위와 중간값이 바뀌는 과정을 설명한다.",
+        "user_message": "정렬된 배열에서 중간값을 타겟과 비교하고, 타겟이 있을 수 없는 쪽을 제외해. 남은 범위에서 반복하다 같은 값을 찾거나 범위가 없어지면 끝나. 매번 절반 정도로 줄어서 O(log N)이야.",
+        "reference_materials": [
+          {
+            "material_id": "binary-search-lecture-fixture",
+            "title": "평가를 위해 구성한 가상 강의 자료",
+            "content": "이진 탐색은 정렬된 배열에서 중간 원소를 찾으려는 값과 비교하고, 남은 탐색 범위를 매 단계 절반 정도로 좁히는 알고리즘이다. 오름차순 배열에서는 찾는 값이 중간값보다 작으면 왼쪽 범위를, 크면 오른쪽 범위를 남긴다. 정렬되어 있으므로 제외하는 범위에는 찾는 값이 없다고 판단할 수 있다. 같은 값을 찾거나 탐색 범위가 비면 종료한다. 범위를 줄인 뒤에는 남은 범위 안에서 중간 원소를 다시 고른다. 중간 원소 접근과 비교가 상수 시간인 배열에서 평균 및 최악의 시간 복잡도는 O(log N)이다."
+          }
+        ],
+        "conversation_history": [],
+        "species_id": "rubber_duck"
+      },
+      "notes": [
+        "cases.json 입력만 변환. expected는 전송하지 않음."
+      ]
+    },
+    {
+      "id": "binary-search-07-no-reference",
+      "input": {
+        "learning_goal": "이진 탐색의 전제와 탐색 범위를 줄이는 원리를 설명한다.",
+        "user_message": "이진 탐색은 정렬된 배열에서 쓰는 방법이야. 오름차순 배열에서 가운데 값과 찾는 값을 비교해서, 찾는 값이 더 작으면 왼쪽만 남기고 더 크면 오른쪽만 남겨. 정렬되어 있으니까 제외한 쪽에는 찾는 값이 없다고 볼 수 있어. 이걸 남은 범위에서 반복하는 거야.",
+        "reference_materials": [],
+        "conversation_history": [],
+        "species_id": "rubber_duck"
+      },
+      "notes": [
+        "cases.json 입력만 변환. expected는 전송하지 않음."
+      ]
+    },
+    {
+      "id": "binary-search-08-answer-request",
+      "input": {
+        "learning_goal": "이진 탐색에서 탐색 범위를 절반씩 줄이는 것과 O(log N) 시간 복잡도의 관계를 설명한다.",
+        "user_message": "왜 O(log N)인지 모르겠어. 그냥 답을 알려줘.",
+        "reference_materials": [],
+        "conversation_history": [],
+        "species_id": "rubber_duck"
+      },
+      "notes": [
+        "cases.json 입력만 변환. expected는 전송하지 않음."
+      ]
+    },
+    {
+      "id": "linear-algebra-01-sufficient",
+      "input": {
+        "learning_goal": "가우스 소거법으로 P1의 해를 구하고 행 연산의 정당성, 후진대입 및 유일해 판단을 설명한다.",
+        "reference_materials": [
+          {
+            "material_id": "p1",
+            "title": "평가를 위해 자체 작성한 연립방정식",
+            "content": "평가를 위해 자체 작성한 문제 P1:\nx+y+z=6\n2x+3y+z=11\nx+y+2z=9"
+          }
+        ],
+        "user_message": "확대행렬에서 R2에서 R1의 두 배를 빼고, R3에서 R1을 뺐어. 그러면 두 번째 행은 [0, 1, -1 | -1], 세 번째 행은 [0, 0, 1 | 3]이 돼. 다른 행의 배수를 더하거나 빼는 건 반대 연산으로 되돌릴 수 있으니까 해집합이 유지돼. 마지막 행에서 z=3, 두 번째 행에서 y=2, 첫 번째 행에서 x=1이야. 모든 변수 열에 피벗이 있고 모순인 행이 없으니 자유변수 없이 해가 하나야. 원래 식에 대입해도 우변이 6, 11, 9로 맞아.",
+        "conversation_history": [],
+        "species_id": "rubber_duck"
+      },
+      "notes": [
+        "linearAlgebraCases.md의 현재 발화를 그대로 추출. 문제만 자료로 제공하며 정답·기대 분석·AI 예시는 전송하지 않음."
+      ]
+    },
+    {
+      "id": "linear-algebra-02-arithmetic-slip",
+      "input": {
+        "learning_goal": "가우스 소거법으로 P1의 해를 구하고 행 연산의 정당성, 후진대입 및 유일해 판단을 설명한다.",
+        "reference_materials": [
+          {
+            "material_id": "p1",
+            "title": "평가를 위해 자체 작성한 연립방정식",
+            "content": "평가를 위해 자체 작성한 문제 P1:\nx+y+z=6\n2x+3y+z=11\nx+y+2z=9"
+          }
+        ],
+        "user_message": "R2에서 R1의 두 배를 빼고, R3에서 R1을 뺐어. 이 연산은 되돌릴 수 있어서 해집합이 같아. 두 번째 행은 [0, 1, -1 | 1], 세 번째 행은 [0, 0, 1 | 3]이야. 그래서 z=3, y=4, x=-1이 돼. 모든 변수 열에 피벗이 있고 모순인 행도 없으니 유일한 해는 (-1, 4, 3)이야.",
+        "conversation_history": [],
+        "species_id": "rubber_duck"
+      },
+      "notes": [
+        "linearAlgebraCases.md의 현재 발화를 그대로 추출. 문제만 자료로 제공하며 정답·기대 분석·AI 예시는 전송하지 않음."
+      ]
+    },
+    {
+      "id": "linear-algebra-03-skipped-unverified",
+      "input": {
+        "learning_goal": "P1을 가우스 소거법으로 풀고 풀이 원리를 설명한다.",
+        "reference_materials": [
+          {
+            "material_id": "p1",
+            "title": "평가를 위해 자체 작성한 연립방정식",
+            "content": "평가를 위해 자체 작성한 문제 P1:\nx+y+z=6\n2x+3y+z=11\nx+y+2z=9"
+          }
+        ],
+        "user_message": "가우스 소거법으로 풀면 z=3이고, 대입하면 y=2, x=1이야. 해는 하나야.",
+        "conversation_history": [],
+        "species_id": "rubber_duck"
+      },
+      "notes": [
+        "linearAlgebraCases.md의 현재 발화를 그대로 추출. 문제만 자료로 제공하며 정답·기대 분석·AI 예시는 전송하지 않음."
+      ]
+    },
+    {
+      "id": "linear-algebra-04-skipped-verified",
+      "input": {
+        "learning_goal": "가우스 소거법을 이용해 P1을 푼다.",
+        "reference_materials": [
+          {
+            "material_id": "p1",
+            "title": "평가를 위해 자체 작성한 연립방정식",
+            "content": "평가를 위해 자체 작성한 문제 P1:\nx+y+z=6\n2x+3y+z=11\nx+y+2z=9"
+          }
+        ],
+        "user_message": "가우스 소거법으로 풀면 z=3이고, 대입하면 y=2, x=1이야. 해는 하나야.",
+        "conversation_history": [
+          {
+            "role": "user",
+            "content": "앞선 별도 문제는 x+y=3, x-y=1이었어. 두 번째 식에서 첫 번째 식을 빼서 -2y=-2를 얻고, y=1을 첫 식에 대입해서 x=2를 얻었어. 다른 행의 배수를 더하거나 빼는 건 반대 연산으로 되돌릴 수 있어서 해집합이 유지돼. 소거 뒤 모순인 행이 없고 모든 변수 열에 피벗이 있어 자유변수가 없으니 해가 하나야."
+          },
+          {
+            "role": "user",
+            "content": "행의 배수를 다른 행에 더하는 건 되돌릴 수 있어서 해집합이 유지돼. 모순인 행이 없고 모든 변수 열에 피벗이 있으면 자유변수가 없어서 해가 하나야."
+          }
+        ],
+        "species_id": "rubber_duck"
+      },
+      "notes": [
+        "linearAlgebraCases.md의 현재 발화를 그대로 추출. 문제만 자료로 제공하며 정답·기대 분석·AI 예시는 전송하지 않음.",
+        "문서에 요약된 이전 수행을 실행 입력으로 구체화: 자체 작성한 2변수 앞선 문제와 실제 소거·후진대입 발화를 추가함. 기존 평가 입력 확정본이 아니라 이번 실행용 가상 대화이며 원문에 그대로 있던 대화가 아님."
+      ]
+    },
+    {
+      "id": "linear-algebra-05-wrong-justification",
+      "input": {
+        "learning_goal": "P1 풀이에서 행 연산이 해집합을 보존하는 이유를 설명한다.",
+        "reference_materials": [
+          {
+            "material_id": "p1",
+            "title": "평가를 위해 자체 작성한 연립방정식",
+            "content": "평가를 위해 자체 작성한 문제 P1:\nx+y+z=6\n2x+3y+z=11\nx+y+2z=9"
+          }
+        ],
+        "user_message": "소거해서 답은 (1, 2, 3)을 얻었어. 행 연산으로 해가 유지되는 건, 다른 행의 배수를 더하면 각 방정식의 계수랑 우변이 원래와 똑같이 남기 때문이야.",
+        "conversation_history": [],
+        "species_id": "rubber_duck"
+      },
+      "notes": [
+        "linearAlgebraCases.md의 현재 발화를 그대로 추출. 문제만 자료로 제공하며 정답·기대 분석·AI 예시는 전송하지 않음."
+      ]
+    },
+    {
+      "id": "linear-algebra-06-repeated-subtraction",
+      "input": {
+        "learning_goal": "소거 과정에서 음수와 뺄셈을 올바르게 처리한다.",
+        "reference_materials": [
+          {
+            "material_id": "p1",
+            "title": "평가를 위해 자체 작성한 연립방정식",
+            "content": "평가를 위해 자체 작성한 문제 P1:\nx+y+z=6\n2x+3y+z=11\nx+y+2z=9"
+          }
+        ],
+        "user_message": "이번에도 큰 수에서 작은 수를 빼서 1이라고 썼어.",
+        "conversation_history": [
+          {
+            "role": "user",
+            "content": "앞선 문제에서 5-8=3으로 계산했어."
+          },
+          {
+            "role": "assistant",
+            "content": "5-8은 -3이야."
+          },
+          {
+            "role": "user",
+            "content": "P1에서 R2에서 R1의 두 배를 빼고 상수항 11-12=1이라고 계산했어."
+          }
+        ],
+        "species_id": "rubber_duck"
+      },
+      "notes": [
+        "linearAlgebraCases.md의 현재 발화를 그대로 추출. 문제만 자료로 제공하며 정답·기대 분석·AI 예시는 전송하지 않음.",
+        "문서의 5-8 오류·AI 교정·현재 11-12 오류를 가상 이전 대화로 구성함. 교정 이력을 모델에 실제로 제공함."
+      ]
+    },
+    {
+      "id": "linear-algebra-07-free-variable",
+      "input": {
+        "learning_goal": "자유변수가 있는 연립방정식 P2의 해를 표현한다.",
+        "reference_materials": [
+          {
+            "material_id": "p2",
+            "title": "평가를 위해 자체 작성한 연립방정식",
+            "content": "평가를 위해 자체 작성한 문제 P2:\nx+y+z=3\n2x+2y+2z=6\nx-y+z=1"
+          }
+        ],
+        "user_message": "소거하면 y=1, x+z=2가 나와. z에는 피벗이 없으니까 z=0으로 정하면 돼. 그래서 유일한 해는 (2, 1, 0)이야.",
+        "conversation_history": [
+          {
+            "role": "user",
+            "content": "앞선 별도 문제는 x+y=3, x-y=1이었어. 두 번째 식에서 첫 번째 식을 빼서 -2y=-2를 얻고, y=1을 첫 식에 대입해서 x=2를 얻었어. 다른 행의 배수를 더하거나 빼는 건 반대 연산으로 되돌릴 수 있어서 해집합이 유지돼. 소거 뒤 모순인 행이 없고 모든 변수 열에 피벗이 있어 자유변수가 없으니 해가 하나야."
+          }
+        ],
+        "species_id": "rubber_duck"
+      },
+      "notes": [
+        "linearAlgebraCases.md의 현재 발화를 그대로 추출. 문제만 자료로 제공하며 정답·기대 분석·AI 예시는 전송하지 않음.",
+        "문서에 요약된 이전 수행을 실행 입력으로 구체화: 자체 작성한 2변수 앞선 문제와 실제 소거·후진대입 발화를 추가함. 기존 평가 입력 확정본이 아니라 이번 실행용 가상 대화이며 원문에 그대로 있던 대화가 아님."
+      ]
+    },
+    {
+      "id": "linear-algebra-08-alternative-method",
+      "input": {
+        "learning_goal": "P1의 해를 구하고 선택한 풀이가 성립하는 이유를 설명한다. 풀이법은 지정하지 않는다.",
+        "reference_materials": [
+          {
+            "material_id": "p1",
+            "title": "평가를 위해 자체 작성한 연립방정식",
+            "content": "평가를 위해 자체 작성한 문제 P1:\nx+y+z=6\n2x+3y+z=11\nx+y+2z=9"
+          }
+        ],
+        "user_message": "A x = b로 놓고 역행렬로 풀었어. A의 행은 [1,1,1], [2,3,1], [1,1,2]이고, b는 [6,11,9]야. det A=1이라 역행렬이 존재해. 역행렬의 행은 [5,-1,-2], [-3,1,1], [-1,0,1]이야. 양변 왼쪽에 역행렬을 곱하면 x=A의 역행렬 곱하기 b가 되고, 계산하면 (1,2,3)을 얻어. 역행렬이 있으니 해도 하나야.",
+        "conversation_history": [],
+        "species_id": "rubber_duck"
+      },
+      "notes": [
+        "linearAlgebraCases.md의 현재 발화를 그대로 추출. 문제만 자료로 제공하며 정답·기대 분석·AI 예시는 전송하지 않음."
+      ]
+    },
+    {
+      "id": "korean-history-01-sufficient",
+      "input": {
+        "learning_goal": "단체 식별 근거와 정답 활동을 그 단체에 연결한 이유를 설명한다. 모든 인물의 활동·오답 선택지 전체 해설은 요구하지 않는다.",
+        "reference_materials": [
+          {
+            "material_id": "history-77-q34-summary",
+            "title": "기존 평가 문서의 기출 문항 요약·일부 선택지",
+            "content": "제77회 한국사능력검정시험 심화 34번의 기존 프로젝트 문서 요약(원문 전문이 아님): 안태국의 활동을 소개하는 전시 안내에서 태극서관, 안창호·양기탁 중심의 비밀결사, 국외 독립군 기지 건설을 위한 활동 등이 제시된다. 이 단체의 활동을 고르는 문항이다. 이번 사례에 필요한 선택지는 ② 대성학교 설립, ③ 만민공동회 개최다. 다른 선택지와 원문 이미지는 제공하지 않는다."
+          }
+        ],
+        "user_message": "답은 ②야. 안창호와 양기탁이 중심이 된 비밀결사이고 국외 독립군 기지 건설을 추진했다는 점에서 신민회라고 봤어. 신민회의 교육 활동에 대성학교 설립이 있으니까 연결돼.",
+        "conversation_history": [],
+        "species_id": "rubber_duck"
+      },
+      "notes": [
+        "koreanHistoryCases.md의 현재 발화 그대로 사용. 기존 문항 요약과 필요한 선택지 2개만 제공; 공식 정답·단체 식별 결과·기대 분석·AI 예시는 평가자용으로 분리함. 전체 5지선다/원문 이해 평가는 아님."
+      ]
+    },
+    {
+      "id": "korean-history-02-correct-choice-wrong-entity",
+      "input": {
+        "learning_goal": "단체 식별 근거와 정답 활동을 그 단체에 연결한 이유를 설명한다. 모든 인물의 활동·오답 선택지 전체 해설은 요구하지 않는다.",
+        "reference_materials": [
+          {
+            "material_id": "history-77-q34-summary",
+            "title": "기존 평가 문서의 기출 문항 요약·일부 선택지",
+            "content": "제77회 한국사능력검정시험 심화 34번의 기존 프로젝트 문서 요약(원문 전문이 아님): 안태국의 활동을 소개하는 전시 안내에서 태극서관, 안창호·양기탁 중심의 비밀결사, 국외 독립군 기지 건설을 위한 활동 등이 제시된다. 이 단체의 활동을 고르는 문항이다. 이번 사례에 필요한 선택지는 ② 대성학교 설립, ③ 만민공동회 개최다. 다른 선택지와 원문 이미지는 제공하지 않는다."
+          }
+        ],
+        "user_message": "답은 ②야. 신간회가 민족주의와 사회주의 세력이 함께 만든 단체잖아. 그 단체가 대성학교를 세웠으니까 ②를 골랐어.",
+        "conversation_history": [],
+        "species_id": "rubber_duck"
+      },
+      "notes": [
+        "koreanHistoryCases.md의 현재 발화 그대로 사용. 기존 문항 요약과 필요한 선택지 2개만 제공; 공식 정답·단체 식별 결과·기대 분석·AI 예시는 평가자용으로 분리함. 전체 5지선다/원문 이해 평가는 아님."
+      ]
+    },
+    {
+      "id": "korean-history-03-wrong-activity",
+      "input": {
+        "learning_goal": "단체 식별 근거와 정답 활동을 그 단체에 연결한 이유를 설명한다. 모든 인물의 활동·오답 선택지 전체 해설은 요구하지 않는다.",
+        "reference_materials": [
+          {
+            "material_id": "history-77-q34-summary",
+            "title": "기존 평가 문서의 기출 문항 요약·일부 선택지",
+            "content": "제77회 한국사능력검정시험 심화 34번의 기존 프로젝트 문서 요약(원문 전문이 아님): 안태국의 활동을 소개하는 전시 안내에서 태극서관, 안창호·양기탁 중심의 비밀결사, 국외 독립군 기지 건설을 위한 활동 등이 제시된다. 이 단체의 활동을 고르는 문항이다. 이번 사례에 필요한 선택지는 ② 대성학교 설립, ③ 만민공동회 개최다. 다른 선택지와 원문 이미지는 제공하지 않는다."
+          }
+        ],
+        "user_message": "안창호와 양기탁이 나와서 신민회라고 생각했어. 신민회가 만민공동회를 개최했으니까 답은 ③이야.",
+        "conversation_history": [],
+        "species_id": "rubber_duck"
+      },
+      "notes": [
+        "koreanHistoryCases.md의 현재 발화 그대로 사용. 기존 문항 요약과 필요한 선택지 2개만 제공; 공식 정답·단체 식별 결과·기대 분석·AI 예시는 평가자용으로 분리함. 전체 5지선다/원문 이해 평가는 아님."
+      ]
+    },
+    {
+      "id": "korean-history-04-omitted-activity",
+      "input": {
+        "learning_goal": "단체 식별 근거와 정답 활동을 그 단체에 연결한 이유를 설명한다. 모든 인물의 활동·오답 선택지 전체 해설은 요구하지 않는다.",
+        "reference_materials": [
+          {
+            "material_id": "history-77-q34-summary",
+            "title": "기존 평가 문서의 기출 문항 요약·일부 선택지",
+            "content": "제77회 한국사능력검정시험 심화 34번의 기존 프로젝트 문서 요약(원문 전문이 아님): 안태국의 활동을 소개하는 전시 안내에서 태극서관, 안창호·양기탁 중심의 비밀결사, 국외 독립군 기지 건설을 위한 활동 등이 제시된다. 이 단체의 활동을 고르는 문항이다. 이번 사례에 필요한 선택지는 ② 대성학교 설립, ③ 만민공동회 개최다. 다른 선택지와 원문 이미지는 제공하지 않는다."
+          }
+        ],
+        "user_message": "이건 신민회야. 안창호와 양기탁이 중심이 된 비밀결사라는 점으로 알아봤어.",
+        "conversation_history": [],
+        "species_id": "rubber_duck"
+      },
+      "notes": [
+        "koreanHistoryCases.md의 현재 발화 그대로 사용. 기존 문항 요약과 필요한 선택지 2개만 제공; 공식 정답·단체 식별 결과·기대 분석·AI 예시는 평가자용으로 분리함. 전체 5지선다/원문 이해 평가는 아님."
+      ]
+    },
+    {
+      "id": "korean-history-05-equivalent-expression",
+      "input": {
+        "learning_goal": "단체 식별 근거와 정답 활동을 그 단체에 연결한 이유를 설명한다. 모든 인물의 활동·오답 선택지 전체 해설은 요구하지 않는다.",
+        "reference_materials": [
+          {
+            "material_id": "history-77-q34-summary",
+            "title": "기존 평가 문서의 기출 문항 요약·일부 선택지",
+            "content": "제77회 한국사능력검정시험 심화 34번의 기존 프로젝트 문서 요약(원문 전문이 아님): 안태국의 활동을 소개하는 전시 안내에서 태극서관, 안창호·양기탁 중심의 비밀결사, 국외 독립군 기지 건설을 위한 활동 등이 제시된다. 이 단체의 활동을 고르는 문항이다. 이번 사례에 필요한 선택지는 ② 대성학교 설립, ③ 만민공동회 개최다. 다른 선택지와 원문 이미지는 제공하지 않는다."
+          }
+        ],
+        "user_message": "②야. 안창호랑 양기탁이 비밀리에 만든 조직이면 신민회라고 봤어. 사람들을 가르쳐 나라를 되찾을 힘을 기르려 했고, 그 교육 활동으로 대성학교를 세웠다고 연결했어.",
+        "conversation_history": [],
+        "species_id": "rubber_duck"
+      },
+      "notes": [
+        "koreanHistoryCases.md의 현재 발화 그대로 사용. 기존 문항 요약과 필요한 선택지 2개만 제공; 공식 정답·단체 식별 결과·기대 분석·AI 예시는 평가자용으로 분리함. 전체 5지선다/원문 이해 평가는 아님."
+      ]
+    },
+    {
+      "id": "korean-history-06-assisted-repetition",
+      "input": {
+        "learning_goal": "단체 식별 근거와 정답 활동의 연결을 설명하고, 자료·직접 힌트 없이 독립적으로 떠올리는지도 확인한다.",
+        "reference_materials": [
+          {
+            "material_id": "history-77-q34-summary",
+            "title": "기존 평가 문서의 기출 문항 요약·일부 선택지",
+            "content": "제77회 한국사능력검정시험 심화 34번의 기존 프로젝트 문서 요약(원문 전문이 아님): 안태국의 활동을 소개하는 전시 안내에서 태극서관, 안창호·양기탁 중심의 비밀결사, 국외 독립군 기지 건설을 위한 활동 등이 제시된다. 이 단체의 활동을 고르는 문항이다. 이번 사례에 필요한 선택지는 ② 대성학교 설립, ③ 만민공동회 개최다. 다른 선택지와 원문 이미지는 제공하지 않는다."
+          }
+        ],
+        "user_message": "알겠어. 안창호와 양기탁이 중심인 비밀결사가 신민회이고, 대성학교를 세웠으니까 ②야.",
+        "conversation_history": [
+          {
+            "role": "user",
+            "content": "잘 모르겠어. 이 문제를 설명해줘."
+          },
+          {
+            "role": "assistant",
+            "content": "단체는 신민회이고, 정답은 대성학교 설립을 고른 ②야. 안창호·양기탁과 비밀결사라는 단서로 연결할 수 있어."
+          }
+        ],
+        "species_id": "rubber_duck"
+      },
+      "notes": [
+        "koreanHistoryCases.md의 현재 발화 그대로 사용. 기존 문항 요약과 필요한 선택지 2개만 제공; 공식 정답·단체 식별 결과·기대 분석·AI 예시는 평가자용으로 분리함. 전체 5지선다/원문 이해 평가는 아님.",
+        "문서에 요약된 모르겠다는 사용자 요청을 가상 발화로 구체화하고, 문서의 앞선 AI 해설을 그대로 제공함."
+      ]
+    }
+  ]
+}
