@@ -2,7 +2,7 @@ import type { ExplanationVerdict } from '@/api/tempContract';
 
 // 세션 상태 머신 (CLAUDE.md "세션 상태"). 화면과 상관없는 순수 함수만 둔다.
 
-export type SessionPhase =
+type SessionPhase =
   | 'timing'
   | 'aiQuestion'
   | 'explaining'
@@ -21,7 +21,7 @@ export const NO_EXPLANATION_MS = 10 * 60 * 1000;
 // 미정, 팀과 확정 필요. 지금 값(2번, 넘어가기 허용)은 임시값이다.
 export const MAX_FOLLOW_UPS = 2;
 
-export type SessionState = {
+type SessionState = {
   phase: SessionPhase;
   startedAt: number;
   // 쉬기를 누르기 전까지 쌓인 공부 시간

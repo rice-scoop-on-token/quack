@@ -1,8 +1,9 @@
 import { router } from 'expo-router';
-import { Button, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Button, StyleSheet, Text, View } from 'react-native';
 
 import { SPECIES } from '@/api/mock/data/species';
 import { useTempStore } from '@/api/mock/tempStore';
+import { BottomActionLayout } from '@/components/ui/BottomActionLayout';
 import { CharacterGrowth } from '@/features/character/CharacterGrowth';
 import { SubjectSelect } from '@/features/folder/SubjectSelect';
 import { TodayStats } from '@/features/home/TodayStats';
@@ -27,55 +28,42 @@ export function HomeScreen() {
 
   return (
     // 위쪽은 스크롤되고, 공부 시작과 추가 기능 버튼은 하단 탭 바로 위에 고정된다
-    <View style={styles.screen}>
-      <ScrollView contentContainerStyle={styles.container}>
-        {/* 오늘 함께할 과목 선택 */}
-        <Text>오늘 함께할 과목</Text>
-        {/* 과목 선택 바 */}
-        <SubjectSelect folders={folders} value={selected} onChange={(f) => setSelectedFolderId(f.id)} />
+    <BottomActionLayout
+      inTab
+      actions={
+        <>
+          {/* 공부 시작 버튼 (고른 과목으로 공부 준비에 들어간다) */}
+          <Button title={`${speciesName}와 공부 시작`} onPress={() => router.push('/session/setup')} />
 
-        {/* 인사 문구 */}
-        <Text>나의 작은 공부 습관</Text>
-        <Text>{displayName}님, 오늘도 한 걸음 함께 자라볼까?</Text>
+          {/* 추가 기능 버튼 (2·3차 화면) */}
+          <View style={styles.row}>
+            {/* AI 팟캐스트 버튼 */}
+            <Button title="AI 팟캐스트 (준비 중)" disabled onPress={() => {}} />
+            {/* 오늘의 퀴즈 버튼 */}
+            <Button title="오늘의 퀴즈 (준비 중)" disabled onPress={() => {}} />
+          </View>
+        </>
+      }
+    >
+      {/* 오늘 함께할 과목 선택 */}
+      <Text>오늘 함께할 과목</Text>
+      {/* 과목 선택 바 */}
+      <SubjectSelect folders={folders} value={selected} onChange={(f) => setSelectedFolderId(f.id)} />
 
-        {/* 고른 과목의 캐릭터와 성장 표시 */}
-        <CharacterGrowth folder={selected} />
+      {/* 인사 문구 */}
+      <Text>나의 작은 공부 습관</Text>
+      <Text>{displayName}님, 오늘도 한 걸음 함께 자라볼까?</Text>
 
-        {/* 오늘의 학습 기록 (성장 표시 아래부터 하단 버튼 위까지가 기록 영역이다. 디자인 예정) */}
-        <TodayStats />
-      </ScrollView>
+      {/* 고른 과목의 캐릭터와 성장 표시 */}
+      <CharacterGrowth folder={selected} />
 
-      {/* 하단 고정 버튼 영역 */}
-      <View style={styles.actions}>
-        {/* 공부 시작 버튼 (고른 과목으로 공부 준비에 들어간다) */}
-        <Button title={`${speciesName}와 공부 시작`} onPress={() => router.push('/session/setup')} />
-
-        {/* 추가 기능 버튼 (2·3차 화면) */}
-        <View style={styles.row}>
-          {/* AI 팟캐스트 버튼 */}
-          <Button title="AI 팟캐스트 (준비 중)" disabled onPress={() => {}} />
-          {/* 오늘의 퀴즈 버튼 */}
-          <Button title="오늘의 퀴즈 (준비 중)" disabled onPress={() => {}} />
-        </View>
-      </View>
-    </View>
+      {/* 오늘의 학습 기록 (성장 표시 아래부터 하단 버튼 위까지가 기록 영역이다. 디자인 예정) */}
+      <TodayStats />
+    </BottomActionLayout>
   );
 }
 
 const styles = StyleSheet.create({
-  screen: {
-    flex: 1,
-  },
-  container: {
-    gap: 12,
-    padding: 24,
-  },
-  // 하단 탭이 홈 바 영역을 맡으므로 아래 여백만 둔다
-  actions: {
-    gap: 8,
-    paddingHorizontal: 24,
-    paddingVertical: 12,
-  },
   empty: {
     flex: 1,
     justifyContent: 'center',

@@ -34,7 +34,7 @@ export function buildReport(session: StudySession): SessionReport {
 }
 
 // 세션 보상 경험치. BE와 확정 필요. 지금 규칙(세션 완료 20 + 충분 판정 개념마다 10 + 퀴즈 정답마다 5)은 FE 임시값이다.
-export const XP_RULE = { session: 20, perConcept: 10, perQuizCorrect: 5 } as const;
+const XP_RULE = { session: 20, perConcept: 10, perQuizCorrect: 5 } as const;
 
 export function rewardXp(report: SessionReport): number {
   return (

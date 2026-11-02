@@ -9,24 +9,17 @@ import { useCharacterXp } from '@/features/character/useCharacterXp';
 type Props = {
   folder: Folder;
   detail: string;
-  // 없으면 아직 만들지 않은 화면으로 가는 카드라 누를 수 없게 하고 "준비 중"을 붙인다.
-  onPress?: () => void;
+  onPress: () => void;
 };
 
-// 과목 카드. 홈의 과목별 선생님 목록과 과목 서랍(L-01)에서 같이 쓴다.
+// 과목 카드. 과목 서랍(L-01)에서 쓴다.
 export function SubjectCard({ folder, detail, onPress }: Props) {
   const species = SPECIES.find((s) => s.id === folder.species_id);
   const { stage } = growthFromXp(useCharacterXp(folder.id));
 
   return (
     // 과목 카드
-    <Pressable
-      style={styles.card}
-      onPress={onPress}
-      disabled={!onPress}
-      accessibilityRole="button"
-      accessibilityState={{ disabled: !onPress }}
-    >
+    <Pressable style={styles.card} onPress={onPress} accessibilityRole="button">
       {/* 선생님 캐릭터 */}
       <CharacterBox speciesId={folder.species_id} stage={stage} size={56} />
       {/* 과목 이름과 선생님 설명 */}
@@ -39,7 +32,7 @@ export function SubjectCard({ folder, detail, onPress }: Props) {
         </Text>
       </View>
       {/* 이동 표시 */}
-      <Text>{onPress ? '›' : '준비 중'}</Text>
+      <Text>›</Text>
     </Pressable>
   );
 }

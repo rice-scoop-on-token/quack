@@ -3,11 +3,11 @@ import type { Folder } from '@quack/shared';
 import type { StudySession } from '@/api/tempContract';
 
 // 과목 색. DB에 색 칸이 없어서 FE에서 임시로 정한다. 디자인 작업 때 이 값만 바꾼다.
-export const SUBJECT_COLORS = ['#4e79a7', '#f28e2b', '#59a14f', '#e15759', '#b07aa1', '#edc948'];
+const SUBJECT_COLORS = ['#4e79a7', '#f28e2b', '#59a14f', '#e15759', '#b07aa1', '#edc948'];
 
 // 과목 id로 색을 고른다. 과목 순서가 바뀌거나 다른 과목을 지워도 그 과목의 색은 그대로다.
 // ponytail: 과목이 많으면 두 과목이 같은 색일 수 있다. 범례에 이름과 시간을 같이 써서 구분한다. 겹치면 안 되면 folders에 색 칸을 둔다.
-export function subjectColor(folderId: string): string {
+function subjectColor(folderId: string): string {
   let hash = 0;
   for (const ch of folderId) {
     hash = (hash * 31 + ch.charCodeAt(0)) % 1_000_003;
@@ -15,14 +15,14 @@ export function subjectColor(folderId: string): string {
   return SUBJECT_COLORS[hash % SUBJECT_COLORS.length];
 }
 
-export type SubjectShare = {
+type SubjectShare = {
   folderId: string;
   name: string;
   seconds: number;
   color: string;
 };
 
-export type TodaySummary = {
+type TodaySummary = {
   totalSeconds: number;
   count: number;
   // 충분 판정을 받은 개념 수. 세션마다 서로 다른 개념만 센다(같은 개념을 여러 번 충분히 설명해도 1개).
@@ -32,7 +32,7 @@ export type TodaySummary = {
 };
 
 // 세션에서 충분 판정을 받은 서로 다른 개념
-export function understoodConcepts(session: StudySession): string[] {
+function understoodConcepts(session: StudySession): string[] {
   return [...new Set(session.turns.filter((t) => t.analysis.verdict === 'sufficient').map((t) => t.analysis.concept))];
 }
 

@@ -36,9 +36,7 @@ type TempStore = {
   materials: Material[];
   addMaterial: (material: Material) => void;
   setMaterialStatus: (id: string, status: Material['status']) => void;
-  // 홈과 공부 준비에서 같이 쓰는 지금 고른 과목
-  selectedFolderId: string | null;
-  // 고른 과목. 고른 적이 없거나 지워졌으면 첫 과목, 과목이 없으면 undefined
+  // 홈과 공부 준비에서 같이 쓰는 지금 고른 과목. 고른 적이 없거나 지워졌으면 첫 과목, 과목이 없으면 undefined
   selectedFolder: Folder | undefined;
   setSelectedFolderId: (id: string) => void;
   // 끝낸 공부 세션 기록
@@ -65,17 +63,13 @@ const PERSIST_ON = Platform.OS === 'web' && process.env.EXPO_PUBLIC_USE_MOCK ===
 const STORAGE_KEY = 'quack.tempStore';
 
 // 예전(5단계 온보딩) 저장값에 남은 draftSpeciesId 같은 칸은 검사하지 않고 무시한다.
+// 고른 과목은 화면에 id 대신 selectedFolder로 내보내므로 저장용 칸으로만 둔다.
 type Saved = Pick<
   TempStore,
-  | 'onboarded'
-  | 'displayName'
-  | 'folders'
-  | 'characterStats'
-  | 'materials'
-  | 'selectedFolderId'
-  | 'sessions'
-  | 'xpLedger'
->;
+  'onboarded' | 'displayName' | 'folders' | 'characterStats' | 'materials' | 'sessions' | 'xpLedger'
+> & {
+  selectedFolderId: string | null;
+};
 
 // StudySession은 shared에 스키마가 없어서 Session 스키마에 더한 칸의 모양만 검사한다.
 function isStudySession(value: unknown): boolean {
@@ -274,7 +268,6 @@ export function TempStoreProvider({ children }: { children: ReactNode }) {
         materials,
         addMaterial,
         setMaterialStatus,
-        selectedFolderId,
         selectedFolder: folders.find((f) => f.id === selectedFolderId) ?? folders[0],
         setSelectedFolderId,
         sessions,
