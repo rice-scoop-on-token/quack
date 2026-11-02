@@ -20,6 +20,7 @@
 | --- | --- |
 | [analyzeExplanation.ts](../../backend/supabase/functions/_ai/prompts/analyzeExplanation.ts) | 공통 튜티 프롬프트와 `buildAnalyzeExplanationMessages` 입력 조합 함수 |
 | [schemas.ts](../../backend/supabase/functions/_ai/schemas.ts) | `aiAnalysisOutputSchema`, `validateAiAnalysisOutput`, 형태를 설명하는 `aiAnalysisOutputJsonSchema` |
+| [analysisOutput.test.ts](analysisOutput.test.ts) | 문서 예시 3개와 잘못된 출력 조합·입력 분리를 확인하는 Deno 회귀 검사 |
 
 - 프롬프트 작성 함수는 입력을 별도 사용자 JSON 메시지로 직렬화한다. 네트워크 요청·파일 추출·자료 조회·대화 저장·입력 자르기를 수행하지 않는다. 전체 대화·실제 자료 텍스트를 조합하는 책임은 호출 단계에 남아 있다.
 - 입력 타입은 README의 목표·자료·현재 메시지·이전 대화·동물 ID 초안을 따른다. TypeScript 타입은 런타임 입력 검증이나 자료 읽기 실패 상태의 처리가 아니다. 자료 전체 읽기 실패를 빈 자료 목록으로 자동 전환하지 말고, 호출 전에 기존 사용자 확인 원칙을 처리해야 한다.
@@ -38,8 +39,22 @@ deno check --no-lock index.ts ../_ai/schemas.ts ../_ai/prompts/analyzeExplanatio
 ```
 
 - 로컬 Deno 2.9.6으로 위 세 파일 타입 검사를 통과했다. 전역 설치 없이 임시 실행기를 사용했다. 저장소·CI의 2.9.8 표기는 유지했으며, npm에 해당 버전이 없다는 PR #10의 기록을 실제 조회로 확인했다.
-- 임시 Deno 테스트에서 문서 출력 예시 3개 통과, 잘못된 형식·조합 17개 거절, 해설 요청의 유보 조합 1개 통과, 입력 직렬화·메시지 분리 1개 통과를 확인했다. 총 22개는 로컬 코드 검사 수이며 학습 사례 22개에 대한 모델 평가가 아니다. 임시 테스트 파일은 저장소에 추가하지 않았고, 지속적으로 실행할 평가·회귀 검사 도구는 후속 작업이다.
+- 최초 임시 Deno 검사는 `analysisOutput.test.ts`로 옮겼다. 문서 출력 예시 3개, 잘못된 형식·조합 17개, 해설 요청의 유보 조합 1개, 입력 직렬화·메시지 분리 1개를 검사한다. 총 22개는 로컬 코드 검사 수이며 학습 사례 22개에 대한 모델 평가가 아니다. 실제 모델 자동 평가 실행기는 아직 없다.
 - 실제 LLM/STT 호출과 응답 비교, `functions serve`에서의 실행·HTTP 시험은 하지 않았다. 기존 API 타입 검사 통과를 Edge Runtime 실행 검증으로 대체하지 않는다.
+
+#### 출력 회귀 검사 실행
+
+**저장소 루트**에서 아래 명령 하나로 실행한다. Deno 실행 파일이 PATH에 있어야 한다. 현재 작업 환경에서는 앞서 준비한 임시 Deno 2.9.6 실행기를 사용했으며, 이번 작업에서 추가 패키지나 전역 도구를 설치하지 않는다. 일반 터미널에 Deno가 없으면 루트 README의 설치 안내에 따라 사용자가 설치해야 한다.
+
+```bash
+deno test --no-lock --config backend/supabase/functions/api/deno.json --allow-read=ai/evals/outputDraft.md ai/evals/analysisOutput.test.ts
+```
+
+외부 테스트 라이브러리를 추가하지 않고 `Deno.test`를 사용한다. import map은 기존 함수 설정을 읽으며, 상대 import는 `.ts`를 명시한다. 문서 예시를 `import.meta.url` 기준으로 직접 읽어 테스트용 복사본과 달라지는 것을 피한다. 문서 예시의 개수·형식이 바뀌면 검사도 함께 검토해야 한다.
+
+런타임 읽기 권한은 `outputDraft.md` 한 파일에만 부여한다. 모델·DB·HTTP 서버를 호출하지 않고 비밀 키를 읽지 않는다. 첫 실행 때 Deno가 고정된 zod 의존성을 받는 네트워크 접근은 필요할 수 있다. 권한 없는 추가 파일 읽기·네트워크 호출은 테스트에 허용하지 않는다. 현재 CI에는 이 명령을 추가하지 않았다.
+
+이 검사는 JSON 형태·선택한 조합과 직렬화 경계를 확인한다. 학습 내용의 사실 정확성, 실제 모델의 튜티 행동·복수 질문·프롬프트 주입 방어 성능, 전체 사례의 판정 품질을 검증하지 않는다.
 
 ### PR·문서 대조에서 남은 연결 사항
 
