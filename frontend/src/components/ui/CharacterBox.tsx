@@ -3,12 +3,7 @@ import { StyleSheet, Text, View } from 'react-native';
 
 import { SPECIES } from '@/api/mock/data/species';
 import type { GrowthStage } from '@/api/tempContract';
-
-const STAGE_LABEL: Record<GrowthStage, string> = {
-  baby: '아기',
-  child: '어린이',
-  adult: '성체',
-};
+import { STAGE_LABEL } from '@/features/character/growth';
 
 type Props = {
   speciesId: SpeciesId;

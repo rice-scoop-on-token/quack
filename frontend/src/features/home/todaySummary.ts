@@ -25,11 +25,18 @@ export type SubjectShare = {
 export type TodaySummary = {
   totalSeconds: number;
   count: number;
+  // 충분 판정을 받은 개념 수. 세션마다 서로 다른 개념만 센다(같은 개념을 여러 번 충분히 설명해도 1개).
+  conceptCount: number;
   // 공부 시간이 많은 과목부터
   bySubject: SubjectShare[];
 };
 
-// 오늘(기기 시간 기준) 끝낸 세션의 공부 시간 합, 세션 수, 과목별 시간
+// 세션에서 충분 판정을 받은 서로 다른 개념
+export function understoodConcepts(session: StudySession): string[] {
+  return [...new Set(session.turns.filter((t) => t.analysis.verdict === 'sufficient').map((t) => t.analysis.concept))];
+}
+
+// 오늘(기기 시간 기준) 끝낸 세션의 공부 시간 합, 세션 수, 설명한 개념 수, 과목별 시간
 export function summarizeToday(sessions: StudySession[], folders: Folder[], now: Date): TodaySummary {
   const today = now.toDateString();
   const todays = sessions.filter((s) => s.ended_at && new Date(s.ended_at).toDateString() === today);
@@ -46,6 +53,7 @@ export function summarizeToday(sessions: StudySession[], folders: Folder[], now:
   return {
     totalSeconds: todays.reduce((sum, s) => sum + s.study_seconds, 0),
     count: todays.length,
+    conceptCount: todays.reduce((sum, s) => sum + understoodConcepts(s).length, 0),
     bySubject,
   };
 }

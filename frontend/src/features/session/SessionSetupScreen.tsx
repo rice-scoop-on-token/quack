@@ -20,12 +20,15 @@ export function SessionSetupScreen() {
 
   if (!selectedFolder) {
     return (
-      <View style={styles.empty}>
+      <BottomActionLayout
+        actions={
+          // 과목 만들기 버튼
+          <Button title="과목 만들기" onPress={() => router.replace('/subjects/new')} />
+        }
+      >
         {/* 과목 없음 안내 */}
         <Text>공부할 과목이 없어요. 과목을 먼저 만들어 주세요.</Text>
-        {/* 과목 만들기 버튼 */}
-        <Button title="과목 만들기" onPress={() => router.replace('/subjects/new')} />
-      </View>
+      </BottomActionLayout>
     );
   }
 
@@ -38,7 +41,8 @@ export function SessionSetupScreen() {
     // selectedFolder는 위에서 확인했지만 함수 안이라 타입이 좁혀지지 않아 !를 쓴다.
     // QuackApi 교체 지점: 여기서 sessions 행을 만들고(POST /sessions) 받은 세션 id로 타이머에 간다.
     // ?demo= 값은 화면 주소마다 따로라서 타이머 주소에도 넘긴다(?demo=hour 등)
-    router.push({
+    // 공부 준비는 바꿔 끼운다. 세션이 끝나면 앞 화면으로 돌아오지 않고 홈으로 가게 하기 위해서다.
+    router.replace({
       pathname: '/session/timer',
       params: { folderId: selectedFolder!.id, goal: trimmed, ...(demo ? { demo } : {}) },
     });
@@ -92,12 +96,6 @@ export function SessionSetupScreen() {
 }
 
 const styles = StyleSheet.create({
-  empty: {
-    flex: 1,
-    justifyContent: 'center',
-    gap: 12,
-    padding: 24,
-  },
   form: {
     gap: 8,
   },

@@ -1,7 +1,13 @@
 import { useEffect, useReducer, useState } from 'react';
 
 import { useDemoVariant } from '@/api/mock/useDemoVariant';
-import { elapsedMs, NO_EXPLANATION_MS, sessionReducer, startSession } from '@/features/session/machine';
+import {
+  elapsedMs,
+  isIdleOver,
+  NO_EXPLANATION_MS,
+  sessionReducer,
+  startSession,
+} from '@/features/session/machine';
 
 // ?demo=hour: 59:50부터 시작해 1시간을 넘길 때 표시를 10초 만에 확인한다
 const DEMO_HOUR_START_MS = (59 * 60 + 50) * 1000;
@@ -17,7 +23,6 @@ export function useSessionTimer() {
     startSession(Date.now(), demo === 'hour' ? DEMO_HOUR_START_MS : 0),
   );
   const [now, setNow] = useState(Date.now);
-  // 커밋 6에서 timing → aiQuestion(idleTimeout) 전환에 쓴다
   const noExplanationMs = demo === 'idle' ? DEMO_IDLE_MS : NO_EXPLANATION_MS;
 
   useEffect(() => {
@@ -28,6 +33,13 @@ export function useSessionTimer() {
     const timer = setInterval(() => setNow(Date.now()), 1000);
     return () => clearInterval(timer);
   }, [state.runningSince]);
+
+  // 설명 없이 시간이 지나면 선생님이 먼저 질문한다(timing → aiQuestion)
+  useEffect(() => {
+    if (isIdleOver(state, now, noExplanationMs)) {
+      dispatch({ type: 'idleTimeout' });
+    }
+  }, [state, now, noExplanationMs]);
 
   // 세션을 끝내고 끝낸 시각과 공부 시간을 돌려준다
   function finish(): { endedAt: number; studyMs: number } {
@@ -40,7 +52,7 @@ export function useSessionTimer() {
     state,
     elapsedMs: elapsedMs(state, now),
     running: state.runningSince !== null,
-    noExplanationMs,
+    send: dispatch,
     pause: () => dispatch({ type: 'pause', now: Date.now() }),
     resume: () => dispatch({ type: 'resume', now: Date.now() }),
     finish,

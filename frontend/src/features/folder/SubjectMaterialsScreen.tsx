@@ -1,9 +1,10 @@
+import type { Folder } from '@quack/shared';
 import { router, useLocalSearchParams } from 'expo-router';
 import { Button, Text } from 'react-native';
 
 import { useTempStore } from '@/api/mock/tempStore';
 import { BottomActionLayout } from '@/components/ui/BottomActionLayout';
-import { MaterialUpload } from '@/features/folder/MaterialUpload';
+import { MaterialUploadActions, MaterialUploadBody, useMaterialUpload } from '@/features/folder/MaterialUpload';
 
 // 과목 상세(L-02)와 과목 추가에서 들어오는 자료 추가 화면
 export function SubjectMaterialsScreen() {
@@ -22,28 +23,42 @@ export function SubjectMaterialsScreen() {
   }
 
   if (!folder) {
-    return (
-      <BottomActionLayout
-        actions={
-          // 과목 서랍으로 가는 버튼
-          <Button title="과목 서랍으로" onPress={() => router.dismissTo('/subjects')} />
-        }
-      >
-        {/* 과목 없음 안내 (주소로 바로 들어오거나 새로고침한 경우) */}
-        <Text>과목을 찾을 수 없어요.</Text>
-      </BottomActionLayout>
-    );
+    return <MissingFolder />;
   }
+  return <MaterialsForm folder={folder} onDone={done} />;
+}
 
+// 자료 추가 본문과 하단 버튼. 훅(useMaterialUpload)이 과목을 받아야 해서 과목이 있을 때만 그린다.
+function MaterialsForm({ folder, onDone }: { folder: Folder; onDone: () => void }) {
+  const upload = useMaterialUpload(folder);
   return (
     <BottomActionLayout
       actions={
-        // 완료 버튼
-        <Button title="완료" onPress={done} />
+        <>
+          {/* 자료 업로드 버튼 */}
+          <MaterialUploadActions state={upload} />
+          {/* 완료 버튼 */}
+          <Button title="완료" onPress={onDone} />
+        </>
       }
     >
       {/* 자료 추가 영역 */}
-      <MaterialUpload folder={folder} />
+      <MaterialUploadBody state={upload} />
+    </BottomActionLayout>
+  );
+}
+
+// 과목 없음 안내 (주소로 바로 들어오거나 새로고침한 경우)
+function MissingFolder() {
+  return (
+    <BottomActionLayout
+      actions={
+        // 과목 서랍으로 가는 버튼
+        <Button title="과목 서랍으로" onPress={() => router.dismissTo('/subjects')} />
+      }
+    >
+      {/* 과목 없음 안내 */}
+      <Text>과목을 찾을 수 없어요.</Text>
     </BottomActionLayout>
   );
 }

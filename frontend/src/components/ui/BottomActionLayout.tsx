@@ -8,10 +8,12 @@ type Props = {
   actions: ReactNode;
   // 내용이 짧으면 세로 중앙에 둔다. 길면 그대로 스크롤된다.
   centered?: boolean;
+  // 하단 탭 안의 화면이면 true. 탭 바가 홈 바 영역을 맡으므로 그만큼 띄우지 않는다.
+  inTab?: boolean;
 };
 
 // 화면 내용은 위에서 스크롤되고, 다음 단계 버튼은 화면 맨 아래에 고정되는 레이아웃이다.
-export function BottomActionLayout({ children, actions, centered = false }: Props) {
+export function BottomActionLayout({ children, actions, centered = false, inTab = false }: Props) {
   const insets = useSafeAreaInsets();
   const keyboardHeight = useKeyboardHeight();
 
@@ -25,7 +27,9 @@ export function BottomActionLayout({ children, actions, centered = false }: Prop
       {/* 하단 고정 버튼 영역 */}
       {/* 키보드가 열려 있으면 키보드 높이만큼, 아니면 아이폰 홈 바 영역만큼 띄운다.
           키보드가 홈 바 영역을 덮으므로 둘을 더하지 않는다. */}
-      <View style={[styles.actions, { paddingBottom: Math.max(keyboardHeight, insets.bottom) + 12 }]}>
+      <View
+        style={[styles.actions, { paddingBottom: (inTab ? keyboardHeight : Math.max(keyboardHeight, insets.bottom)) + 12 }]}
+      >
         {actions}
       </View>
     </View>

@@ -1,21 +1,27 @@
 import { router, useLocalSearchParams, usePreventRemove } from 'expo-router';
 import { useState } from 'react';
-import { Button, Platform, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Button, Platform, StyleSheet, Text, View } from 'react-native';
 
 import { TEMP_USER_ID, tempId, useTempStore } from '@/api/mock/tempStore';
-import { CharacterBox } from '@/components/ui/CharacterBox';
+import { useDemoVariant } from '@/api/mock/useDemoVariant';
+import { BottomActionLayout } from '@/components/ui/BottomActionLayout';
+import { NoRecord } from '@/components/ui/NoRecord';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { growthFromXp } from '@/features/character/growth';
 import { useCharacterXp } from '@/features/character/useCharacterXp';
+import { phaseView } from '@/features/session/components/SessionPhasePanel';
+import { useExplanation } from '@/features/session/hooks/useExplanation';
 import { useSessionTimer } from '@/features/session/hooks/useSessionTimer';
 import { formatElapsed } from '@/features/session/machine';
 
-// S-02 집중 타이머
+// S-02 집중 타이머와 S-03 설명·꼬리 질문. 시간이 끊기지 않도록 한 화면 안에서 단계별 본문만 바꾼다.
 export function TimerScreen() {
   const { folderId, goal } = useLocalSearchParams<{ folderId?: string; goal?: string }>();
   const { folders, addSession } = useTempStore();
   const folder = folders.find((f) => f.id === folderId);
   const timer = useSessionTimer();
+  const demo = useDemoVariant();
+  const explanation = useExplanation(timer);
   const { stage } = growthFromXp(useCharacterXp(folderId ?? ''));
   const [confirmingFinish, setConfirmingFinish] = useState(false);
   // 웹 브라우저 뒤로 가기로 나가려 할 때 띄우는 확인 창
@@ -23,7 +29,9 @@ export function TimerScreen() {
 
   // 세션이 진행 중이면 "공부 마치기"로만 나간다. 헤더 뒤로 버튼과 밀어서 뒤로 가기는 (app)/_layout.tsx 에서 숨긴다.
   // 앱(Android 뒤로 가기 버튼 포함)은 그냥 막는다. 웹 브라우저 뒤로 가기는 완전히 막을 수 없어서 기록 없이 나가는지 확인한다.
-  const active = !!folder && !!goal;
+  // 공부 마치기나 기록 없이 나가기로 떠날 때는 막기를 함께 끈다(usePreventRemove가 둘을 맞추라고 경고한다)
+  const [leaving, setLeaving] = useState(false);
+  const active = !!folder && !!goal && !leaving;
   const disablePrevention = usePreventRemove(active, () => {
     if (Platform.OS === 'web') {
       setConfirmingLeave(true);
@@ -31,21 +39,21 @@ export function TimerScreen() {
   });
 
   if (!folder || !goal) {
-    return (
-      <View style={styles.container}>
-        {/* 세션 없음 안내 (주소로 바로 들어오거나 새로고침한 경우) */}
-        <Text>진행 중인 공부가 없어요. 홈에서 다시 시작해 주세요.</Text>
-        {/* 홈으로 가는 버튼 */}
-        <Button title="홈으로" onPress={() => router.dismissTo('/home')} />
-      </View>
-    );
+    return <NoRecord message="진행 중인 공부가 없어요. 홈에서 다시 시작해 주세요." onHome={() => router.dismissTo('/home')} />;
   }
+
+  const phase = timer.state.phase;
+  // 분석 중에는 공부 마치기를 막는다(machine.ts 규칙)
+  const canFinish = phase !== 'analyzing';
+  // 설명 단계에서 보내지 않은 입력이 있으면 마치기 확인 창에 알린다
+  const hasUnsent = phase === 'explaining' && explanation.draft.text.trim() !== '';
 
   function handleFinish() {
     const { endedAt, studyMs } = timer.finish();
+    const sessionId = tempId();
     // QuackApi 교체 지점: POST /sessions/:id/finish
     addSession({
-      id: tempId(),
+      id: sessionId,
       user_id: TEMP_USER_ID,
       folder_id: folder!.id,
       goal: goal!,
@@ -53,61 +61,76 @@ export function TimerScreen() {
       started_at: new Date(timer.state.startedAt).toISOString(),
       ended_at: new Date(endedAt).toISOString(),
       study_seconds: Math.floor(studyMs / 1000),
+      turns: explanation.turns,
+      quiz: null,
     });
     setConfirmingFinish(false);
+    setLeaving(true);
     disablePrevention();
-    // 세션 점검·리포트(S-04, S-05)는 커밋 7에서 만든다. 그때 이동 위치를 점검 화면으로 바꾼다.
-    router.dismissTo('/home');
+    // 세션 점검(S-04)으로 간다. ?demo= 값도 넘긴다(fail, grow 등).
+    router.replace({ pathname: '/session/review', params: { sessionId, ...(demo ? { demo } : {}) } });
   }
 
-  // 막힌 뒤로 가기(공부 준비로 돌아가기)를 다시 실행하지 않고, 공부 마치기와 같게 홈으로 간다
+  // 막힌 뒤로 가기를 다시 실행하지 않고 홈으로 간다
   function leaveWithoutRecord() {
     setConfirmingLeave(false);
+    setLeaving(true);
     disablePrevention();
     router.dismissTo('/home');
   }
 
+  const view = phaseView({
+    folder,
+    stage,
+    goal,
+    timer,
+    explanation,
+    onFinish: () => setConfirmingFinish(true),
+  });
+
   return (
-    <ScrollView contentContainerStyle={styles.container}>
-      {/* 과목과 집중 중 표시 */}
-      <Text>{folder.name} · {timer.running ? '집중 중' : '쉬는 중'}</Text>
-      {/* 오늘의 학습 목표 */}
-      <Text>{goal}</Text>
-
-      {/* 선생님 캐릭터와 한 줄 안내 */}
-      <View style={styles.character}>
-        <CharacterBox speciesId={folder.species_id} stage={stage} size={160} />
-        <Text>{timer.running ? '나도 옆에서 읽고 있을게.' : '잠깐 쉬어가자.'}</Text>
-      </View>
-
-      {/* 경과 시간 (쉬는 시간은 빠지고, 선생님과 대화하는 시간은 들어간다) */}
-      <View style={styles.character}>
-        <Text accessibilityRole="timer">{formatElapsed(timer.elapsedMs)}</Text>
+    <BottomActionLayout
+      actions={
+        <>
+          {/* 단계별 버튼 */}
+          {view.actions}
+          {/* 쉬기·다시 시작, 공부 마치기 버튼 (모든 단계에서 보인다) */}
+          <View style={styles.row}>
+            {/* 쉬기 또는 다시 시작 버튼 */}
+            {timer.running ? (
+              <Button title="잠깐 쉬기" onPress={timer.pause} />
+            ) : (
+              <Button title="다시 시작" onPress={timer.resume} />
+            )}
+            {/* 공부 마치기 버튼 (분석 중에는 비활성) */}
+            <Button title="공부 마치기" disabled={!canFinish} onPress={() => setConfirmingFinish(true)} />
+          </View>
+        </>
+      }
+    >
+      {/* 위쪽 영역: 모든 단계에서 시간이 흐르고, 쉬기를 눌렀을 때만 멈춘다 */}
+      <View style={styles.top}>
+        {/* 과목과 집중 중 표시 */}
+        <Text>
+          {folder.name} · {timer.running ? '집중 중' : '쉬는 중'}
+        </Text>
+        {/* 경과 시간 (쉬는 시간은 빠지고, 선생님과 대화하는 시간은 들어간다) */}
+        <Text style={styles.time} accessibilityRole="timer">
+          {formatElapsed(timer.elapsedMs)}
+        </Text>
         <Text>{timer.running ? '지금 쌓이는 공부 시간' : '잠시 쉬어가는 중'}</Text>
       </View>
 
-      {/* 쉬기·다시 시작, 공부 마치기 버튼 */}
-      <View style={styles.row}>
-        {/* 쉬기 또는 다시 시작 버튼 */}
-        {timer.running ? (
-          <Button title="잠깐 쉬기" onPress={timer.pause} />
-        ) : (
-          <Button title="다시 시작" onPress={timer.resume} />
-        )}
-        {/* 공부 마치기 버튼 */}
-        <Button title="공부 마치기" onPress={() => setConfirmingFinish(true)} />
-      </View>
-
-      {/* 설명 시작 버튼 (설명 화면은 커밋 6에서 만든다) */}
-      <Button title="이제 설명해 볼게 (준비 중)" disabled onPress={() => {}} />
-      {/* AI 선제 질문 바로 보기 버튼 (커밋 6에서 만든다) */}
-      <Button title="기다리지 않고 반응 보기 (준비 중)" disabled onPress={() => {}} />
+      {/* 단계별 본문 */}
+      {view.body}
 
       {/* 공부 마치기 확인 창 */}
       <ConfirmDialog
         visible={confirmingFinish}
         title="공부를 마칠까요?"
-        message={`지금까지 ${formatElapsed(timer.elapsedMs)} 공부했어요. 기록을 저장하고 홈으로 가요.`}
+        message={`지금까지 ${formatElapsed(timer.elapsedMs)} 공부했어요. 기록을 저장하고 학습 점검으로 가요.${
+          hasUnsent ? ' 보내지 않은 설명은 저장되지 않아요.' : ''
+        }`}
         confirmLabel="공부 마치기"
         onConfirm={handleFinish}
         onCancel={() => setConfirmingFinish(false)}
@@ -122,18 +145,16 @@ export function TimerScreen() {
         onConfirm={leaveWithoutRecord}
         onCancel={() => setConfirmingLeave(false)}
       />
-    </ScrollView>
+    </BottomActionLayout>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flexGrow: 1,
-    justifyContent: 'center',
-    gap: 12,
-    padding: 24,
+  // 경과 시간을 크게 보여 준다 (임시 크기, 디자인 작업 때 바꾼다)
+  time: {
+    fontSize: 48,
   },
-  character: {
+  top: {
     alignItems: 'center',
     gap: 8,
   },

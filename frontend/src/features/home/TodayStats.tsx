@@ -3,14 +3,14 @@ import { StyleSheet, Text, View } from 'react-native';
 
 import { TEMP_USER_ID, useTempStore } from '@/api/mock/tempStore';
 import { useDemoVariant } from '@/api/mock/useDemoVariant';
-import type { StudySession } from '@/api/tempContract';
+import type { SessionTurn, StudySession } from '@/api/tempContract';
 import { summarizeToday } from '@/features/home/todaySummary';
 
 // 홈 오늘의 학습 기록. 모든 과목의 합이다.
 export function TodayStats() {
   const { sessions, folders } = useTempStore();
   const demo = useDemoVariant();
-  // ?demo=today: 저장된 기록 대신 두 과목으로 나뉜 오늘 기록 2건을 보여 준다(저장하지 않는다)
+  // ?demo=today: 저장된 기록 대신 두 과목으로 나뉜 오늘 기록 2건(설명한 개념 2개)을 보여 준다(저장하지 않는다)
   const summary =
     demo === 'today'
       ? summarizeToday(demoSessions(), DEMO_FOLDERS, new Date())
@@ -30,8 +30,8 @@ export function TodayStats() {
           <View style={styles.row}>
             <Text>오늘의 공부 {Math.floor(summary.totalSeconds / 60)}분</Text>
             <Text>공부 횟수 {summary.count}회</Text>
-            {/* 설명한 개념 수는 설명 분석(커밋 6)이 생기면 연결한다 */}
-            <Text>설명한 개념 0개</Text>
+            {/* 설명한 개념 수 (충분 판정을 받은 개념) */}
+            <Text>설명한 개념 {summary.conceptCount}개</Text>
           </View>
 
           {/* 과목별 공부 시간 비율 막대 (스크린 리더는 아래 범례를 읽는다) */}
@@ -63,12 +63,23 @@ const DEMO_FOLDERS: Folder[] = [
   { id: 'demo-b', user_id: TEMP_USER_ID, name: '과목 B', species_id: 'cat', created_at: '' },
 ];
 
+// 개념 수는 충분 판정을 받은 서로 다른 개념만 세므로, 데모 설명 기록은 판정과 개념 이름만 둔다
+const demoTurn = (concept: string) => ({ analysis: { verdict: 'sufficient', concept } }) as SessionTurn;
+
 function demoSessions(): StudySession[] {
   const ended = new Date().toISOString();
-  const base = { user_id: TEMP_USER_ID, status: 'finished' as const, started_at: ended, ended_at: ended };
+  const base = { user_id: TEMP_USER_ID, status: 'finished' as const, started_at: ended, ended_at: ended, quiz: null };
   return [
-    { ...base, id: 'demo-1', folder_id: 'demo-a', goal: '데모', study_seconds: 25 * 60 },
-    { ...base, id: 'demo-2', folder_id: 'demo-b', goal: '데모', study_seconds: 18 * 60 },
+    // 과목 A는 개념 2개를 충분히 설명했다
+    {
+      ...base,
+      id: 'demo-1',
+      folder_id: 'demo-a',
+      goal: '데모',
+      study_seconds: 25 * 60,
+      turns: [demoTurn('핵심 정의'), demoTurn('사용 예시')],
+    },
+    { ...base, id: 'demo-2', folder_id: 'demo-b', goal: '데모', study_seconds: 18 * 60, turns: [] },
   ];
 }
 

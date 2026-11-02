@@ -1,5 +1,12 @@
 import { STAGE_XP, type GrowthStage } from '@/api/tempContract';
 
+// 성장 단계 이름. 캐릭터 박스와 보상·성장 축하 화면에서 쓴다.
+export const STAGE_LABEL: Record<GrowthStage, string> = {
+  baby: '아기',
+  child: '어린이',
+  adult: '성체',
+};
+
 export type Growth = {
   stage: GrowthStage;
   // 다음 단계까지 남은 경험치. 다 자랐으면(adult) null

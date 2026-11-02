@@ -12,15 +12,9 @@ const STATUS_LABEL: Record<Material['status'], string> = {
   failed: '읽기 실패',
 };
 
-type Props = {
-  folder: Folder;
-  // 넘기면 업로드 버튼 아래에 "나중에 추가할게요"를 보여 준다. 온보딩에서만 쓴다.
-  onSkip?: () => void;
-};
-
 // 자료 추가. 온보딩 마지막 단계(O-04)와 과목 상세의 자료 추가에서 같이 쓴다.
-// 완료·건너뛰기 버튼은 화면마다 다음 이동이 달라서 각 화면의 하단 고정 영역에 둔다.
-export function MaterialUpload({ folder, onSkip }: Props) {
+// 버튼은 모두 화면 하단 고정 영역에 두므로, 본문(MaterialUploadBody)과 버튼(MaterialUploadActions)을 나눴다.
+export function useMaterialUpload(folder: Folder) {
   const { materials, addMaterial, setMaterialStatus } = useTempStore();
   const demo = useDemoVariant();
   const folderMaterials = materials.filter((m) => m.folder_id === folder.id);
@@ -48,6 +42,19 @@ export function MaterialUpload({ folder, onSkip }: Props) {
     setTimeout(() => setMaterialStatus(material.id, 'ready'), 800);
   }
 
+  return { folder, folderMaterials, loading, failed, upload };
+}
+
+type UploadState = ReturnType<typeof useMaterialUpload>;
+
+type BodyProps = {
+  state: UploadState;
+  // 넘기면 과목 카드 아래에 "나중에 추가할게요"를 보여 준다. 온보딩에서만 쓴다.
+  onSkip?: () => void;
+};
+
+// 자료 추가 본문(제목, 과목 카드, 나중에 추가하기, 처리 상태, 등록한 자료 목록)
+export function MaterialUploadBody({ state, onSkip }: BodyProps) {
   return (
     <View style={styles.container}>
       {/* 화면 제목과 설명 */}
@@ -56,14 +63,11 @@ export function MaterialUpload({ folder, onSkip }: Props) {
 
       {/* 자료를 넣을 과목 카드 */}
       <View style={styles.card}>
-        <Text>{folder.name}</Text>
+        <Text>{state.folder.name}</Text>
         <Text>과목 폴더</Text>
       </View>
-
-      {/* 자료 업로드 버튼 */}
-      <Button title="자료 업로드" onPress={upload} />
       {onSkip ? (
-        // 나중에 추가하기 버튼 (작은 글씨)
+        // 나중에 추가하기 버튼 (작은 글씨, 온보딩 화면 설계대로 본문에 둔다)
         <Pressable style={styles.skipButton} onPress={onSkip} accessibilityRole="button">
           <Text style={styles.skip}>나중에 추가할게요</Text>
         </Pressable>
@@ -72,26 +76,22 @@ export function MaterialUpload({ folder, onSkip }: Props) {
       <Text>PDF · 텍스트 · 이미지 자료를 올릴 수 있어요.</Text>
 
       {/* 자료 처리 중 상태 */}
-      {loading ? (
+      {state.loading ? (
         <View style={styles.card}>
           <Text>자료에서 텍스트를 읽고 있어요…</Text>
           <ActivityIndicator />
         </View>
       ) : null}
 
-      {/* 자료 처리 실패 상태 */}
-      {failed ? (
+      {/* 자료 처리 실패 상태 (다른 자료 선택 버튼은 하단에 있다) */}
+      {state.failed ? (
         <View style={styles.card}>
-          <Text accessibilityRole="alert">
-            자료를 읽지 못했어요. 텍스트가 있는 파일로 다시 시도해 주세요.
-          </Text>
-          {/* 다른 자료 선택 버튼 */}
-          <Button title="다른 자료 선택" onPress={() => router.setParams({ demo: undefined })} />
+          <Text accessibilityRole="alert">자료를 읽지 못했어요. 텍스트가 있는 파일로 다시 시도해 주세요.</Text>
         </View>
       ) : null}
 
       {/* 등록한 자료 목록 */}
-      {folderMaterials.map((m) => (
+      {state.folderMaterials.map((m) => (
         // 자료 항목
         <View key={m.id} style={styles.card}>
           <Text>{m.title}</Text>
@@ -99,6 +99,18 @@ export function MaterialUpload({ folder, onSkip }: Props) {
         </View>
       ))}
     </View>
+  );
+}
+
+// 자료 추가 버튼들. 각 화면이 하단 고정 영역에서 자기 다음 버튼(완료 등) 위에 놓는다.
+export function MaterialUploadActions({ state }: { state: UploadState }) {
+  return (
+    <>
+      {/* 실패했을 때 다른 자료 선택 버튼 */}
+      {state.failed ? <Button title="다른 자료 선택" onPress={() => router.setParams({ demo: undefined })} /> : null}
+      {/* 자료 업로드 버튼 */}
+      <Button title="자료 업로드" onPress={state.upload} />
+    </>
   );
 }
 
