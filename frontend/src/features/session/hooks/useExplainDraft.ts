@@ -34,6 +34,8 @@ export function useExplainDraft() {
     },
     recording,
     toggleRecording,
+    // 돌아가기로 설명 입력을 나갈 때 쓴다(전사문은 채우지 않는다)
+    stopRecording: () => setRecording(false),
     error,
     setError,
     // 녹음 중이거나 빈 입력이면 보낼 수 없다

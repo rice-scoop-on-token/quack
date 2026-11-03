@@ -88,10 +88,26 @@ export function useExplanation(timer: Timer) {
   }
 
   // 꼬리 질문 넘어가기: 이 개념은 보완할 개념으로 남기고 다음 개념으로 공부를 이어 간다
+  // 다음 개념으로 가므로 답하다 만 초안은 지운다
   function skip() {
     moveToNextConcept();
     setSkipped(true);
+    draft.stopRecording();
+    draft.clear();
+    draft.setError('');
     timer.send({ type: 'skip', now: Date.now() });
+  }
+
+  // 설명 입력의 "돌아가기". 꼬리 질문에 답하던 중이면 넘어가기와 같다.
+  // 그 밖에는 같은 개념이라 초안을 남겨, 다시 설명을 시작하면 이어서 쓸 수 있다.
+  function cancel() {
+    if (prompt.trigger === 'follow_up') {
+      skip();
+      return;
+    }
+    draft.stopRecording();
+    draft.setError('');
+    timer.send({ type: 'cancelExplain', now: Date.now() });
   }
 
   return {
@@ -105,5 +121,6 @@ export function useExplanation(timer: Timer) {
     send,
     continueStudy,
     skip,
+    cancel,
   };
 }

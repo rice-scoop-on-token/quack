@@ -34,8 +34,8 @@ type SessionState = {
   followUpCount: number;
 };
 
-// 쉬기·다시 시작은 단계와 따로 둔다. AI와 대화하는 단계에서도 시간이 흐르고, 쉬기를 눌렀을 때만 멈춘다.
-// 시각이 필요한 이벤트는 now를 받는다.
+// 쉬기·다시 시작은 단계와 따로 둔다. 시각이 필요한 이벤트는 now를 받는다.
+// AI와 대화하는 동안 타이머를 멈출지는 미정이다(CLAUDE.md 미정 사항). 지금은 멈추지 않는 것으로 임시 구현했다(쉬기를 눌렀을 때만 멈춘다).
 export type SessionEvent =
   | { type: 'pause'; now: number }
   | { type: 'resume'; now: number }
@@ -47,6 +47,9 @@ export type SessionEvent =
   | { type: 'startExplain' }
   // 녹음 또는 채팅 제출
   | { type: 'submit' }
+  // explaining의 "돌아가기". 꼬리 질문에 답하던 중이면 이 이벤트 대신 skip을 보낸다(넘어가기와 같다).
+  // 임시 구현, 팀 확인 필요: CLAUDE.md "세션 상태"에 없는 전환(explaining → timing)이다.
+  | { type: 'cancelExplain'; now: number }
   | { type: 'analyzed'; verdict: ExplanationVerdict; now: number }
   // 분석 요청 실패. 입력을 그대로 두고 다시 보낼 수 있게 explaining으로 돌아간다.
   | { type: 'analysisFailed' }
@@ -61,7 +64,7 @@ export type SessionEvent =
 const NEXT: Partial<Record<SessionPhase, Partial<Record<SessionEvent['type'], SessionPhase>>>> = {
   timing: { idleTimeout: 'aiQuestion', startExplain: 'explaining', finish: 'finished' },
   aiQuestion: { startExplain: 'explaining', snooze: 'timing', finish: 'finished' },
-  explaining: { submit: 'analyzing', finish: 'finished' },
+  explaining: { submit: 'analyzing', cancelExplain: 'timing', skip: 'timing', finish: 'finished' },
   analyzing: { analysisFailed: 'explaining' },
   followUp: { startExplain: 'explaining', skip: 'timing', finish: 'finished' },
   confirmed: { continue: 'timing', finish: 'finished' },
@@ -124,12 +127,17 @@ export function sessionReducer(state: SessionState, event: SessionEvent): Sessio
         return { ...state, phase: next, accumulatedMs: elapsedMs(state, event.now), runningSince: null };
       }
       // timing으로 돌아오면 설명 없음 시간을 처음부터 센다. 다음 개념으로 가면(이어서 공부, 넘어가기) 꼬리 질문 수도 0부터 센다.
-      if (event.type === 'snooze' || event.type === 'continue' || event.type === 'skip') {
+      if (
+        event.type === 'snooze' ||
+        event.type === 'cancelExplain' ||
+        event.type === 'continue' ||
+        event.type === 'skip'
+      ) {
         return {
           ...state,
           phase: next,
           timingSinceMs: elapsedMs(state, event.now),
-          followUpCount: event.type === 'snooze' ? state.followUpCount : 0,
+          followUpCount: event.type === 'continue' || event.type === 'skip' ? 0 : state.followUpCount,
         };
       }
       return { ...state, phase: next };

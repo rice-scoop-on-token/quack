@@ -96,8 +96,14 @@ export function phaseView({ folder, stage, goal, timer, explanation, onFinish }:
             <ExplainInput draft={draft} />
           </>
         ),
-        // 녹음·보내기 버튼 (실패했으면 다시 보내기)
-        actions: <ExplainActions draft={draft} onSend={explanation.send} />,
+        actions: (
+          <>
+            {/* 녹음·보내기 버튼 (실패했으면 다시 보내기) */}
+            <ExplainActions draft={draft} onSend={explanation.send} />
+            {/* 꼬리 질문에 답하던 중이면 넘어가기와 같다. 임시 구현, 팀 확인 필요 */}
+            <Button title="돌아가기" onPress={explanation.cancel} />
+          </>
+        ),
       };
 
     case 'analyzing':

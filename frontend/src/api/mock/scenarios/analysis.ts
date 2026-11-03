@@ -1,6 +1,7 @@
 import type { ExplanationTurn } from '@quack/shared';
 
 import type { ExplanationAnalysis, ExplanationVerdict } from '@/api/tempContract';
+import { josa } from '@/lib/josa';
 
 // 설명 분석 mock. 고정값이 아니라 시나리오로 판정을 바꿔 모든 분기를 화면에서 확인한다(CLAUDE.md).
 // 글로 보내든 말로 보내든 이 함수 하나로 분석한다. 분석 로직은 선생님(페르소나)과 상관없이 같다.
@@ -62,7 +63,7 @@ export function mockAnalysis(req: AnalyzeRequest): ExplanationAnalysis {
     follow_up_question: sufficient
       ? null
       : verdict === 'ambiguous'
-        ? `방금 설명에서 '${req.concept}'이 정확히 무엇을 가리키는지 다시 말해 줄래?`
+        ? `방금 설명에서 '${req.concept}'${josa(req.concept, '이', '가')} 정확히 무엇을 가리키는지 다시 말해 줄래?`
         : FOLLOW_UP_QUESTIONS[Math.min(req.followUpCount, FOLLOW_UP_QUESTIONS.length - 1)],
     next_topic: sufficient ? req.nextConcept : null,
     follow_up_count: req.followUpCount,

@@ -2,6 +2,8 @@ import type { Report } from '@quack/shared';
 
 import type { ExplanationVerdict, GrowthStage, StudySession, TempRewardGrant } from '@/api/tempContract';
 import { growthFromXp } from '@/features/character/growth';
+import { MAX_FOLLOW_UPS } from '@/features/session/machine';
+import { josa } from '@/lib/josa';
 
 export const VERDICT_LABEL: Record<ExplanationVerdict, string> = {
   sufficient: '충분',
@@ -57,10 +59,18 @@ export type ReExplainItem = { concept: string; question: string };
 // 꼬리 질문 없이 넘어간 개념은 그 개념을 다시 설명해 달라는 질문으로 채운다.
 export function reExplainItems(session: StudySession): ReExplainItem[] {
   return buildReport(session).weak_concepts.map((concept) => {
-    const asked = session.turns.filter((t) => t.analysis.concept === concept && t.analysis.follow_up_question);
+    // 꼬리 질문 한도에 걸린 분석은 상태 머신이 바로 공부로 돌아가서 그 질문이 화면에 나오지 않았다. 그래서 뺀다.
+    const shown = session.turns.filter(
+      (t) =>
+        t.analysis.concept === concept &&
+        t.analysis.follow_up_question !== null &&
+        t.analysis.follow_up_count < MAX_FOLLOW_UPS,
+    );
     return {
       concept,
-      question: asked.at(-1)?.analysis.follow_up_question ?? `'${concept}'을 다시 내 말로 설명해 줄래?`,
+      question:
+        shown.at(-1)?.analysis.follow_up_question ??
+        `'${concept}'${josa(concept, '을', '를')} 다시 내 말로 설명해 줄래?`,
     };
   });
 }

@@ -38,7 +38,7 @@ export function BottomActionLayout({ children, actions, centered = false, inTab 
 
 // KeyboardAvoidingView는 Stack 헤더 높이만큼 보정해야 하는데, 그 값을 주는 useHeaderHeight가
 // expo-router 공개 API에 없어서 키보드 높이를 직접 받는다.
-// ponytail: 화면 아래 끝이 창 아래 끝이라고 가정한다. 하단 탭 안에서 쓰면 탭 높이만큼 더 올라가니 그때 탭 높이를 빼야 한다.
+// 한계: 화면 아래 끝이 창 아래 끝이라고 가정한다. 하단 탭 안에서 쓰면 버튼이 탭 높이만큼 더 올라가므로, 그때는 탭 높이를 빼야 한다.
 // 확인 필요(Android 실기기): edge-to-edge에서 키보드가 열릴 때 창 크기도 줄어든다면 여백이 두 번 들어가 버튼이 키보드보다 높이 뜬다.
 // 그렇다면 Android에서는 이 값을 쓰지 않는다.
 function useKeyboardHeight(): number {

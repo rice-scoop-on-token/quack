@@ -61,7 +61,8 @@ export type SessionTurn = Pick<ExplanationTurn, 'seq' | 'trigger' | 'input_mode'
 
 // 끝낸 공부 세션 기록. shared의 Session에 공부 시간, 설명 기록, 점검 퀴즈 결과를 더한다.
 // BE에 공부 시간 칸 추가 제안 필요. 쉬는 시간은 빠지므로 ended_at - started_at 으로는 공부 시간을 알 수 없다.
-// AI와 대화하는 시간(설명, 분석, 꼬리 질문)도 공부 시간에 들어간다. 쉬기를 누른 동안만 빠진다.
+// 지금은 AI와 대화하는 시간(설명, 분석, 꼬리 질문)도 공부 시간에 들어가고, 쉬기를 누른 동안만 빠진다.
+// AI와 대화하는 동안 타이머를 멈출지는 미정이다(CLAUDE.md 미정 사항). 지금은 멈추지 않는 것으로 임시 구현했다.
 // turns와 quiz는 서버에서는 explanation_turns, quiz_attempts 테이블에 있다.
 export type StudySession = Session & {
   study_seconds: number;

@@ -22,7 +22,7 @@ export function useMaterialUpload(folder: Folder) {
   const failed = demo === 'error' || folderMaterials.some((m) => m.status === 'failed');
 
   // 실제 파일 선택 교체 지점: 파일을 고르게 하고, Storage 업로드 후 POST /materials/:id/process 를 호출한다.
-  // ponytail: supabase 구현이 아직 없어 mock 모드인지 검사하지 않고 항상 가짜 자료를 넣는다.
+  // 한계: supabase 구현이 아직 없어서, mock 모드인지 보지 않고 늘 샘플 자료를 넣는다. supabase를 연결할 때 고친다.
   function upload() {
     const material: Material = {
       id: tempId(),

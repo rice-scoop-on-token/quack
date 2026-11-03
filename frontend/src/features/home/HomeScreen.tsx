@@ -7,6 +7,7 @@ import { BottomActionLayout } from '@/components/ui/BottomActionLayout';
 import { CharacterGrowth } from '@/features/character/CharacterGrowth';
 import { SubjectSelect } from '@/features/folder/SubjectSelect';
 import { TodayStats } from '@/features/home/TodayStats';
+import { josa } from '@/lib/josa';
 
 // H-01 홈
 export function HomeScreen() {
@@ -24,7 +25,7 @@ export function HomeScreen() {
     );
   }
 
-  const speciesName = SPECIES.find((s) => s.id === selected.species_id)?.name;
+  const speciesName = SPECIES.find((s) => s.id === selected.species_id)?.name ?? '';
 
   return (
     // 위쪽은 스크롤되고, 공부 시작과 추가 기능 버튼은 하단 탭 바로 위에 고정된다
@@ -33,7 +34,7 @@ export function HomeScreen() {
       actions={
         <>
           {/* 공부 시작 버튼 (고른 과목으로 공부 준비에 들어간다) */}
-          <Button title={`${speciesName}와 공부 시작`} onPress={() => router.push('/session/setup')} />
+          <Button title={`${speciesName}${josa(speciesName, '과', '와')} 공부 시작`} onPress={() => router.push('/session/setup')} />
 
           {/* 추가 기능 버튼 (2·3차 화면) */}
           <View style={styles.row}>

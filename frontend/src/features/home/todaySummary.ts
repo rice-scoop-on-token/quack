@@ -6,7 +6,7 @@ import type { StudySession } from '@/api/tempContract';
 const SUBJECT_COLORS = ['#4e79a7', '#f28e2b', '#59a14f', '#e15759', '#b07aa1', '#edc948'];
 
 // 과목 id로 색을 고른다. 과목 순서가 바뀌거나 다른 과목을 지워도 그 과목의 색은 그대로다.
-// ponytail: 과목이 많으면 두 과목이 같은 색일 수 있다. 범례에 이름과 시간을 같이 써서 구분한다. 겹치면 안 되면 folders에 색 칸을 둔다.
+// 한계: 과목이 많으면 두 과목이 같은 색일 수 있다. 그래서 범례에 이름과 시간을 같이 써서 구분한다. 색이 겹치면 안 된다면 folders에 색 칸을 둔다.
 function subjectColor(folderId: string): string {
   let hash = 0;
   for (const ch of folderId) {

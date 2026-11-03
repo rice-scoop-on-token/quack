@@ -15,7 +15,7 @@ const DEMO_HOUR_START_MS = (59 * 60 + 50) * 1000;
 const DEMO_IDLE_MS = 10 * 1000;
 
 // 세션 상태 머신을 화면에 연결한다. 시간이 흐르는 동안 1초마다 다시 그린다.
-// ponytail: 진행 중인 세션은 화면 메모리에만 있다. 앱을 끄면 사라지고, 웹에서 새로고침하면 주소에 남은 과목·목표로 00:00부터 다시 시작한다.
+// 한계: 진행 중인 세션은 화면 메모리에만 있다. 앱을 끄면 사라지고, 웹에서 새로고침하면 주소에 남은 과목·목표로 00:00부터 다시 시작한다.
 // 서버 연결 때(POST /sessions) 서버의 진행 중 세션을 이어서 쓸지 다시 정한다.
 export function useSessionTimer() {
   const demo = useDemoVariant();
