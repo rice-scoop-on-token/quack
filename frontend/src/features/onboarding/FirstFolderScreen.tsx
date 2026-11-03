@@ -9,8 +9,8 @@ import { OnboardingStepLayout } from '@/features/onboarding/OnboardingStepLayout
 export function FirstFolderScreen() {
   const form = useNewFolderForm();
 
-  function handleSubmit() {
-    const folder = form.submit();
+  async function handleSubmit() {
+    const folder = await form.submit();
     if (folder) {
       router.push({ pathname: '/materials', params: { folderId: folder.id } });
     }

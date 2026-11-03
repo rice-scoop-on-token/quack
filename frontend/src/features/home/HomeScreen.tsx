@@ -2,18 +2,22 @@ import { router } from 'expo-router';
 import { Button, StyleSheet, Text, View } from 'react-native';
 
 import { SPECIES } from '@/api/mock/data/species';
-import { useTempStore } from '@/api/mock/tempStore';
+import { useApiQuery } from '@/api';
 import { BottomActionLayout } from '@/components/ui/BottomActionLayout';
 import { CharacterGrowth } from '@/features/character/CharacterGrowth';
+import { useSelectedFolder } from '@/features/folder/SelectedFolder';
 import { SubjectSelect } from '@/features/folder/SubjectSelect';
 import { TodayStats } from '@/features/home/TodayStats';
 import { josa } from '@/lib/josa';
 
 // H-01 홈
 export function HomeScreen() {
-  // 고른 과목은 공부 준비 화면과 같이 쓰도록 tempStore에 둔다
-  const { displayName, folders, selectedFolder: selected, setSelectedFolderId } = useTempStore();
+  const profile = useApiQuery((api) => api.getProfile(), []);
+  const { folders, selected, select } = useSelectedFolder();
 
+  if (folders === undefined) {
+    return null;
+  }
   if (!selected) {
     return (
       <View style={styles.empty}>
@@ -30,7 +34,10 @@ export function HomeScreen() {
       inTab
       actions={
         <>
-          <Button title={`${speciesName}${josa(speciesName, '과', '와')} 공부 시작`} onPress={() => router.push('/session/setup')} />
+          <Button
+            title={`${speciesName}${josa(speciesName, '과', '와')} 공부 시작`}
+            onPress={() => router.push('/session/setup')}
+          />
 
           <View style={styles.row}>
             <Button title="AI 팟캐스트 (준비 중)" disabled onPress={() => {}} />
@@ -40,10 +47,10 @@ export function HomeScreen() {
       }
     >
       <Text>오늘 함께할 과목</Text>
-      <SubjectSelect folders={folders} value={selected} onChange={(f) => setSelectedFolderId(f.id)} />
+      <SubjectSelect folders={folders} value={selected} onChange={(f) => select(f.id)} />
 
       <Text>나의 작은 공부 습관</Text>
-      <Text>{displayName}님, 오늘도 한 걸음 함께 자라볼까?</Text>
+      <Text>{profile?.display_name}님, 오늘도 한 걸음 함께 자라볼까?</Text>
 
       <CharacterGrowth folder={selected} />
 

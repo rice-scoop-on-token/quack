@@ -21,7 +21,7 @@ type Props = {
 
 // 타이머 화면의 단계별 본문과 하단 버튼. 버튼은 모두 화면 하단 고정 영역에 두므로 둘을 나눠 돌려준다.
 // 위쪽의 경과 시간과 하단의 쉬기·공부 마치기는 TimerScreen이 늘 보여 준다.
-// 선생님 말투는 그 과목 선생님의 성격(personas)을 따른다. 질문 내용은 분석 결과가 정한다.
+// 질문 내용(꼬리 질문, 선생님이 먼저 묻는 질문)은 서버가 정하고, 앞뒤에 붙는 말투 문구만 그 과목 선생님의 성격(personas)을 따른다.
 export function phaseView({ folder, stage, goal, timer, explanation, onFinish }: Props): {
   body: ReactNode;
   actions: ReactNode;
@@ -60,7 +60,7 @@ export function phaseView({ folder, stage, goal, timer, explanation, onFinish }:
               <CharacterBox speciesId={folder.species_id} stage={stage} size={120} />
             </View>
             <Text style={styles.bubble} accessibilityLiveRegion="polite">
-              {lines.aiQuestion}
+              {explanation.aiQuestion}
             </Text>
             <Text>설명이 없는 동안 책을 읽으며 기다렸어요.</Text>
           </>
@@ -69,7 +69,8 @@ export function phaseView({ folder, stage, goal, timer, explanation, onFinish }:
           <>
             <Button
               title="설명하기"
-              onPress={() => explanation.start({ trigger: 'ai_question', question: lines.aiQuestion })}
+              disabled={!explanation.aiQuestion}
+              onPress={() => explanation.start({ trigger: 'ai_question', question: explanation.aiQuestion })}
             />
             <Button title="조금 이따가" onPress={() => timer.send({ type: 'snooze', now: Date.now() })} />
           </>

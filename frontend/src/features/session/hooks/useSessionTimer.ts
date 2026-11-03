@@ -15,8 +15,8 @@ const DEMO_HOUR_START_MS = (59 * 60 + 50) * 1000;
 const DEMO_IDLE_MS = 10 * 1000;
 
 // 세션 상태 머신을 화면에 연결한다. 시간이 흐르는 동안 1초마다 다시 그린다.
-// 한계: 진행 중인 세션은 화면 메모리에만 있다. 앱을 끄면 사라지고, 웹에서 새로고침하면 주소에 남은 과목·목표로 00:00부터 다시 시작한다.
-// 서버 연결 때(POST /sessions) 서버의 진행 중 세션을 이어서 쓸지 다시 정한다.
+// 한계: 타이머 상태(공부 시간, 단계)는 화면 메모리에만 있다. 웹에서 새로고침하면 같은 세션으로 00:00부터 다시 잰다.
+// 서버 연결 때 진행 중인 세션의 시간을 이어서 쓸지 다시 정한다.
 export function useSessionTimer() {
   const demo = useDemoVariant();
   const [state, dispatch] = useReducer(sessionReducer, null, () =>
@@ -41,11 +41,11 @@ export function useSessionTimer() {
     }
   }, [state, now, noExplanationMs]);
 
-  // 세션을 끝내고 끝낸 시각과 공부 시간을 돌려준다
-  function finish(): { endedAt: number; studyMs: number } {
+  // 세션을 끝내고 공부 시간(쉬기 제외)을 돌려준다. 끝낸 시각은 서버가 정한다.
+  function finish(): number {
     const endedAt = Date.now();
     dispatch({ type: 'finish', now: endedAt });
-    return { endedAt, studyMs: elapsedMs(state, endedAt) };
+    return elapsedMs(state, endedAt);
   }
 
   return {

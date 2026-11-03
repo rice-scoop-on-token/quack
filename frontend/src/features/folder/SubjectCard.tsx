@@ -15,7 +15,7 @@ type Props = {
 // 과목 카드. 과목 서랍(L-01)에서 쓴다.
 export function SubjectCard({ folder, detail, onPress }: Props) {
   const species = SPECIES.find((s) => s.id === folder.species_id);
-  const { stage } = growthFromXp(useCharacterXp(folder.id));
+  const { stage } = growthFromXp(useCharacterXp(folder.id) ?? 0);
 
   return (
     <Pressable style={styles.card} onPress={onPress} accessibilityRole="button">

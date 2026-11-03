@@ -1,11 +1,9 @@
+import type { QuizPublic } from '@quack/shared';
 import { router, useLocalSearchParams } from 'expo-router';
-import { useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Button, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 
-import { analyzeExplanation } from '@/api/mock/scenarios/analysis';
-import { createMockQuiz } from '@/api/mock/scenarios/quiz';
-import { useTempStore } from '@/api/mock/tempStore';
-import { useDemoVariant } from '@/api/mock/useDemoVariant';
+import { useQuackApi } from '@/api';
 import type { ExplanationAnalysis } from '@/api/tempContract';
 import { BottomActionLayout } from '@/components/ui/BottomActionLayout';
 import { NoRecord } from '@/components/ui/NoRecord';
@@ -18,23 +16,39 @@ const SEND_ERROR = '연결이 끊겼어요. 작성한 설명은 그대로 있어
 // S-04 학습 점검. 보완할 개념이 있으면 다시 설명하기(선택)부터, 그다음 퀴즈(필수)를 풀고 리포트로 간다.
 export function ReviewScreen() {
   const { sessionId } = useLocalSearchParams<{ sessionId?: string }>();
+  const api = useQuackApi();
   const { session, params, leave } = useAfterSession(sessionId);
-  const { addSessionTurn, setSessionQuiz } = useTempStore();
-  const demo = useDemoVariant();
-  // 다시 설명해 충분을 받으면 보완할 개념이 줄어들므로, 블록 목록은 처음 들어왔을 때 것으로 고정한다
-  const [items] = useState<ReExplainItem[]>(() => (session ? reExplainItems(session) : []));
-  const [step, setStep] = useState<'reExplain' | 'quiz'>(items.length > 0 ? 'reExplain' : 'quiz');
-  const [quiz] = useState(() => createMockQuiz(sessionId ?? ''));
+  // 다시 설명해 충분을 받으면 보완할 개념이 줄어들므로, 블록 목록은 세션을 처음 불러왔을 때 것으로 고정한다
+  const [items, setItems] = useState<ReExplainItem[] | null>(null);
+  const [quizStarted, setQuizStarted] = useState(false);
+  const [quiz, setQuiz] = useState<QuizPublic | null>(null);
   const [open, setOpen] = useState<string | null>(null);
   const [drafts, setDrafts] = useState<Record<string, string>>({});
   // 블록(개념)별 분석 결과와 보내기 실패 문구
   const [analyses, setAnalyses] = useState<Record<string, ExplanationAnalysis>>({});
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [sending, setSending] = useState(false);
-  // ?demo=fail 은 여기서도 첫 분석 요청만 실패시킨다
-  const callCount = useRef(0);
 
-  if (!session) {
+  if (session && items === null) {
+    setItems(reExplainItems(session));
+  }
+  const step = quizStarted || items?.length === 0 ? 'quiz' : 'reExplain';
+
+  useEffect(() => {
+    if (step !== 'quiz' || !sessionId || quiz) {
+      return;
+    }
+    let current = true;
+    api.createQuiz(sessionId).then((r) => current && setQuiz(r.quiz));
+    return () => {
+      current = false;
+    };
+  }, [step, sessionId, quiz, api]);
+
+  if (session === undefined || (session && items === null)) {
+    return null;
+  }
+  if (!session || !items) {
     return <NoRecord message="점검할 공부 기록이 없어요." onHome={() => leave(() => router.dismissTo('/home'))} />;
   }
 
@@ -42,47 +56,33 @@ export function ReviewScreen() {
   const sendable = items.filter((it) => !analyses[it.concept] && drafts[it.concept]?.trim());
   const sentAny = Object.keys(analyses).length > 0;
 
+  // 타이머 설명과 같은 분석 경로(sendTurn)를 쓰고, 블록마다 따로 분석한다
   async function sendAll() {
     setSending(true);
-    const batch = sendable.map((it) => {
-      // React Compiler가 callCount.current++ 를 "먼저 올리고 쓰기"로 바꿀 수 있어서, 읽고 나서 따로 올린다
-      const callIndex = callCount.current;
-      callCount.current = callIndex + 1;
-      const text = drafts[it.concept].trim();
-      // 타이머 설명과 같은 분석 경로를 쓴다. 블록마다 따로 분석한다.
-      return analyzeExplanation({
-        concept: it.concept,
-        text,
-        trigger: 're_explain',
-        followUpCount: 0,
-        nextConcept: null,
-        demo,
-        callIndex,
-      }).then(
-        (analysis) => ({ it, text, analysis }),
-        () => ({ it, text, analysis: null }),
-      );
-    });
-    const done = await Promise.all(batch);
+    const done = await Promise.all(
+      sendable.map((it) =>
+        api
+          .sendTurn(session!.id, {
+            trigger: 're_explain',
+            input_mode: 'chat',
+            text: drafts[it.concept].trim(),
+            question_text: it.question,
+          })
+          .then(
+            (turn) => ({ it, analysis: turn.analysis }),
+            () => ({ it, analysis: null }),
+          ),
+      ),
+    );
     const nextAnalyses: Record<string, ExplanationAnalysis> = {};
     // 이번에 보낸 블록의 실패 문구만 새로 정한다(성공한 블록은 문구를 지운다)
     const nextErrors: Record<string, string> = {};
-    let seq = session!.turns.length;
-    done.forEach(({ it, text, analysis }) => {
-      if (!analysis) {
+    done.forEach(({ it, analysis }) => {
+      if (analysis) {
+        nextAnalyses[it.concept] = analysis;
+      } else {
         nextErrors[it.concept] = SEND_ERROR;
-        return;
       }
-      nextAnalyses[it.concept] = analysis;
-      seq += 1;
-      addSessionTurn(session!.id, {
-        seq,
-        trigger: 're_explain',
-        input_mode: 'chat',
-        question_text: it.question,
-        text,
-        analysis,
-      });
     });
     setAnalyses((prev) => ({ ...prev, ...nextAnalyses }));
     setErrors(nextErrors);
@@ -90,6 +90,9 @@ export function ReviewScreen() {
   }
 
   if (step === 'quiz') {
+    if (!quiz) {
+      return null;
+    }
     return (
       <QuizRunner
         quiz={quiz}
@@ -98,12 +101,6 @@ export function ReviewScreen() {
             <Text>짧은 퀴즈로 마무리해요</Text>
             <Text>외웠는지보다, 설명할 수 있는지가 중요해요.</Text>
           </>
-        }
-        onComplete={(graded) =>
-          setSessionQuiz(session.id, {
-            correct_count: graded.filter((r) => r.correct).length,
-            total_count: graded.length,
-          })
         }
         finishLabel="결과 리포트 보기"
         onFinish={() => leave(() => router.replace({ pathname: '/session/report', params }))}
@@ -121,7 +118,7 @@ export function ReviewScreen() {
             onPress={sendAll}
           />
           {/* 다시 설명하기는 선택이라 보내지 않고도 퀴즈로 넘어갈 수 있다 */}
-          <Button title={sentAny ? '퀴즈 풀기' : '건너뛰고 퀴즈 풀기'} disabled={sending} onPress={() => setStep('quiz')} />
+          <Button title={sentAny ? '퀴즈 풀기' : '건너뛰고 퀴즈 풀기'} disabled={sending} onPress={() => setQuizStarted(true)} />
         </>
       }
     >

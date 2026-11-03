@@ -13,6 +13,9 @@ export const unstable_settings = {
 export default function AppLayout() {
   const access = useAccessState();
 
+  if (access === 'loading') {
+    return null;
+  }
   if (access === 'onboarding') {
     return <Redirect href="/intro" />;
   }

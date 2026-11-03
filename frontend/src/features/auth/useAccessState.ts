@@ -1,10 +1,13 @@
-import { useTempStore } from '@/api/mock/tempStore';
+import { useApiQuery } from '@/api';
 
 // 익명 로그인이라 "로그인 전" 상태가 없다. 앱을 열면 항상 로그인된 사용자다.
-export type AccessState = 'onboarding' | 'app';
+// 프로필을 불러오는 동안은 'loading'이라, 레이아웃이 아무것도 그리지 않고 기다린다.
+export type AccessState = 'loading' | 'onboarding' | 'app';
 
 export function useAccessState(): AccessState {
-  // QuackApi 교체 지점: profile.onboarding_completed_at이 null이면 'onboarding'으로 판단한다.
-  const { onboarded } = useTempStore();
-  return onboarded ? 'app' : 'onboarding';
+  const profile = useApiQuery((api) => api.getProfile(), []);
+  if (profile === undefined) {
+    return 'loading';
+  }
+  return profile?.onboarding_completed_at ? 'app' : 'onboarding';
 }

@@ -2,7 +2,7 @@ import type { Folder, Material } from '@quack/shared';
 import { router } from 'expo-router';
 import { ActivityIndicator, Button, Pressable, StyleSheet, Text, View } from 'react-native';
 
-import { TEMP_USER_ID, tempId, useTempStore } from '@/api/mock/tempStore';
+import { useApiQuery, useQuackApi } from '@/api';
 import { useDemoVariant } from '@/api/mock/useDemoVariant';
 
 const STATUS_LABEL: Record<Material['status'], string> = {
@@ -15,31 +15,21 @@ const STATUS_LABEL: Record<Material['status'], string> = {
 // 자료 추가. 온보딩 마지막 단계(O-04)와 과목 상세의 자료 추가에서 같이 쓴다.
 // 버튼은 모두 화면 하단 고정 영역에 두므로, 본문(MaterialUploadBody)과 버튼(MaterialUploadActions)을 나눴다.
 export function useMaterialUpload(folder: Folder) {
-  const { materials, addMaterial, setMaterialStatus } = useTempStore();
+  const api = useQuackApi();
+  const materials = useApiQuery((a) => a.listMaterials(), []);
   const demo = useDemoVariant();
-  const folderMaterials = materials.filter((m) => m.folder_id === folder.id);
+  const folderMaterials = (materials ?? []).filter((m) => m.folder_id === folder.id);
   const loading = demo === 'loading' || folderMaterials.some((m) => m.status === 'processing');
   const failed = demo === 'error' || folderMaterials.some((m) => m.status === 'failed');
 
-  // 실제 파일 선택 교체 지점: 파일을 고르게 하고, Storage 업로드 후 POST /materials/:id/process 를 호출한다.
-  // 한계: supabase 구현이 아직 없어서, mock 모드인지 보지 않고 늘 샘플 자료를 넣는다. supabase를 연결할 때 고친다.
-  function upload() {
-    const material: Material = {
-      id: tempId(),
-      user_id: TEMP_USER_ID,
+  // 한계: 실제 파일 선택이 없어서 누를 때마다 번호를 붙인 샘플 자료를 넣는다. 파일 선택을 붙일 때 고른 파일의 종류와 이름을 쓴다.
+  async function upload() {
+    const material = await api.createMaterial({
       folder_id: folder.id,
       kind: 'pdf',
-      // 누를 때마다 하나씩 추가되도록 번호를 붙인다
       title: `샘플자료_${folderMaterials.length + 1}.pdf`,
-      storage_path: null,
-      status: 'processing',
-      key_concepts: [],
-      error_message: null,
-      created_at: new Date().toISOString(),
-    };
-    addMaterial(material);
-    // 서버가 자료를 읽는 시간을 흉내 낸다
-    setTimeout(() => setMaterialStatus(material.id, 'ready'), 800);
+    });
+    await api.processMaterial(material.id);
   }
 
   return { folder, folderMaterials, loading, failed, upload };

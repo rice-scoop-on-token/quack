@@ -2,23 +2,21 @@ import type { QuizPublic, QuizQuestionResult } from '@quack/shared';
 import { useState, type ReactNode } from 'react';
 import { Button, Pressable, StyleSheet, Text } from 'react-native';
 
-import { gradeMockQuiz } from '@/api/mock/scenarios/quiz';
+import { useQuackApi } from '@/api';
 import { BottomActionLayout } from '@/components/ui/BottomActionLayout';
 
 type Props = {
   quiz: QuizPublic;
-  // 문제 위에 보여 줄 내용(제목, 개념 칩 등)
   header?: ReactNode;
-  // 마지막 문제까지 답을 확인했을 때 한 번 부른다
-  onComplete?: (results: QuizQuestionResult[]) => void;
   // 마지막 문제를 확인한 뒤의 하단 버튼
   finishLabel: string;
   onFinish: () => void;
 };
 
-// 점검 퀴즈. 한 화면에 한 문제씩 보여 주고, 버튼은 하단에 고정해 해설이 늘어나도 위치가 바뀌지 않는다.
+// 점검 퀴즈. 버튼은 하단에 고정해 해설이 늘어나도 위치가 바뀌지 않는다.
 // 학습 점검(S-04)과 과목 상세의 지난 리포트(퀴즈 다시 풀기)에서 같이 쓴다.
-export function QuizRunner({ quiz, header, onComplete, finishLabel, onFinish }: Props) {
+export function QuizRunner({ quiz, header, finishLabel, onFinish }: Props) {
+  const api = useQuackApi();
   const total = quiz.questions.length;
   const [page, setPage] = useState(0);
   const [answers, setAnswers] = useState<(number | null)[]>(() => quiz.questions.map(() => null));
@@ -30,14 +28,13 @@ export function QuizRunner({ quiz, header, onComplete, finishLabel, onFinish }: 
   const picked = answers[page];
   const result = page < checkedCount ? results?.[page] : undefined;
 
-  function checkAnswer() {
-    // QuackApi 교체 지점: POST /quizzes/:id/submit (마지막 문제에서 한 번 보낸다)
-    const graded = gradeMockQuiz(quiz, answers.map((a) => a ?? -1));
+  // 한 문제씩 정답과 해설을 보여 주려고, 답을 확인할 때마다 지금까지 푼 답을 모두 보낸다. 마지막 제출에 모든 답이 들어간다.
+  // 한계: 서버에 풀이 시도가 문제 수만큼 남는다. 서버가 문제마다 제출을 받을지, 시도를 하나로 합칠지 BE와 정해야 한다.
+  async function checkAnswer() {
+    const answered = quiz.questions.slice(0, page + 1).map((q, i) => ({ question_id: q.id, answer: answers[i] ?? 0 }));
+    const { results: graded } = await api.submitQuiz(quiz.id, { answers: answered });
     setResults(graded);
     setCheckedCount(page + 1);
-    if (page + 1 === total) {
-      onComplete?.(graded);
-    }
   }
 
   return (

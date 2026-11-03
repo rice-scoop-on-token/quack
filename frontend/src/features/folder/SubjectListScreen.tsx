@@ -1,13 +1,17 @@
 import { router } from 'expo-router';
 import { Button, StyleSheet, Text, View } from 'react-native';
 
-import { useTempStore } from '@/api/mock/tempStore';
+import { useApiQuery } from '@/api';
 import { BottomActionLayout } from '@/components/ui/BottomActionLayout';
 import { SubjectCard } from '@/features/folder/SubjectCard';
 
 // L-01 과목 서랍
 export function SubjectListScreen() {
-  const { folders, materials } = useTempStore();
+  const folders = useApiQuery((api) => api.listFolders(), []);
+  const materials = useApiQuery((api) => api.listMaterials(), []);
+  if (!folders || !materials) {
+    return null;
+  }
 
   return (
     <BottomActionLayout

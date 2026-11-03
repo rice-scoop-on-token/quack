@@ -2,7 +2,7 @@ import { router, useLocalSearchParams, usePreventRemove } from 'expo-router';
 import { useState } from 'react';
 import { Button, Platform, StyleSheet, Text, View } from 'react-native';
 
-import { TEMP_USER_ID, tempId, useTempStore } from '@/api/mock/tempStore';
+import { useApiQuery, useQuackApi } from '@/api';
 import { useDemoVariant } from '@/api/mock/useDemoVariant';
 import { BottomActionLayout } from '@/components/ui/BottomActionLayout';
 import { NoRecord } from '@/components/ui/NoRecord';
@@ -16,13 +16,18 @@ import { formatElapsed } from '@/features/session/machine';
 
 // S-02 집중 타이머와 S-03 설명·꼬리 질문. 시간이 끊기지 않도록 한 화면 안에서 단계별 본문만 바꾼다.
 export function TimerScreen() {
-  const { folderId, goal } = useLocalSearchParams<{ folderId?: string; goal?: string }>();
-  const { folders, addSession } = useTempStore();
-  const folder = folders.find((f) => f.id === folderId);
+  const { sessionId } = useLocalSearchParams<{ sessionId?: string }>();
+  const api = useQuackApi();
+  const session = useApiQuery((a) => (sessionId ? a.getSession(sessionId) : Promise.resolve(null)), [sessionId]);
+  const folders = useApiQuery((a) => a.listFolders(), []);
+  // 끝낸 세션으로 돌아오면(주소로 바로 들어오는 등) 진행 중인 공부가 없는 것으로 본다
+  const activeSession = session?.status === 'active' ? session : null;
+  const folder = folders?.find((f) => f.id === activeSession?.folder_id);
+  const goal = activeSession?.goal;
   const timer = useSessionTimer();
   const demo = useDemoVariant();
-  const explanation = useExplanation(timer);
-  const { stage } = growthFromXp(useCharacterXp(folderId ?? ''));
+  const explanation = useExplanation(timer, sessionId);
+  const { stage } = growthFromXp(useCharacterXp(folder?.id ?? '') ?? 0);
   const [confirmingFinish, setConfirmingFinish] = useState(false);
   // 웹 브라우저 뒤로 가기로 나가려 할 때 띄우는 확인 창
   const [confirmingLeave, setConfirmingLeave] = useState(false);
@@ -38,6 +43,9 @@ export function TimerScreen() {
     }
   });
 
+  if (session === undefined || folders === undefined) {
+    return null;
+  }
   if (!folder || !goal) {
     return <NoRecord message="진행 중인 공부가 없어요. 홈에서 다시 시작해 주세요." onHome={() => router.dismissTo('/home')} />;
   }
@@ -48,23 +56,11 @@ export function TimerScreen() {
   // 설명 단계에서 보내지 않은 입력이 있으면 마치기 확인 창에 알린다
   const hasUnsent = phase === 'explaining' && explanation.draft.text.trim() !== '';
 
-  function handleFinish() {
-    const { endedAt, studyMs } = timer.finish();
-    const sessionId = tempId();
-    // QuackApi 교체 지점: POST /sessions/:id/finish
-    addSession({
-      id: sessionId,
-      user_id: TEMP_USER_ID,
-      folder_id: folder!.id,
-      goal: goal!,
-      status: 'finished',
-      started_at: new Date(timer.state.startedAt).toISOString(),
-      ended_at: new Date(endedAt).toISOString(),
-      study_seconds: Math.floor(studyMs / 1000),
-      turns: explanation.turns,
-      quiz: null,
-    });
+  // 앱은 공부 시간만 보낸다. 종료 상태와 끝낸 시각은 서버가 정하고, 설명 기록은 설명할 때마다 저장됐다.
+  async function handleFinish() {
+    const studyMs = timer.finish();
     setConfirmingFinish(false);
+    await api.finishSession(sessionId!, { study_seconds: Math.floor(studyMs / 1000) });
     setLeaving(true);
     disablePrevention();
     // 세션 점검(S-04)으로 간다. ?demo= 값도 넘긴다(fail, grow 등).

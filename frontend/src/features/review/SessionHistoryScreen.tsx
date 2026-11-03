@@ -1,16 +1,15 @@
-import type { ExplanationTurn } from '@quack/shared';
+import type { ExplanationTurn, QuizPublic } from '@quack/shared';
 import { router, Stack, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
 import { Button, StyleSheet, Text, View } from 'react-native';
 
-import { rewardGrantFor } from '@/api/mock/ledger';
-import { createMockQuiz } from '@/api/mock/scenarios/quiz';
-import { useTempStore } from '@/api/mock/tempStore';
+import { useApiQuery, useQuackApi } from '@/api';
 import { BottomActionLayout } from '@/components/ui/BottomActionLayout';
 import { NoRecord } from '@/components/ui/NoRecord';
 import { QuizRunner } from '@/features/review/QuizRunner';
-import { buildReport, VERDICT_LABEL } from '@/features/review/report';
+import { VERDICT_LABEL } from '@/features/review/report';
 import { ReportSummary } from '@/features/review/ReportSummary';
+import { useSessionReport } from '@/features/review/useAfterSession';
 
 const TRIGGER_LABEL: Record<ExplanationTurn['trigger'], string> = {
   self: '스스로 설명',
@@ -20,15 +19,20 @@ const TRIGGER_LABEL: Record<ExplanationTurn['trigger'], string> = {
 };
 
 // 과목 상세(L-02)의 지난 학습 리포트. 설명 내용을 다시 보고 퀴즈를 다시 풀 수 있다.
-// 퀴즈 다시 풀기는 연습이라 세션의 퀴즈 결과와 경험치를 바꾸지 않는다.
+// 퀴즈 다시 풀기는 연습이라 세션의 퀴즈 결과와 경험치를 바꾸지 않는다(리포트를 이미 받은 세션이라 서버가 바꾸지 않는다).
+// 리포트를 받기 전에 점검에서 나간 세션은 여기서 리포트를 요청할 때 보상이 지급된다.
 export function SessionHistoryScreen() {
   const { sessionId } = useLocalSearchParams<{ id: string; sessionId: string }>();
-  const { sessions, xpLedger } = useTempStore();
-  const session = sessions.find((s) => s.id === sessionId);
+  const api = useQuackApi();
+  const session = useApiQuery((a) => a.getSession(sessionId), [sessionId]);
+  const result = useSessionReport(sessionId);
   // 다시 풀 때마다 새 퀴즈(처음 상태)로 시작한다
-  const [practice, setPractice] = useState<ReturnType<typeof createMockQuiz> | null>(null);
+  const [practice, setPractice] = useState<QuizPublic | null>(null);
 
-  if (!session) {
+  if (session === undefined || result === undefined) {
+    return null;
+  }
+  if (!session || !result) {
     return <NoRecord message="학습 기록을 찾을 수 없어요." onHome={() => router.dismissTo('/home')} />;
   }
 
@@ -43,13 +47,13 @@ export function SessionHistoryScreen() {
     );
   }
 
-  const report = buildReport(session);
-  const grant = rewardGrantFor(session.id, xpLedger);
-
   return (
     <BottomActionLayout
       actions={
-        <Button title="퀴즈 다시 풀기" onPress={() => setPractice(createMockQuiz(session.id))} />
+        <Button
+          title="퀴즈 다시 풀기"
+          onPress={() => api.createQuiz(session.id).then((r) => setPractice(r.quiz))}
+        />
       }
     >
       <Stack.Screen options={{ title: '학습 리포트' }} />
@@ -57,8 +61,8 @@ export function SessionHistoryScreen() {
       <Text>{session.goal}</Text>
       <Text>{session.ended_at ? new Date(session.ended_at).toLocaleString() : ''}</Text>
 
-      <ReportSummary report={report} />
-      {grant ? <Text>받은 경험치 +{grant.xp} XP</Text> : null}
+      <ReportSummary report={result.report} />
+      <Text>받은 경험치 +{result.rewards.xp} XP</Text>
 
       <Text>설명 내용</Text>
       {session.turns.length === 0 ? (

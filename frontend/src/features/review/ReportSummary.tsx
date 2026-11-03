@@ -1,10 +1,9 @@
+import type { Report } from '@quack/shared';
 import { StyleSheet, Text, View } from 'react-native';
-
-import type { SessionReport } from '@/features/review/report';
 
 // 리포트 본문(공부 시간, 설명한 개념, 설명 시도, 퀴즈 결과, 이해한 개념, 보완할 개념).
 // 학습 리포트(S-05)와 과목 상세의 지난 리포트에서 같이 쓴다.
-export function ReportSummary({ report }: { report: SessionReport }) {
+export function ReportSummary({ report }: { report: Report }) {
   return (
     <>
       <View style={styles.row}>

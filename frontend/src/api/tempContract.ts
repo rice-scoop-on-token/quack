@@ -1,4 +1,4 @@
-import type { ExplanationTurn, Session } from '@quack/shared';
+import type { ExplanationTurn, Report, Session } from '@quack/shared';
 
 // BE와 합의했지만 아직 shared에 반영되지 않은 타입을 이 파일 하나에 모은다.
 // shared 반영 후 교체: shared에 같은 타입이 생기면 여기 것을 지우고 shared 것을 import한다.
@@ -59,7 +59,10 @@ export type SessionTurn = Pick<ExplanationTurn, 'seq' | 'trigger' | 'input_mode'
   analysis: ExplanationAnalysis;
 };
 
-// 끝낸 공부 세션 기록. shared의 Session에 공부 시간, 설명 기록, 점검 퀴즈 결과를 더한다.
+// POST /sessions/:id/ai-question 응답 초안. shared에는 AI 분석 스키마와 함께 들어갈 예정이다.
+export type TempAiQuestion = { question: string };
+
+// 공부 세션 조회 결과. shared의 Session에 공부 시간, 설명 기록, 점검 퀴즈 결과를 더한다.
 // BE에 공부 시간 칸 추가 제안 필요. 쉬는 시간은 빠지므로 ended_at - started_at 으로는 공부 시간을 알 수 없다.
 // 지금은 AI와 대화하는 시간(설명, 분석, 꼬리 질문)도 공부 시간에 들어가고, 쉬기를 누른 동안만 빠진다.
 // AI와 대화하는 동안 타이머를 멈출지는 미정이다(CLAUDE.md 미정 사항). 지금은 멈추지 않는 것으로 임시 구현했다.
@@ -73,12 +76,14 @@ export type StudySession = Session & {
 
 // ── 보상 ──
 // shared의 RewardGrant(level_before/level_after) 대신 쓰는 임시 타입이다. BE에 xp_before/xp_after로 바꾸자고 제안할 모양이다.
+// 앱은 레벨 대신 성장 단계를 쓰고, 단계는 누적 경험치로 계산하기 때문이다.
+// 어느 세션·과목의 보상인지는 함께 오는 리포트(report.session_id)로 알 수 있어서 넣지 않는다.
 export type TempRewardGrant = {
-  // 화면은 아직 아래 xp 칸만 쓴다. 두 id는 BE에 제안할 보상 응답 모양(어느 세션의 보상이 어느 과목 캐릭터에 쌓였는지)이라 남긴다.
-  session_id: string;
-  folder_id: string;
   xp: number;
   // 그 과목 캐릭터의 지급 전후 누적 경험치
   xp_before: number;
   xp_after: number;
 };
+
+// shared CreateReportResponse에서 rewards만 위 임시 타입으로 바꾼 모양
+export type TempReportResponse = { report: Report; rewards: TempRewardGrant };

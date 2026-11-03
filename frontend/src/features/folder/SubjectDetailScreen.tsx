@@ -2,12 +2,13 @@ import { router, Stack, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
 import { Button, Pressable, StyleSheet, Text, View } from 'react-native';
 
-import { useTempStore } from '@/api/mock/tempStore';
+import { useApiQuery, useQuackApi } from '@/api';
 import { BottomActionLayout } from '@/components/ui/BottomActionLayout';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { CharacterGrowth } from '@/features/character/CharacterGrowth';
 import { TeacherSummary } from '@/features/character/TeacherSummary';
-import { buildReport } from '@/features/review/report';
+import { useSelectedFolder } from '@/features/folder/SelectedFolder';
+import { understoodConcepts } from '@/features/review/report';
 
 const STATUS_LABEL = {
   uploaded: '올리는 중',
@@ -19,10 +20,16 @@ const STATUS_LABEL = {
 // L-02 과목·자료 상세
 export function SubjectDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
-  const { folders, materials, sessions, deleteFolder, setSelectedFolderId } = useTempStore();
+  const api = useQuackApi();
+  const { folders, select } = useSelectedFolder();
+  const materials = useApiQuery((a) => a.listMaterials(), []);
+  const sessions = useApiQuery((a) => a.listSessions(), []);
   const [confirmingDelete, setConfirmingDelete] = useState(false);
-  const folder = folders.find((f) => f.id === id);
 
+  if (!folders || !materials || !sessions) {
+    return null;
+  }
+  const folder = folders.find((f) => f.id === id);
   if (!folder) {
     return (
       <BottomActionLayout
@@ -37,9 +44,9 @@ export function SubjectDetailScreen() {
   }
 
   const folderMaterials = materials.filter((m) => m.folder_id === folder.id);
-  // 이 과목의 지난 학습. 최근 것부터
+  // 이 과목의 지난 학습. 최근 것부터. 진행 중이거나 기록 없이 나간 세션(active)은 뺀다.
   const folderSessions = sessions
-    .filter((s) => s.folder_id === folder.id)
+    .filter((s) => s.folder_id === folder.id && s.status !== 'active')
     .sort((a, b) => (b.ended_at ?? '').localeCompare(a.ended_at ?? ''));
 
   const addMaterials = () =>
@@ -47,13 +54,12 @@ export function SubjectDetailScreen() {
 
   // 이 과목을 고른 과목으로 바꾸고 공부 준비로 간다. 홈의 과목 선택도 이 과목으로 바뀐다.
   const startStudy = () => {
-    setSelectedFolderId(folder.id);
+    select(folder.id);
     router.push('/session/setup');
   };
 
-  const handleDelete = () => {
-    // QuackApi 교체 지점: folders에서 이 행을 지운다. 캐릭터와 경험치 내역은 DB가 함께 지운다.
-    deleteFolder(folder.id);
+  const handleDelete = async () => {
+    await api.deleteFolder(folder.id);
     setConfirmingDelete(false);
     router.dismissTo('/subjects');
   };
@@ -111,7 +117,7 @@ export function SubjectDetailScreen() {
             <Text>{s.goal}</Text>
             <Text>
               {s.ended_at ? new Date(s.ended_at).toLocaleDateString() : ''} · {Math.floor(s.study_seconds / 60)}분 · 개념{' '}
-              {buildReport(s).covered_concepts.length}개
+              {understoodConcepts(s).length}개
             </Text>
           </Pressable>
         ))

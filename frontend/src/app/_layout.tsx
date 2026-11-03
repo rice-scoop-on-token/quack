@@ -1,11 +1,14 @@
 import { Stack } from 'expo-router';
 
-import { TempStoreProvider } from '@/api/mock/tempStore';
+import { ApiProvider } from '@/api';
+import { SelectedFolderProvider } from '@/features/folder/SelectedFolder';
 
 export default function RootLayout() {
   return (
-    <TempStoreProvider>
-      <Stack screenOptions={{ headerShown: false }} />
-    </TempStoreProvider>
+    <ApiProvider>
+      <SelectedFolderProvider>
+        <Stack screenOptions={{ headerShown: false }} />
+      </SelectedFolderProvider>
+    </ApiProvider>
   );
 }

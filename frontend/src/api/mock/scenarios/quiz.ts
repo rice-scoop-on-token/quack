@@ -1,10 +1,10 @@
 import type { QuizPublic, QuizQuestionResult } from '@quack/shared';
 
-import { tempId } from '@/api/mock/tempStore';
+import { tempId } from '@/api/mock/ids';
 
 // 점검(S-04) 퀴즈 mock. 형식은 shared 추천안(객관식 4지선다)을 따른다.
 // 자료 분석이 없어서 과목과 상관없는 "설명하며 공부하기" 문항 3개를 쓴다.
-// QuackApi 교체 지점: POST /sessions/:id/quiz (문항), POST /quizzes/:id/submit (채점)
+// 서버의 POST /sessions/:id/quiz (문항), POST /quizzes/:id/submit (채점) 역할이다.
 
 type MockQuestion = { prompt: string; choices: string[]; answer: number; explanation: string };
 

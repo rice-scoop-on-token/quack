@@ -12,6 +12,9 @@ type Props = {
 // 과목 캐릭터와 성장 표시. 홈(H-01)과 과목 상세(L-02)에서 같이 쓴다.
 export function CharacterGrowth({ folder }: Props) {
   const xp = useCharacterXp(folder.id);
+  if (xp === undefined) {
+    return null;
+  }
   const { stage, xpToNext, progress } = growthFromXp(xp);
 
   return (

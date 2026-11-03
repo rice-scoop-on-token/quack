@@ -9,8 +9,8 @@ import { useNewFolderForm } from '@/features/folder/useNewFolderForm';
 export function NewSubjectScreen() {
   const form = useNewFolderForm();
 
-  function handleSubmit() {
-    const folder = form.submit();
+  async function handleSubmit() {
+    const folder = await form.submit();
     if (!folder) {
       return;
     }

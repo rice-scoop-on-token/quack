@@ -3,13 +3,11 @@ import type { ExplanationTurn } from '@quack/shared';
 import type { ExplanationAnalysis, ExplanationVerdict } from '@/api/tempContract';
 import { josa } from '@/lib/josa';
 
-// 설명 분석 mock. 고정값이 아니라 시나리오로 판정을 바꿔 모든 분기를 화면에서 확인한다(CLAUDE.md).
-// 글로 보내든 말로 보내든 이 함수 하나로 분석한다. 분석 로직은 선생님(페르소나)과 상관없이 같다.
-// QuackApi 교체 지점: POST /sessions/:id/turns
+// 설명 분석 mock(POST /sessions/:id/turns 의 분석 부분). 고정값이 아니라 시나리오로 판정을 바꿔 모든 분기를 화면에서 확인한다(CLAUDE.md).
+// 분석 로직은 선생님(페르소나)과 상관없이 같다.
 
 // 개념 하나에 대해 몇 번째 설명인지(0부터)에 따른 판정. 마지막 값이 계속 반복된다.
 const SCENARIOS: Record<string, ExplanationVerdict[]> = {
-  // 기본: 부족 → 부족 → 충분
   default: ['insufficient', 'insufficient', 'sufficient'],
   sufficient: ['sufficient'],
   ambiguous: ['ambiguous', 'sufficient'],
@@ -26,10 +24,8 @@ const FOLLOW_UP_QUESTIONS = [
   '반대 상황에서도 그 설명이 맞는지 말해 줄래?',
 ];
 
-// 말 탭의 mock 녹음을 멈추면 입력란에 채우는 임시 전사문. 실제 STT는 개발 빌드 세팅 후 별도 커밋에서 붙인다.
+// 실제 STT는 개발 빌드 세팅 후 별도 커밋에서 붙인다
 export const MOCK_TRANSCRIPT = '음, 제가 이해한 건 이 개념이 어떤 문제를 풀려고 생겼고, 보통 이런 상황에서 쓴다는 거예요.';
-
-const DELAY_MS = 1000;
 
 export function mockConcept(index: number): string {
   return MOCK_CONCEPTS[index] ?? `개념 ${index + 1}`;
@@ -38,18 +34,15 @@ export function mockConcept(index: number): string {
 export type AnalyzeRequest = {
   concept: string;
   text: string;
-  // 무엇에 답한 설명인지(shared ExplanationTurn.trigger)
   trigger: ExplanationTurn['trigger'];
   // 이 개념에서 지금까지 한 꼬리 질문 수
   followUpCount: number;
   // 다음 주제로 제안할 개념(없으면 null)
   nextConcept: string | null;
-  // ?demo= 값과, 이 세션에서 몇 번째 분석 요청인지(0부터). fail 시나리오는 첫 요청만 실패한다.
+  // ?demo= 값으로 시나리오를 고른다
   demo: string | null;
-  callIndex: number;
 };
 
-// 판정 순서만 정하는 순수 함수. 일회용 스크립트로 확인하기 쉽게 지연과 분리했다.
 // 점검의 다시 설명하기(re_explain)는 시나리오의 마지막 판정을 쓴다(기본은 충분, stuck은 부족).
 export function mockAnalysis(req: AnalyzeRequest): ExplanationAnalysis {
   const steps = SCENARIOS[req.demo ?? ''] ?? SCENARIOS.default;
@@ -68,12 +61,4 @@ export function mockAnalysis(req: AnalyzeRequest): ExplanationAnalysis {
     next_topic: sufficient ? req.nextConcept : null,
     follow_up_count: req.followUpCount,
   };
-}
-
-export async function analyzeExplanation(req: AnalyzeRequest): Promise<ExplanationAnalysis> {
-  await new Promise((resolve) => setTimeout(resolve, DELAY_MS));
-  if (req.demo === 'fail' && req.callIndex === 0) {
-    throw new Error('mock 분석 실패');
-  }
-  return mockAnalysis(req);
 }
