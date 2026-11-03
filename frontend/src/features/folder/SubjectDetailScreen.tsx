@@ -6,6 +6,7 @@ import { useApiQuery, useQuackApi } from '@/api';
 import { BottomActionLayout } from '@/components/ui/BottomActionLayout';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { CharacterGrowth } from '@/features/character/CharacterGrowth';
+import { SCREEN_ACTIONS } from '@/features/character/screenActions';
 import { TeacherSummary } from '@/features/character/TeacherSummary';
 import { useSelectedFolder } from '@/features/folder/SelectedFolder';
 import { understoodConcepts } from '@/features/review/report';
@@ -82,7 +83,7 @@ export function SubjectDetailScreen() {
       <Text>나의 과목</Text>
       <Text>{folder.name}</Text>
 
-      <CharacterGrowth folder={folder} />
+      <CharacterGrowth folder={folder} action={SCREEN_ACTIONS.subjectDetail} />
 
       <Text>학습 자료</Text>
       {folderMaterials.length === 0 ? (

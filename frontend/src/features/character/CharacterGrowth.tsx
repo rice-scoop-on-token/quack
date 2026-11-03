@@ -2,15 +2,17 @@ import type { Folder } from '@quack/shared';
 import { StyleSheet, Text, View } from 'react-native';
 
 import { CharacterBox } from '@/components/ui/CharacterBox';
+import type { CharacterAction } from '@/features/character/characterAssets';
 import { growthFromXp } from '@/features/character/growth';
 import { useCharacterXp } from '@/features/character/useCharacterXp';
 
 type Props = {
   folder: Folder;
+  action: CharacterAction;
 };
 
 // 과목 캐릭터와 성장 표시. 홈(H-01)과 과목 상세(L-02)에서 같이 쓴다.
-export function CharacterGrowth({ folder }: Props) {
+export function CharacterGrowth({ folder, action }: Props) {
   const xp = useCharacterXp(folder.id);
   // 불러오는 중에도 같은 자리를 잡아 둬서, 다 불러왔을 때 아래 요소가 밀리지 않게 한다
   const growth = xp === undefined ? undefined : growthFromXp(xp);
@@ -18,7 +20,7 @@ export function CharacterGrowth({ folder }: Props) {
 
   return (
     <View style={styles.container}>
-      <CharacterBox speciesId={folder.species_id} stage={growth?.stage} size={140} />
+      <CharacterBox speciesId={folder.species_id} stage={growth?.stage} size={140} action={action} />
 
       <Text>
         {!growth

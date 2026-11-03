@@ -6,6 +6,7 @@ import { BottomActionLayout } from '@/components/ui/BottomActionLayout';
 import { NoRecord } from '@/components/ui/NoRecord';
 import { CharacterBox } from '@/components/ui/CharacterBox';
 import { STAGE_LABEL } from '@/features/character/growth';
+import { SCREEN_ACTIONS } from '@/features/character/screenActions';
 import { stageChange } from '@/features/review/report';
 import { useAfterSession, useSessionReport } from '@/features/review/useAfterSession';
 
@@ -38,7 +39,7 @@ export function GrowthScreen() {
       </Text>
 
       <View style={styles.character}>
-        <CharacterBox speciesId={folder.species_id} stage={change.to} size={180} />
+        <CharacterBox speciesId={folder.species_id} stage={change.to} size={180} action={SCREEN_ACTIONS.growth} />
       </View>
 
       <Text style={styles.center}>

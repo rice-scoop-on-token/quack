@@ -6,10 +6,15 @@ import { PERSONAS } from '@/api/mock/data/personas';
 import type { GrowthStage } from '@/api/tempContract';
 import { CharacterBox } from '@/components/ui/CharacterBox';
 import { SpeechBubble } from '@/components/ui/SpeechBubble';
+import { SCREEN_ACTIONS } from '@/features/character/screenActions';
 import { ExplainActions, ExplainInput } from '@/features/session/components/ExplainInput';
 import type { useExplanation } from '@/features/session/hooks/useExplanation';
 import type { useSessionTimer } from '@/features/session/hooks/useSessionTimer';
 import { MAX_FOLLOW_UPS } from '@/features/session/machine';
+
+// 단계가 바뀔 때 캐릭터 크기가 바뀌지 않게 모든 단계에서 같은 크기를 쓴다.
+// 동작 시트 한 칸이 256px라, 더 키우면 고해상도 화면에서 확대되어 흐려진다.
+const CHARACTER_SIZE = 120;
 
 type Props = {
   folder: Folder;
@@ -37,7 +42,12 @@ export function phaseView({ folder, stage, goal, timer, explanation, onFinish }:
           <>
             <Text>{goal}</Text>
             <View style={styles.center}>
-              <CharacterBox speciesId={folder.species_id} stage={stage} size={160} />
+              <CharacterBox
+                speciesId={folder.species_id}
+                stage={stage}
+                size={CHARACTER_SIZE}
+                action={timer.running ? SCREEN_ACTIONS.timing : SCREEN_ACTIONS.paused}
+              />
               <Text>{timer.running ? '나도 옆에서 읽고 있을게.' : '잠깐 쉬어가자.'}</Text>
             </View>
             {/* 넘어간 개념은 리포트의 보완할 개념이 된다 */}
@@ -58,7 +68,12 @@ export function phaseView({ folder, stage, goal, timer, explanation, onFinish }:
         body: (
           <>
             <View style={styles.center}>
-              <CharacterBox speciesId={folder.species_id} stage={stage} size={120} />
+              <CharacterBox
+                speciesId={folder.species_id}
+                stage={stage}
+                size={CHARACTER_SIZE}
+                action={SCREEN_ACTIONS.aiQuestion}
+              />
             </View>
             <SpeechBubble>{explanation.aiQuestion}</SpeechBubble>
             <Text>설명이 없는 동안 책을 읽으며 기다렸어요.</Text>
@@ -100,6 +115,12 @@ export function phaseView({ folder, stage, goal, timer, explanation, onFinish }:
           <>
             <Text style={styles.bubble}>{draft.text}</Text>
             <View style={styles.center} accessibilityRole="progressbar" accessibilityLiveRegion="polite">
+              <CharacterBox
+                speciesId={folder.species_id}
+                stage={stage}
+                size={CHARACTER_SIZE}
+                action={SCREEN_ACTIONS.analyzing}
+              />
               <Text>설명을 살펴보고 있어요…</Text>
               <Text>{lines.thinking}</Text>
             </View>
@@ -116,7 +137,16 @@ export function phaseView({ folder, stage, goal, timer, explanation, onFinish }:
               꼬리 질문 {timer.state.followUpCount} / {MAX_FOLLOW_UPS}
             </Text>
             <View style={styles.center}>
-              <CharacterBox speciesId={folder.species_id} stage={stage} size={120} />
+              <CharacterBox
+                speciesId={folder.species_id}
+                stage={stage}
+                size={CHARACTER_SIZE}
+                action={
+                  last?.verdict === 'ambiguous'
+                    ? SCREEN_ACTIONS.followUpAmbiguous
+                    : SCREEN_ACTIONS.followUpInsufficient
+                }
+              />
             </View>
             <SpeechBubble>
               {lines.followUpLead} {last?.follow_up_question}
@@ -144,7 +174,12 @@ export function phaseView({ folder, stage, goal, timer, explanation, onFinish }:
         body: (
           <>
             <View style={styles.center}>
-              <CharacterBox speciesId={folder.species_id} stage={stage} size={120} />
+              <CharacterBox
+                speciesId={folder.species_id}
+                stage={stage}
+                size={CHARACTER_SIZE}
+                action={SCREEN_ACTIONS.confirmed}
+              />
             </View>
             <SpeechBubble>{lines.praise}</SpeechBubble>
             {last?.next_topic ? <Text>다음 주제: {last.next_topic}</Text> : null}
