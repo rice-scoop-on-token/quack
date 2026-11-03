@@ -12,20 +12,21 @@ type Props = {
 // 과목 캐릭터와 성장 표시. 홈(H-01)과 과목 상세(L-02)에서 같이 쓴다.
 export function CharacterGrowth({ folder }: Props) {
   const xp = useCharacterXp(folder.id);
-  if (xp === undefined) {
-    return null;
-  }
-  const { stage, xpToNext, progress } = growthFromXp(xp);
+  // 불러오는 중에도 같은 자리를 잡아 둬서, 다 불러왔을 때 아래 요소가 밀리지 않게 한다
+  const growth = xp === undefined ? undefined : growthFromXp(xp);
+  const progress = growth?.progress ?? 0;
 
   return (
     <View style={styles.container}>
-      <CharacterBox speciesId={folder.species_id} stage={stage} size={140} />
+      <CharacterBox speciesId={folder.species_id} stage={growth?.stage} size={140} />
 
-      {xpToNext === null ? (
-        <Text>다 자랐어요! 앞으로도 함께 공부해요.</Text>
-      ) : (
-        <Text>다음 단계까지 {xpToNext} XP</Text>
-      )}
+      <Text>
+        {!growth
+          ? ' '
+          : growth.xpToNext === null
+            ? '다 자랐어요! 앞으로도 함께 공부해요.'
+            : `다음 단계까지 ${growth.xpToNext} XP`}
+      </Text>
 
       <View
         style={styles.bar}

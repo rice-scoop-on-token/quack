@@ -2,6 +2,7 @@ import { StyleSheet, Text, View } from 'react-native';
 
 import { PERSONAS } from '@/api/mock/data/personas';
 import { CharacterBox } from '@/components/ui/CharacterBox';
+import { SpeechBubble } from '@/components/ui/SpeechBubble';
 import { SpeciesPicker } from '@/features/character/SpeciesPicker';
 import { FolderNameForm } from '@/features/folder/FolderNameForm';
 import type { NewFolderForm } from '@/features/folder/useNewFolderForm';
@@ -16,10 +17,8 @@ export function NewFolderFields({ form }: Props) {
   return (
     <>
       <View style={styles.character}>
-        <Text style={styles.bubble} accessibilityLiveRegion="polite">
-          {PERSONAS[form.speciesId].greeting}
-        </Text>
-        <CharacterBox speciesId={form.speciesId} stage="baby" />
+        <SpeechBubble>{PERSONAS[form.speciesId].greeting}</SpeechBubble>
+        <CharacterBox speciesId={form.speciesId} stage="adult" />
       </View>
 
       <FolderNameForm value={form.name} onChangeText={form.setName} error={form.error} />
@@ -36,10 +35,5 @@ const styles = StyleSheet.create({
   character: {
     alignItems: 'center',
     gap: 8,
-  },
-  // 말풍선 자리가 보이도록 테두리만 둔다 (임시 스타일, 디자인 작업 때 바꾼다)
-  bubble: {
-    padding: 12,
-    borderWidth: 1,
   },
 });

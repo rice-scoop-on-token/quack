@@ -1,11 +1,25 @@
 import { router } from 'expo-router';
-import { Button, StyleSheet, Text, View } from 'react-native';
+import { Button, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 
 import { CharacterBox } from '@/components/ui/CharacterBox';
 import { OnboardingStepLayout } from '@/features/onboarding/OnboardingStepLayout';
 
+// 가운데를 조금 크게 둔 세 캐릭터의 비율. 폰 폭에는 2배(160/192/160)가 한 줄에 들어가지 않아서,
+// 본문 폭에 맞춰 키우고 넓은 화면에서는 2배까지만 키운다.
+const SIDE = 80;
+const MIDDLE = 96;
+const GAP = 8;
+const MAX_SCALE = 2;
+// BottomActionLayout 본문 좌우 여백
+const CONTENT_PADDING = 24;
+
 // O-01 소개
 export function IntroScreen() {
+  const { width } = useWindowDimensions();
+  const scale = Math.min(MAX_SCALE, (width - CONTENT_PADDING * 2 - GAP * 2) / (SIDE * 2 + MIDDLE));
+  const side = Math.floor(SIDE * scale);
+  const middle = Math.floor(MIDDLE * scale);
+
   return (
     <OnboardingStepLayout
       step={1}
@@ -18,9 +32,9 @@ export function IntroScreen() {
       <Text>혼자 배운 내용을 친구에게 들려주세요. 이해도 쌓이고, 작은 친구도 함께 자라요.</Text>
 
       <View style={styles.row}>
-        <CharacterBox speciesId="cat" stage="baby" size={80} />
-        <CharacterBox speciesId="rubber_duck" stage="child" size={96} />
-        <CharacterBox speciesId="raccoon" stage="baby" size={80} />
+        <CharacterBox speciesId="cat" stage="adult" size={side} />
+        <CharacterBox speciesId="rubber_duck" stage="adult" size={middle} />
+        <CharacterBox speciesId="raccoon" stage="adult" size={side} />
       </View>
 
       <View style={styles.steps}>
@@ -37,7 +51,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'flex-end',
-    gap: 8,
+    gap: GAP,
   },
   steps: {
     gap: 8,

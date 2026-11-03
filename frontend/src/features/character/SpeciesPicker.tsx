@@ -48,9 +48,11 @@ const styles = StyleSheet.create({
     padding: 8,
     borderWidth: 1,
   },
-  // 선택된 카드 강조 (임시 스타일, 디자인 작업 때 바꾼다)
+  // 선택된 카드 강조 (임시 스타일, 디자인 작업 때 바꾼다).
+  // 테두리가 두꺼워진 만큼 안쪽 여백을 줄여, 카드 안 글이 다시 줄바꿈되어 화면이 밀리지 않게 한다.
   selected: {
     borderWidth: 3,
+    padding: 6,
   },
   text: {
     textAlign: 'center',

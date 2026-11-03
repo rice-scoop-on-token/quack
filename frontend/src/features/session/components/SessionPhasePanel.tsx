@@ -5,6 +5,7 @@ import { Button, StyleSheet, Text, View } from 'react-native';
 import { PERSONAS } from '@/api/mock/data/personas';
 import type { GrowthStage } from '@/api/tempContract';
 import { CharacterBox } from '@/components/ui/CharacterBox';
+import { SpeechBubble } from '@/components/ui/SpeechBubble';
 import { ExplainActions, ExplainInput } from '@/features/session/components/ExplainInput';
 import type { useExplanation } from '@/features/session/hooks/useExplanation';
 import type { useSessionTimer } from '@/features/session/hooks/useSessionTimer';
@@ -59,9 +60,7 @@ export function phaseView({ folder, stage, goal, timer, explanation, onFinish }:
             <View style={styles.center}>
               <CharacterBox speciesId={folder.species_id} stage={stage} size={120} />
             </View>
-            <Text style={styles.bubble} accessibilityLiveRegion="polite">
-              {explanation.aiQuestion}
-            </Text>
+            <SpeechBubble>{explanation.aiQuestion}</SpeechBubble>
             <Text>설명이 없는 동안 책을 읽으며 기다렸어요.</Text>
           </>
         ),
@@ -119,9 +118,9 @@ export function phaseView({ folder, stage, goal, timer, explanation, onFinish }:
             <View style={styles.center}>
               <CharacterBox speciesId={folder.species_id} stage={stage} size={120} />
             </View>
-            <Text style={styles.bubble} accessibilityLiveRegion="polite">
+            <SpeechBubble>
               {lines.followUpLead} {last?.follow_up_question}
-            </Text>
+            </SpeechBubble>
             {last && last.missing_concepts.length > 0 ? (
               <Text>더 채우면 좋은 부분: {last.missing_concepts.join(', ')}</Text>
             ) : null}
@@ -147,9 +146,7 @@ export function phaseView({ folder, stage, goal, timer, explanation, onFinish }:
             <View style={styles.center}>
               <CharacterBox speciesId={folder.species_id} stage={stage} size={120} />
             </View>
-            <Text style={styles.bubble} accessibilityLiveRegion="polite">
-              {lines.praise}
-            </Text>
+            <SpeechBubble>{lines.praise}</SpeechBubble>
             {last?.next_topic ? <Text>다음 주제: {last.next_topic}</Text> : null}
           </>
         ),

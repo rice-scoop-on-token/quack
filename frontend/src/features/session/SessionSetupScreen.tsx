@@ -67,7 +67,7 @@ export function SessionSetupScreen() {
       {/* 홈의 과목 선택과 같은 값을 쓴다 */}
       <SubjectSelect folders={folders} value={selectedFolder} onChange={(f) => select(f.id)} />
 
-      <TeacherSummary folder={selectedFolder} />
+      <TeacherSummary folder={selectedFolder} showCharacter />
 
       <View style={styles.form}>
         <Text>오늘의 학습 목표 (필수)</Text>
