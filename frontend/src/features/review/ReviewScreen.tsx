@@ -95,7 +95,6 @@ export function ReviewScreen() {
         quiz={quiz}
         header={
           <>
-            {/* 퀴즈 제목 */}
             <Text>짧은 퀴즈로 마무리해요</Text>
             <Text>외웠는지보다, 설명할 수 있는지가 중요해요.</Text>
           </>
@@ -116,18 +115,16 @@ export function ReviewScreen() {
     <BottomActionLayout
       actions={
         <>
-          {/* 입력한 블록만 한꺼번에 보내는 버튼 */}
           <Button
             title={sending ? '살펴보고 있어요…' : '설명 보내기'}
             disabled={sending || sendable.length === 0}
             onPress={sendAll}
           />
-          {/* 퀴즈로 넘어가는 버튼 (다시 설명하기는 선택이다) */}
+          {/* 다시 설명하기는 선택이라 보내지 않고도 퀴즈로 넘어갈 수 있다 */}
           <Button title={sentAny ? '퀴즈 풀기' : '건너뛰고 퀴즈 풀기'} disabled={sending} onPress={() => setStep('quiz')} />
         </>
       }
     >
-      {/* 화면 제목과 설명 */}
       <Text>배운 내용을 한 번 더 꺼내볼까요?</Text>
       <Text>대답하지 못한 꼬리 질문을 골라 다시 설명해 보세요. 쓴 것만 보내져요.</Text>
 
@@ -136,20 +133,17 @@ export function ReviewScreen() {
         const error = errors[it.concept];
         const expanded = open === it.concept || !!analysis || !!error;
         return (
-          // 꼬리 질문 블록 (누르면 아래에 입력창이 펼쳐진다)
           <View key={it.concept} style={styles.block}>
             <Pressable
               onPress={() => setOpen(open === it.concept ? null : it.concept)}
               accessibilityRole="button"
               accessibilityState={{ expanded }}
             >
-              {/* 개념 이름과 꼬리 질문 */}
               <Text>{it.concept}</Text>
               <Text>{it.question}</Text>
             </Pressable>
             {expanded ? (
               <>
-                {/* 블록 설명 입력창 (분석을 받은 뒤에는 고칠 수 없다) */}
                 <TextInput
                   style={styles.input}
                   value={drafts[it.concept] ?? ''}
@@ -158,7 +152,6 @@ export function ReviewScreen() {
                   editable={!analysis && !sending}
                   placeholder="내 말로 다시 설명해 보세요."
                 />
-                {/* 분석 결과 또는 실패 문구 */}
                 {analysis ? (
                   <Text accessibilityLiveRegion="polite">
                     판정: {VERDICT_LABEL[analysis.verdict]} ·{' '}

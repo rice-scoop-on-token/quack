@@ -23,11 +23,9 @@ export function NewSubjectScreen() {
     <BottomActionLayout
       centered
       actions={
-        // 과목 만들기 버튼
         <Button title="과목 만들기" onPress={handleSubmit} />
       }
     >
-      {/* 새 과목 입력 본문 */}
       <NewFolderFields form={form} />
     </BottomActionLayout>
   );

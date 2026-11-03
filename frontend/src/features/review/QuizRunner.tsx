@@ -44,20 +44,16 @@ export function QuizRunner({ quiz, header, onComplete, finishLabel, onFinish }: 
     <BottomActionLayout
       actions={
         !result ? (
-          // 답 확인 버튼 (보기를 골라야 누를 수 있다)
           <Button title="답 확인하기" disabled={picked === null} onPress={checkAnswer} />
         ) : page + 1 < total ? (
-          // 다음 문제 버튼
           <Button title="다음 문제" onPress={() => setPage(page + 1)} />
         ) : (
-          // 마지막 문제 뒤 버튼
           <Button title={finishLabel} onPress={onFinish} />
         )
       }
     >
       {header}
 
-      {/* 문제 번호와 문제 */}
       <Text>
         문제 {page + 1} / {total}
       </Text>
@@ -67,7 +63,6 @@ export function QuizRunner({ quiz, header, onComplete, finishLabel, onFinish }: 
         // 답을 확인하면 정답 보기는 초록, 내가 고른 오답 보기는 빨강
         const mark = !result ? null : ci === result.correct_answer ? 'correct' : ci === picked ? 'wrong' : null;
         return (
-          // 보기 버튼 (답을 확인한 뒤에는 고를 수 없다)
           <Pressable
             key={ci}
             style={[
@@ -90,14 +85,12 @@ export function QuizRunner({ quiz, header, onComplete, finishLabel, onFinish }: 
         );
       })}
 
-      {/* 채점 결과와 해설 (보기와 하단 버튼 사이) */}
       {result ? (
         <Text accessibilityLiveRegion="polite">
           {result.correct ? '맞았어요! ' : '괜찮아요, 다시 연결해 봐요. '}
           {result.explanation}
         </Text>
       ) : null}
-      {/* 마지막 문제 뒤 퀴즈 결과 요약 */}
       {result && page + 1 === total && results ? (
         <Text>
           {results.filter((r) => r.correct).length} / {total}개 맞혔어요.

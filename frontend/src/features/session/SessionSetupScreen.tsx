@@ -22,11 +22,9 @@ export function SessionSetupScreen() {
     return (
       <BottomActionLayout
         actions={
-          // 과목 만들기 버튼
           <Button title="과목 만들기" onPress={() => router.replace('/subjects/new')} />
         }
       >
-        {/* 과목 없음 안내 */}
         <Text>공부할 과목이 없어요. 과목을 먼저 만들어 주세요.</Text>
       </BottomActionLayout>
     );
@@ -51,27 +49,20 @@ export function SessionSetupScreen() {
   return (
     <BottomActionLayout
       actions={
-        // 타이머 시작 버튼
         <Button title="타이머 시작" onPress={handleStart} />
       }
     >
-      {/* 화면 제목과 설명 */}
       <Text>오늘은 무엇을 알아볼까요?</Text>
       <Text>작은 목표 하나면 충분해요.</Text>
 
-      {/* 공부할 과목 선택 */}
       <Text>공부할 과목</Text>
-      {/* 과목 선택 바 (홈의 과목 선택과 같이 바뀐다) */}
+      {/* 홈의 과목 선택과 같은 값을 쓴다 */}
       <SubjectSelect folders={folders} value={selectedFolder} onChange={(f) => setSelectedFolderId(f.id)} />
 
-      {/* 고른 과목의 선생님 요약 */}
       <TeacherSummary folder={selectedFolder} />
 
-      {/* 오늘의 학습 목표 입력 */}
       <View style={styles.form}>
-        {/* 입력창 제목 */}
         <Text>오늘의 학습 목표 (필수)</Text>
-        {/* 학습 목표 입력창 */}
         <TextInput
           style={styles.input}
           value={goal}
@@ -83,9 +74,7 @@ export function SessionSetupScreen() {
           multiline
           placeholder="예: TCP와 UDP의 차이를 내 말로 설명하기"
         />
-        {/* 입력 오류 문구 */}
         {error ? <Text accessibilityRole="alert">{error}</Text> : null}
-        {/* 글자 수와 목표 작성 안내 */}
         <Text>
           {goal.length} / {GOAL_MAX_LENGTH}자
         </Text>

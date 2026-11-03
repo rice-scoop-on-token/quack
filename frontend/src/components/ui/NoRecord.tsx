@@ -12,11 +12,9 @@ export function NoRecord({ message, onHome }: Props) {
   return (
     <BottomActionLayout
       actions={
-        // 홈으로 가는 버튼
         <Button title="홈으로" onPress={onHome} />
       }
     >
-      {/* 기록 없음 안내 */}
       <Text>{message}</Text>
     </BottomActionLayout>
   );

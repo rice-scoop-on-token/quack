@@ -92,39 +92,31 @@ export function TimerScreen() {
     <BottomActionLayout
       actions={
         <>
-          {/* 단계별 버튼 */}
           {view.actions}
-          {/* 쉬기·다시 시작, 공부 마치기 버튼 (모든 단계에서 보인다) */}
           <View style={styles.row}>
-            {/* 쉬기 또는 다시 시작 버튼 */}
             {timer.running ? (
               <Button title="잠깐 쉬기" onPress={timer.pause} />
             ) : (
               <Button title="다시 시작" onPress={timer.resume} />
             )}
-            {/* 공부 마치기 버튼 (분석 중에는 비활성) */}
             <Button title="공부 마치기" disabled={!canFinish} onPress={() => setConfirmingFinish(true)} />
           </View>
         </>
       }
     >
-      {/* 위쪽 영역: 모든 단계에서 시간이 흐르고, 쉬기를 눌렀을 때만 멈춘다(AI와 대화하는 동안 멈출지는 미정, 지금은 임시 구현) */}
+      {/* 모든 단계에서 시간이 흐르고, 쉬기를 눌렀을 때만 멈춘다. AI와 대화하는 동안 멈출지는 미정이고 지금은 임시 구현이다 */}
       <View style={styles.top}>
-        {/* 과목과 집중 중 표시 */}
         <Text>
           {folder.name} · {timer.running ? '집중 중' : '쉬는 중'}
         </Text>
-        {/* 경과 시간 (쉬는 시간은 빠지고, 선생님과 대화하는 시간은 들어간다) */}
         <Text style={styles.time} accessibilityRole="timer">
           {formatElapsed(timer.elapsedMs)}
         </Text>
         <Text>{timer.running ? '지금 쌓이는 공부 시간' : '잠시 쉬어가는 중'}</Text>
       </View>
 
-      {/* 단계별 본문 */}
       {view.body}
 
-      {/* 공부 마치기 확인 창 */}
       <ConfirmDialog
         visible={confirmingFinish}
         title="공부를 마칠까요?"
@@ -136,7 +128,6 @@ export function TimerScreen() {
         onCancel={() => setConfirmingFinish(false)}
       />
 
-      {/* 웹 브라우저 뒤로 가기 확인 창 */}
       <ConfirmDialog
         visible={confirmingLeave}
         title="공부를 그만두고 나갈까요?"

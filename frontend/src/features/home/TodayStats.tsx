@@ -18,35 +18,28 @@ export function TodayStats() {
 
   return (
     <View style={styles.container}>
-      {/* 오늘의 학습 기록 제목 */}
       <Text>오늘의 학습 기록</Text>
 
       {summary.count === 0 ? (
-        // 오늘 기록 없음 안내
         <Text>아직 오늘 공부 기록이 없어요. 공부를 시작하면 여기에 쌓여요.</Text>
       ) : (
         <>
-          {/* 오늘 숫자 기록 (공부 시간, 공부 횟수, 설명한 개념) */}
           <View style={styles.row}>
             <Text>오늘의 공부 {Math.floor(summary.totalSeconds / 60)}분</Text>
             <Text>공부 횟수 {summary.count}회</Text>
-            {/* 설명한 개념 수 (충분 판정을 받은 개념) */}
+            {/* 충분 판정을 받은 개념만 센다 */}
             <Text>설명한 개념 {summary.conceptCount}개</Text>
           </View>
 
-          {/* 과목별 공부 시간 비율 막대 (스크린 리더는 아래 범례를 읽는다) */}
+          {/* 스크린 리더는 막대 대신 아래 범례를 읽는다 */}
           <View style={styles.bar} accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
             {summary.bySubject.map((s) => (
-              // 과목 한 칸 (공부 시간만큼 폭을 차지한다)
               <View key={s.folderId} style={{ flex: s.seconds, backgroundColor: s.color }} />
             ))}
           </View>
 
-          {/* 과목별 범례 (색, 과목 이름, 공부 시간) */}
           {summary.bySubject.map((s) => (
-            // 범례 항목
             <View key={s.folderId} style={styles.legend}>
-              {/* 과목 색 표시 */}
               <View style={[styles.swatch, { backgroundColor: s.color }]} />
               <Text>{s.name}</Text>
               <Text>{Math.floor(s.seconds / 60)}분</Text>

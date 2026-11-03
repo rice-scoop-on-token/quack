@@ -13,19 +13,13 @@ type Props = {
 export function ConfirmDialog({ visible, title, message, confirmLabel, onConfirm, onCancel }: Props) {
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={onCancel}>
-      {/* 확인 창 배경 */}
       <View style={styles.backdrop}>
-        {/* 확인 창 상자 */}
         <View style={styles.dialog} accessibilityRole="alert">
-          {/* 확인 창 제목과 내용 */}
           <Text>{title}</Text>
           <Text>{message}</Text>
 
-          {/* 확인 창 버튼 */}
           <View style={styles.actions}>
-            {/* 취소 버튼 */}
             <Button title="취소" onPress={onCancel} />
-            {/* 확인 버튼 */}
             <Button title={confirmLabel} onPress={onConfirm} />
           </View>
         </View>

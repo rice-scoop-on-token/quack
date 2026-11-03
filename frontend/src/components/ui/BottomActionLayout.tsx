@@ -19,12 +19,10 @@ export function BottomActionLayout({ children, actions, centered = false, inTab 
 
   return (
     <View style={styles.screen}>
-      {/* 스크롤되는 화면 내용 */}
       <ScrollView contentContainerStyle={[styles.content, centered && styles.centered]}>
         {children}
       </ScrollView>
 
-      {/* 하단 고정 버튼 영역 */}
       {/* 키보드가 열려 있으면 키보드 높이만큼, 아니면 아이폰 홈 바 영역만큼 띄운다.
           키보드가 홈 바 영역을 덮으므로 둘을 더하지 않는다. */}
       <View

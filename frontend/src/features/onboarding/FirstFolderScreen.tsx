@@ -20,15 +20,12 @@ export function FirstFolderScreen() {
     <OnboardingStepLayout
       step={3}
       actions={
-        // 과목 만들기 버튼
         <Button title="첫 과목 만들기" onPress={handleSubmit} />
       }
     >
-      {/* 화면 제목과 설명 */}
       <Text>첫 번째 공부를 담을 서랍을 만들어요.</Text>
       <Text>과목마다 다른 선생님과 공부할 수 있어요.</Text>
 
-      {/* 새 과목 입력 본문 */}
       <NewFolderFields form={form} />
     </OnboardingStepLayout>
   );

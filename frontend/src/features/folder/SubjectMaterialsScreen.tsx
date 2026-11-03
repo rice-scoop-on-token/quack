@@ -35,14 +35,11 @@ function MaterialsForm({ folder, onDone }: { folder: Folder; onDone: () => void 
     <BottomActionLayout
       actions={
         <>
-          {/* 자료 업로드 버튼 */}
           <MaterialUploadActions state={upload} />
-          {/* 완료 버튼 */}
           <Button title="완료" onPress={onDone} />
         </>
       }
     >
-      {/* 자료 추가 영역 */}
       <MaterialUploadBody state={upload} />
     </BottomActionLayout>
   );
@@ -53,11 +50,9 @@ function MissingFolder() {
   return (
     <BottomActionLayout
       actions={
-        // 과목 서랍으로 가는 버튼
         <Button title="과목 서랍으로" onPress={() => router.dismissTo('/subjects')} />
       }
     >
-      {/* 과목 없음 안내 */}
       <Text>과목을 찾을 수 없어요.</Text>
     </BottomActionLayout>
   );

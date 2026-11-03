@@ -13,22 +13,18 @@ export function SubjectListScreen() {
     <BottomActionLayout
       inTab
       actions={
-        // 과목 추가 버튼 (과목이 없으면 첫 과목 만들기)
         <Button
           title={folders.length === 0 ? '첫 과목 만들기' : '+ 과목 추가'}
           onPress={() => router.push('/subjects/new')}
         />
       }
     >
-      {/* 화면 제목과 설명 */}
       <Text>나의 과목 서랍</Text>
       <Text>배운 것들이 차곡차곡 쌓이는 곳.</Text>
 
-      {/* 과목 수 */}
       <Text>전체 {folders.length}개</Text>
 
       {folders.length === 0 ? (
-        // 과목 없음 안내
         <View style={styles.empty}>
           <Text>아직 비어 있는 서랍이에요</Text>
           <Text>첫 과목부터 함께 만들어 볼까요?</Text>

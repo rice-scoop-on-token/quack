@@ -31,13 +31,11 @@ export function ReportScreen() {
     <BottomActionLayout
       actions={
         change ? (
-          // 성장 축하 화면으로 가는 확인 버튼 (성장했을 때)
           <Button
             title="확인"
             onPress={() => leave(() => router.replace({ pathname: '/session/growth', params }))}
           />
         ) : (
-          // 보상 화면으로 가는 확인 버튼 (지급이 끝나야 누를 수 있다)
           <Button
             title="확인"
             disabled={!grant}
@@ -46,14 +44,11 @@ export function ReportScreen() {
         )
       }
     >
-      {/* 화면 제목 */}
       <Text>오늘의 공부 · 완료</Text>
       <Text>설명한 만큼, 이해가 자랐어요.</Text>
 
-      {/* 리포트 본문 */}
       <ReportSummary report={report} />
 
-      {/* 얻은 경험치 */}
       <Text>성장의 조각을 모았어요 · +{grant?.xp ?? xp} XP</Text>
     </BottomActionLayout>
   );

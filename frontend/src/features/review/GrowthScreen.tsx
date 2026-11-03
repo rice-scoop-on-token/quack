@@ -24,25 +24,20 @@ export function GrowthScreen() {
     <BottomActionLayout
       centered
       actions={
-        // 확인 버튼 (홈으로 간다)
         <Button title="확인" onPress={goHome} />
       }
     >
-      {/* 성장 축하 문구 */}
       <Text style={styles.center} accessibilityRole="header">
         캐릭터가 성장했어요!
       </Text>
 
-      {/* 성장한 단계의 캐릭터 */}
       <View style={styles.character}>
         <CharacterBox speciesId={folder.species_id} stage={change.to} size={180} />
       </View>
 
-      {/* 이전 단계 → 새 단계 */}
       <Text style={styles.center}>
         {STAGE_LABEL[change.from]} → {STAGE_LABEL[change.to]}
       </Text>
-      {/* 다 자랐을 때 문구 */}
       {change.to === 'adult' ? <Text style={styles.center}>다 자랐어요! 앞으로도 함께 공부해요.</Text> : null}
     </BottomActionLayout>
   );

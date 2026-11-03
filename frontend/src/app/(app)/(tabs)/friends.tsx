@@ -4,7 +4,7 @@ import { StyleSheet, Text, View } from 'react-native';
 export default function FriendsTab() {
   return (
     <View style={styles.container}>
-      {/* 화면 이름 (임시) */}
+      {/* 임시: 2차 화면이라 이름만 둔다 */}
       <Text>친구</Text>
     </View>
   );

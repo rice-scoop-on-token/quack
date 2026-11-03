@@ -7,40 +7,34 @@ import type { SessionReport } from '@/features/review/report';
 export function ReportSummary({ report }: { report: SessionReport }) {
   return (
     <>
-      {/* 공부 숫자 기록 (공부 시간, 설명한 개념, 설명 시도) */}
       <View style={styles.row}>
         <Text>공부 시간 {Math.floor(report.duration_seconds / 60)}분</Text>
         <Text>설명한 개념 {report.covered_concepts.length}개</Text>
         <Text>설명 시도 {report.turn_count}회</Text>
       </View>
-      {/* 점검 퀴즈 결과 (풀었으면) */}
       {report.quiz_total !== null ? (
         <Text>
           퀴즈 {report.quiz_correct} / {report.quiz_total}개 정답
         </Text>
       ) : null}
 
-      {/* 이해한 개념 목록 */}
       <View style={styles.card}>
         <Text>이해한 개념</Text>
         {report.covered_concepts.length === 0 ? (
           <Text>이번에는 충분히 설명한 개념이 없어요.</Text>
         ) : (
           report.covered_concepts.map((c) => (
-            // 이해한 개념 항목
             <Text key={c}>✓ {c}</Text>
           ))
         )}
       </View>
 
-      {/* 보완할 개념 목록 (꼬리 질문 뒤 넘어간 개념 포함) */}
       <View style={styles.card}>
         <Text>보완할 개념</Text>
         {report.weak_concepts.length === 0 ? (
           <Text>보완할 개념이 없어요.</Text>
         ) : (
           report.weak_concepts.map((c) => (
-            // 보완할 개념 항목
             <Text key={c}>· {c} — 다음에 더 알아봐요</Text>
           ))
         )}

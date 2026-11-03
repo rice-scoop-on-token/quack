@@ -18,11 +18,8 @@ export function SubjectCard({ folder, detail, onPress }: Props) {
   const { stage } = growthFromXp(useCharacterXp(folder.id));
 
   return (
-    // 과목 카드
     <Pressable style={styles.card} onPress={onPress} accessibilityRole="button">
-      {/* 선생님 캐릭터 */}
       <CharacterBox speciesId={folder.species_id} stage={stage} size={56} />
-      {/* 과목 이름과 선생님 설명 */}
       <View style={styles.text}>
         <Text>
           {folder.name} · {species?.name} 선생님
@@ -31,7 +28,6 @@ export function SubjectCard({ folder, detail, onPress }: Props) {
           {species?.description} · {detail}
         </Text>
       </View>
-      {/* 이동 표시 */}
       <Text>›</Text>
     </Pressable>
   );

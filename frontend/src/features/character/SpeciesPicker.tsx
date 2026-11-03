@@ -12,12 +12,10 @@ type Props = {
 // 선생님 동물 선택. 온보딩(O-02)과 과목 추가에서만 쓴다. 고른 뒤에는 바꿀 수 없다.
 export function SpeciesPicker({ value, onChange }: Props) {
   return (
-    // 동물 선택 카드 목록
     <View style={styles.list}>
       {SPECIES.map((species) => {
         const selected = species.id === value;
         return (
-          // 동물 선택 카드
           <Pressable
             key={species.id}
             style={[styles.card, selected && styles.selected]}
@@ -28,7 +26,6 @@ export function SpeciesPicker({ value, onChange }: Props) {
           >
             {/* 선택 화면은 성체 모습으로 보여 준다 */}
             <CharacterBox speciesId={species.id} stage="adult" size={72} />
-            {/* 동물 이름과 소개 */}
             <Text style={styles.text}>{species.name}</Text>
             <Text style={styles.text}>{species.description}</Text>
           </Pressable>

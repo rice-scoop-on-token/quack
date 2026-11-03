@@ -16,23 +16,19 @@ export function CharacterGrowth({ folder }: Props) {
 
   return (
     <View style={styles.container}>
-      {/* 캐릭터 이미지 */}
       <CharacterBox speciesId={folder.species_id} stage={stage} size={140} />
 
-      {/* 성장 안내 문구 */}
       {xpToNext === null ? (
         <Text>다 자랐어요! 앞으로도 함께 공부해요.</Text>
       ) : (
         <Text>다음 단계까지 {xpToNext} XP</Text>
       )}
 
-      {/* 성장 진행 바 */}
       <View
         style={styles.bar}
         accessibilityRole="progressbar"
         accessibilityValue={{ min: 0, max: 100, now: Math.round(progress * 100) }}
       >
-        {/* 진행 바 채움 */}
         <View style={[styles.fill, { width: `${progress * 100}%` }]} />
       </View>
     </View>

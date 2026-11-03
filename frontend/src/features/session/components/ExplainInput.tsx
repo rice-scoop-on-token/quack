@@ -11,10 +11,8 @@ const TABS: { mode: InputMode; label: string }[] = [
 export function ExplainInput({ draft }: { draft: ExplainDraft }) {
   return (
     <View style={styles.container}>
-      {/* 글·말 입력 방식 탭 */}
       <View style={styles.tabs} accessibilityRole="tablist">
         {TABS.map((tab) => (
-          // 입력 방식 탭 버튼
           <Pressable
             key={tab.mode}
             style={[styles.tab, draft.mode === tab.mode && styles.selected]}
@@ -28,18 +26,14 @@ export function ExplainInput({ draft }: { draft: ExplainDraft }) {
       </View>
 
       {draft.mode === 'voice' ? (
-        // 녹음 영역 (실제 마이크를 쓰지 않는 mock)
+        // mock: 실제 마이크는 쓰지 않는다
         <View style={styles.recorder}>
-          {/* 녹음 상태 표시 (녹음 버튼은 하단에 있다) */}
           <Text accessibilityLiveRegion="polite">{draft.recording ? '● 듣는 중…' : '준비되면 말해 주세요.'}</Text>
-          {/* mock 안내 */}
           <Text>실제 마이크는 쓰지 않아요. 멈추면 예시 전사문이 채워져요.</Text>
         </View>
       ) : null}
 
-      {/* 입력란 제목 (말로 설명하면 전사문을 고칠 수 있다) */}
       <Text>{draft.mode === 'voice' ? '전사문 확인·수정' : '나의 설명'}</Text>
-      {/* 설명 입력창 */}
       <TextInput
         style={styles.input}
         value={draft.text}
@@ -48,7 +42,6 @@ export function ExplainInput({ draft }: { draft: ExplainDraft }) {
         editable={!draft.recording}
         placeholder="배운 개념을 내 말로 설명해 보세요."
       />
-      {/* 분석 실패 문구 (입력한 설명은 그대로 남는다) */}
       {draft.error ? <Text accessibilityRole="alert">{draft.error}</Text> : null}
     </View>
   );
@@ -59,7 +52,6 @@ export function ExplainInput({ draft }: { draft: ExplainDraft }) {
 export function ExplainActions({ draft, onSend }: { draft: ExplainDraft; onSend: () => void }) {
   return (
     <>
-      {/* 녹음 시작·멈춤 원형 버튼 (말로 설명할 때만) */}
       {draft.mode === 'voice' ? (
         <Pressable
           style={styles.recordButton}
@@ -70,7 +62,6 @@ export function ExplainActions({ draft, onSend }: { draft: ExplainDraft; onSend:
           <Text>{draft.recording ? '멈추기' : '녹음'}</Text>
         </Pressable>
       ) : null}
-      {/* 보내기 버튼 (빈 입력이거나 녹음 중이면 비활성) */}
       <Button title={draft.error ? '다시 보내기' : '설명 보내기'} disabled={!draft.canSend} onPress={onSend} />
     </>
   );

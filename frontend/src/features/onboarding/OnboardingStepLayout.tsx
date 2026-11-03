@@ -16,7 +16,7 @@ type Props = {
 export function OnboardingStepLayout({ step, actions, children }: Props) {
   return (
     <View style={styles.screen}>
-      {/* 온보딩 단계 표시 (스크롤 밖이라 위쪽에 고정된다) */}
+      {/* 단계 표시는 스크롤 밖에 둬서 위쪽에 고정한다 */}
       <Text style={styles.step}>
         {step} / {TOTAL_STEPS}
       </Text>

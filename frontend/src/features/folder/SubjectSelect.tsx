@@ -20,7 +20,6 @@ export function SubjectSelect({ folders, value, onChange }: Props) {
 
   return (
     <View style={styles.container}>
-      {/* 과목 선택 바 (지금 과목 이름과 펼침 표시) */}
       <Pressable
         style={styles.bar}
         onPress={() => setOpen((prev) => !prev)}
@@ -33,10 +32,9 @@ export function SubjectSelect({ folders, value, onChange }: Props) {
       </Pressable>
 
       {open ? (
-        // 펼쳐진 과목 목록 (아래 내용을 밀지 않고 그 위에 덮인다)
+        // 아래 내용을 밀지 않도록 그 위에 덮는다
         <View style={styles.list}>
           {folders.map((f) => (
-            // 과목 목록 항목
             <Pressable
               key={f.id}
               style={styles.item}

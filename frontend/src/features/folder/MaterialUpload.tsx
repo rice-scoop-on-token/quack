@@ -57,25 +57,21 @@ type BodyProps = {
 export function MaterialUploadBody({ state, onSkip }: BodyProps) {
   return (
     <View style={styles.container}>
-      {/* 화면 제목과 설명 */}
       <Text>공부할 자료가 있나요?</Text>
       <Text>자료를 더하면 배운 내용을 바탕으로 질문해요. 지금은 건너뛰어도 괜찮아요.</Text>
 
-      {/* 자료를 넣을 과목 카드 */}
       <View style={styles.card}>
         <Text>{state.folder.name}</Text>
         <Text>과목 폴더</Text>
       </View>
       {onSkip ? (
-        // 나중에 추가하기 버튼 (작은 글씨, 온보딩 화면 설계대로 본문에 둔다)
+        // 온보딩 화면 설계대로 하단 영역이 아니라 본문에 작은 글씨로 둔다
         <Pressable style={styles.skipButton} onPress={onSkip} accessibilityRole="button">
           <Text style={styles.skip}>나중에 추가할게요</Text>
         </Pressable>
       ) : null}
-      {/* 자료 형식 안내 */}
       <Text>PDF · 텍스트 · 이미지 자료를 올릴 수 있어요.</Text>
 
-      {/* 자료 처리 중 상태 */}
       {state.loading ? (
         <View style={styles.card}>
           <Text>자료에서 텍스트를 읽고 있어요…</Text>
@@ -83,16 +79,13 @@ export function MaterialUploadBody({ state, onSkip }: BodyProps) {
         </View>
       ) : null}
 
-      {/* 자료 처리 실패 상태 (다른 자료 선택 버튼은 하단에 있다) */}
       {state.failed ? (
         <View style={styles.card}>
           <Text accessibilityRole="alert">자료를 읽지 못했어요. 텍스트가 있는 파일로 다시 시도해 주세요.</Text>
         </View>
       ) : null}
 
-      {/* 등록한 자료 목록 */}
       {state.folderMaterials.map((m) => (
-        // 자료 항목
         <View key={m.id} style={styles.card}>
           <Text>{m.title}</Text>
           <Text>{STATUS_LABEL[m.status]}</Text>
@@ -106,9 +99,7 @@ export function MaterialUploadBody({ state, onSkip }: BodyProps) {
 export function MaterialUploadActions({ state }: { state: UploadState }) {
   return (
     <>
-      {/* 실패했을 때 다른 자료 선택 버튼 */}
       {state.failed ? <Button title="다른 자료 선택" onPress={() => router.setParams({ demo: undefined })} /> : null}
-      {/* 자료 업로드 버튼 */}
       <Button title="자료 업로드" onPress={state.upload} />
     </>
   );

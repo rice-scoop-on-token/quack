@@ -17,11 +17,10 @@ export function MaterialsStepScreen() {
       <OnboardingStepLayout
         step={4}
         actions={
-          // 과목 만들기로 돌아가는 버튼
           <Button title="과목 만들러 가기" onPress={() => router.replace('/subject')} />
         }
       >
-        {/* 과목 없음 안내 (주소로 바로 들어오거나 새로고침한 경우) */}
+        {/* 주소로 바로 들어오거나 새로고침하면 과목이 없을 수 있다 */}
         <Text>자료를 넣을 과목이 없어요. 과목을 먼저 만들어 주세요.</Text>
       </OnboardingStepLayout>
     );
@@ -48,14 +47,11 @@ function MaterialsStep({ folder }: { folder: Folder }) {
       step={4}
       actions={
         <>
-          {/* 자료 업로드 버튼 */}
           <MaterialUploadActions state={upload} />
-          {/* 완료 버튼 (등록된 자료가 있어야 누를 수 있다) */}
           <Button title="이제 시작할게요" disabled={!hasReadyMaterial} onPress={finish} />
         </>
       }
     >
-      {/* 자료 추가 영역 (과목 카드 아래에 나중에 추가하기) */}
       <MaterialUploadBody state={upload} onSkip={finish} />
     </OnboardingStepLayout>
   );

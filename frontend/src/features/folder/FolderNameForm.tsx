@@ -26,9 +26,7 @@ type Props = {
 export function FolderNameForm({ value, onChangeText, error }: Props) {
   return (
     <View style={styles.form}>
-      {/* 입력창 제목 */}
       <Text>과목 이름 (필수)</Text>
-      {/* 과목 이름 입력창 */}
       <TextInput
         style={styles.input}
         value={value}
@@ -36,9 +34,7 @@ export function FolderNameForm({ value, onChangeText, error }: Props) {
         maxLength={MAX_LENGTH}
         placeholder="예: 컴퓨터 네트워크"
       />
-      {/* 입력 오류 문구 */}
       {error ? <Text accessibilityRole="alert">{error}</Text> : null}
-      {/* 입력 규칙 안내 */}
       <Text>공백만 입력할 수 없어요. 최대 {MAX_LENGTH}자예요.</Text>
     </View>
   );

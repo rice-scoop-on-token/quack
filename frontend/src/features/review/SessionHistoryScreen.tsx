@@ -49,29 +49,22 @@ export function SessionHistoryScreen() {
   return (
     <BottomActionLayout
       actions={
-        // 퀴즈 다시 풀기 버튼
         <Button title="퀴즈 다시 풀기" onPress={() => setPractice(createMockQuiz(session.id))} />
       }
     >
-      {/* 상단 헤더 제목 */}
       <Stack.Screen options={{ title: '학습 리포트' }} />
 
-      {/* 학습 목표와 날짜 */}
       <Text>{session.goal}</Text>
       <Text>{session.ended_at ? new Date(session.ended_at).toLocaleString() : ''}</Text>
 
-      {/* 리포트 본문 */}
       <ReportSummary report={report} />
-      {/* 받은 경험치 */}
       {grant ? <Text>받은 경험치 +{grant.xp} XP</Text> : null}
 
-      {/* 설명 내용 제목 */}
       <Text>설명 내용</Text>
       {session.turns.length === 0 ? (
         <Text>이 공부에서는 설명한 내용이 없어요.</Text>
       ) : (
         session.turns.map((t) => (
-          // 설명 한 번 (무엇에 답했는지, 질문, 내 설명, 판정)
           <View key={t.seq} style={styles.card}>
             <Text>
               {TRIGGER_LABEL[t.trigger]} · {t.analysis.concept} · 판정 {VERDICT_LABEL[t.analysis.verdict]}

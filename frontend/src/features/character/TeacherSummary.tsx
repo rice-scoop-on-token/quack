@@ -14,16 +14,13 @@ export function TeacherSummary({ folder }: Props) {
   const persona = PERSONAS[folder.species_id];
 
   return (
-    // 선생님 요약 카드
     <View style={styles.card}>
       <Text>
         {folder.name} 선생님 · {species?.name}
       </Text>
       <Text>{persona.label}</Text>
-      {/* 성격 태그 목록 */}
       <View style={styles.tags}>
         {persona.tags.map((tag) => (
-          // 성격 태그
           <Text key={tag} style={styles.tag}>
             {tag}
           </Text>
