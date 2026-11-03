@@ -1,34 +1,32 @@
 import type { SpeciesId } from '@quack/shared';
-import { StyleSheet, Text, View } from 'react-native';
+import { Image, View } from 'react-native';
 
 import { SPECIES } from '@/api/mock/data/species';
 import type { GrowthStage } from '@/api/tempContract';
+import { CHARACTER_IMAGES } from '@/features/character/characterAssets';
 import { STAGE_LABEL } from '@/features/character/growth';
 
 type Props = {
   speciesId: SpeciesId;
-  stage?: GrowthStage;
+  // 성장 단계를 불러오는 중이면 undefined. 같은 크기의 빈 자리만 둬서 그림이 뜰 때 다른 요소가 밀리지 않게 한다.
+  stage: GrowthStage | undefined;
   size?: number;
 };
 
-// 캐릭터 이미지 자리다. 에셋이 들어오면 이 파일 안만 이미지로 바꾸면 모든 화면에 반영된다.
-export function CharacterBox({ speciesId, stage = 'child', size = 120 }: Props) {
+// 모든 화면이 이 컴포넌트로 캐릭터를 그려서, 캐릭터 표시 방법은 이 파일 안만 바꾸면 된다.
+// 동물·단계와 상관없이 늘 size×size 자리를 차지한다.
+export function CharacterBox({ speciesId, stage, size = 120 }: Props) {
+  if (!stage) {
+    return <View style={{ width: size, height: size }} />;
+  }
   const name = SPECIES.find((s) => s.id === speciesId)?.name ?? speciesId;
 
   return (
-    // 캐릭터 이미지 자리 (임시 박스)
-    <View style={[styles.box, { width: size, height: size }]}>
-      <Text>{name}</Text>
-      <Text>{STAGE_LABEL[stage]}</Text>
-    </View>
+    <Image
+      source={CHARACTER_IMAGES[speciesId][stage].base}
+      style={{ width: size, height: size }}
+      resizeMode="contain"
+      accessibilityLabel={`${STAGE_LABEL[stage]} ${name}`}
+    />
   );
 }
-
-const styles = StyleSheet.create({
-  // 박스 위치가 보이도록 테두리만 둔다
-  box: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 1,
-  },
-});
