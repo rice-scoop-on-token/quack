@@ -8,7 +8,8 @@ import { AppError, appErrorFromDb } from '../middleware/error.ts';
 const SESSION_COLUMNS = 'id, user_id, folder_id, goal, status, started_at, ended_at';
 
 // adminDb는 다른 사용자의 세션도 바꿀 수 있으므로, 그 전에 RLS가 적용되는 userDb로 내 세션인지 확인한다.
-async function getMySession(userDb: SupabaseClient, sessionId: string): Promise<Session> {
+// turns.service.ts도 같은 확인을 쓴다.
+export async function getMySession(userDb: SupabaseClient, sessionId: string): Promise<Session> {
   const { data, error } = await userDb
     .from('sessions')
     .select(SESSION_COLUMNS)

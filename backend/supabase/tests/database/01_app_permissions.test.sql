@@ -11,6 +11,7 @@
 --   사용자 A aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa, 사용자 B bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb
 --   A 폴더 aaaaaaaa-0000-4000-8000-0000000000f1, A의 지울 폴더 ...f2, B 폴더 bbbbbbbb-0000-4000-8000-0000000000f1
 --   A 세션 aaaaaaaa-0000-4000-8000-0000000000a1, A 자료 aaaaaaaa-0000-4000-8000-0000000000b1
+--   A 턴 aaaaaaaa-0000-4000-8000-0000000000c1, B 세션 bbbbbbbb-0000-4000-8000-0000000000a1, B 턴 bbbbbbbb-0000-4000-8000-0000000000c1
 
 begin;
 create extension if not exists pgtap with schema extensions;
@@ -38,6 +39,20 @@ insert into public.materials (id, user_id, folder_id, kind, title) values
 
 insert into public.reports (session_id, xp_before, summary, duration_seconds, turn_count) values
   ('aaaaaaaa-0000-4000-8000-0000000000a1', 0, '요약', 1, 1);
+
+-- 설명 턴과 분석: A 세션 턴 ...c1, B 세션 ...a1의 턴 bbbbbbbb-0000-4000-8000-0000000000c1
+insert into public.sessions (id, user_id, folder_id, goal) values
+  ('bbbbbbbb-0000-4000-8000-0000000000a1', 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb', 'bbbbbbbb-0000-4000-8000-0000000000f1', 'B 목표');
+
+insert into public.explanation_turns (id, session_id, seq, trigger, input_mode, text) values
+  ('aaaaaaaa-0000-4000-8000-0000000000c1', 'aaaaaaaa-0000-4000-8000-0000000000a1', 1, 'self', 'chat', 'A 설명'),
+  ('bbbbbbbb-0000-4000-8000-0000000000c1', 'bbbbbbbb-0000-4000-8000-0000000000a1', 1, 'self', 'chat', 'B 설명');
+
+insert into public.turn_analyses (
+  turn_id, answer_status, understanding_status, independent_performance_status, action, message, question, analysis, model
+) values
+  ('aaaaaaaa-0000-4000-8000-0000000000c1', 'not_applicable', 'insufficient', 'unverified', 'ask', 'A 발화', 'A 질문', '{"secret": "A 근거"}', 'm'),
+  ('bbbbbbbb-0000-4000-8000-0000000000c1', 'not_applicable', 'sufficient', 'unverified', 'acknowledge', 'B 발화', null, '{"secret": "B 근거"}', 'm');
 
 -- 스키마 전체 검사: 나중에 추가하는 테이블도 함께 검사된다.
 
@@ -105,6 +120,7 @@ select results_eq(
        ('sessions', 'INSERT', 'folder_id,goal,user_id'),
        ('sessions', 'SELECT', '*'),
        ('species', 'SELECT', '*'),
+       ('turn_analyses', 'SELECT', 'action,answer_status,created_at,independent_performance_status,message,question,turn_id,understanding_status'),
        ('xp_ledger', 'SELECT', '*') $$,
   'authenticated의 권한이 앱 권한 표와 같다'
 );
@@ -199,6 +215,41 @@ select throws_ok(
 select throws_ok($$ select * from public.quiz_questions $$, '42501', null, 'quiz_questions(정답 포함)는 조회할 수 없다');
 select throws_ok($$ select * from public.material_contents $$, '42501', null, 'material_contents는 조회할 수 없다');
 select throws_ok($$ select * from public.ai_usage $$, '42501', null, 'ai_usage는 조회할 수 없다');
+
+-- 분석 결과: 공개 칸만 조회할 수 있다
+
+select results_eq(
+  $$ select answer_status, understanding_status, independent_performance_status, action, message, question
+     from public.turn_analyses where turn_id = 'aaaaaaaa-0000-4000-8000-0000000000c1' $$,
+  $$ values ('not_applicable', 'insufficient', 'unverified', 'ask', 'A 발화', 'A 질문') $$,
+  'A는 자기 턴 분석의 공개 칸을 조회할 수 있다'
+);
+select results_eq(
+  $$ select t.seq, a.message from public.explanation_turns t join public.turn_analyses a on a.turn_id = t.id $$,
+  $$ values (1, 'A 발화') $$,
+  'A는 자기 턴과 AI 발화를 함께 조회할 수 있고, B의 분석은 보이지 않는다'
+);
+select throws_ok(
+  $$ select analysis from public.turn_analyses $$,
+  '42501', null, 'turn_analyses.analysis(내부 분석)는 조회할 수 없다'
+);
+select throws_ok(
+  $$ select model from public.turn_analyses $$,
+  '42501', null, 'turn_analyses.model은 조회할 수 없다'
+);
+select throws_ok(
+  $$ select * from public.turn_analyses $$,
+  '42501', null, 'turn_analyses는 select *로 조회할 수 없다(칸 이름을 적어야 한다)'
+);
+select throws_ok(
+  $$ insert into public.turn_analyses (turn_id, answer_status, understanding_status, independent_performance_status, action, message, analysis, model)
+     values ('aaaaaaaa-0000-4000-8000-0000000000c1', 'correct', 'sufficient', 'confirmed', 'acknowledge', '가짜', '{}', 'm') $$,
+  '42501', null, 'turn_analyses에 행을 추가할 수 없다'
+);
+select throws_ok(
+  $$ update public.turn_analyses set understanding_status = 'sufficient' $$,
+  '42501', null, 'turn_analyses의 판정을 바꿀 수 없다'
+);
 
 -- RLS: 다른 사용자의 행
 
