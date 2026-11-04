@@ -1,0 +1,91 @@
+{
+  "version": 1,
+  "source": "assets/characters/animations_v6",
+  "animals": {
+    "cat": {
+      "label": "고양이",
+      "persona": "핵심을 콕 집는 까칠하고 호기심 많은 선생님"
+    },
+    "duck": {
+      "label": "러버덕",
+      "persona": "다정하게 듣고 차근차근 질문하는 선생님"
+    },
+    "raccoon": {
+      "label": "라쿤",
+      "persona": "비교와 예시를 함께 찾는 꼼꼼하고 똑똑한 선생님"
+    }
+  },
+  "stages": {
+    "baby": {
+      "label": "아기",
+      "minXp": 0,
+      "maxXp": 99
+    },
+    "child": {
+      "label": "어린이",
+      "minXp": 100,
+      "maxXp": 299
+    },
+    "adult": {
+      "label": "성체",
+      "minXp": 300,
+      "maxXp": null
+    }
+  },
+  "actions": [
+    "idle",
+    "walk",
+    "run",
+    "read",
+    "think",
+    "dejected",
+    "angry",
+    "happy_jump",
+    "sleep",
+    "surprised",
+    "tired",
+    "study"
+  ],
+  "paths": {
+    "base": "{animal}/{stage}/base.png",
+    "actionSheet": "{animal}/{stage}/actions/{action}.png"
+  },
+  "imageSpecs": {
+    "base": {
+      "width": 512,
+      "height": 512,
+      "format": "png",
+      "alpha": true
+    },
+    "actionSheet": {
+      "width": 1536,
+      "height": 256,
+      "format": "png",
+      "alpha": true,
+      "colors": 256,
+      "layout": "horizontal",
+      "frameCount": 6,
+      "frameWidth": 256,
+      "frameHeight": 256,
+      "frameOrder": "left-to-right"
+    }
+  },
+  "mvp": {
+    "defaultAnimal": "duck",
+    "reactionMotionDeferred": true,
+    "screenActions": {
+      "onboarding": "base",
+      "home": "idle",
+      "subjectDetail": "idle",
+      "sessionSetup": "study",
+      "focusTimer": "read",
+      "teacherQuestion": "think",
+      "analysisSufficient": "happy_jump",
+      "analysisInsufficient": "dejected",
+      "analysisAmbiguous": "surprised",
+      "report": "base",
+      "reward": "happy_jump",
+      "growth": "happy_jump"
+    }
+  }
+}
