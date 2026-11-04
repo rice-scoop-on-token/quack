@@ -139,7 +139,7 @@ DB 권한·제약 시험(`supabase/tests/database`, pgTAP)으로 확인할 수 �
 | `local/quizzes.test.mjs` | 퀴즈 API (BE-B). 라우트 시험 예시 | api 함수가 응답해야 함 |
 | `local/sessions.test.mjs` | 세션 종료 API (BE-B) | api 함수가 응답해야 함 |
 | `local/turns.test.mjs` | 설명 제출 API (BE-B). 실제 AI를 부르는 성공 경로는 `LIVE_AI=1`일 때만 실행한다(비용) | api 함수가 응답해야 함. `LIVE_AI=1`이면 `functions/.env`의 `LLM_API_KEY`·`LLM_MODEL` |
-| `remote/remote.test.mjs` | 원격 프로젝트 반영 확인 | 아래 환경 변수 |
+| `remote/remote.test.mjs` | 원격 프로젝트 반영 확인. service role 경로(`/finish`)도 확인한다(원격은 로컬과 기본 권한이 달라서) | 아래 환경 변수 |
 
 `supabase start`와 `functions serve`는 직접 별도 터미널에서 띄운다. 이 환경(CLI 2.122.0)에서는 `supabase start`만으로도 api 함수가 뜬다. 함수를 개발하거나 PR을 시험할 때는 CLAUDE.md 규칙대로 `functions serve`를 띄운 상태에서 실행한다. api 함수가 응답하지 않으면 해당 시험 파일은 안내 메시지와 함께 멈춘다.
 

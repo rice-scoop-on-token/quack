@@ -58,6 +58,25 @@ test('금지된 칸·테이블은 403', async () => {
   assert.equal(res.status, 403);
 });
 
+// 서버 코드가 service role(adminDb)로 DB에 쓰는 경로가 원격에서 동작하는지 확인한다.
+// 원격은 로컬과 기본 권한이 달라, service_role 권한이 빠지면 이 경로만 42501(500)로 실패했다(docs/decisions/0002).
+// /finish는 AI를 부르지 않아 비용이 없고, adminDb로 sessions를 수정한다.
+test('api 함수: service role 경로(/finish)가 동작한다', async () => {
+  const folder = await remote.rest(user, 'POST', 'folders', { user_id: user.id, name: '종료 시험 폴더', species_id: 'cat' });
+  const session = await remote.rest(user, 'POST', 'sessions', { user_id: user.id, folder_id: folder.body[0].id, goal: '종료 시험' });
+  const sessionId = session.body[0].id;
+
+  const first = await remote.api(user, `/sessions/${sessionId}/finish`, { method: 'POST' });
+  assert.equal(first.status, 200, JSON.stringify(first.body));
+  assert.equal(first.body.session.status, 'finished');
+  assert.equal(first.body.review.turn_count, 0);
+
+  // 이미 종료된 세션은 아무것도 바꾸지 않고 같은 응답을 돌려준다.
+  const again = await remote.api(user, `/sessions/${sessionId}/finish`, { method: 'POST' });
+  assert.equal(again.status, 200);
+  assert.deepEqual(again.body, first.body);
+});
+
 test('api 함수: health 200, /me는 토큰이 있을 때만 자기 프로필', async () => {
   let res = await remote.api('anon', '/health');
   assert.equal(res.status, 200);
