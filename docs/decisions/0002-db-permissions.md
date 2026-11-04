@@ -36,6 +36,7 @@
 | materials | 자기 행 | `user_id`, `folder_id`, `kind`, `title`, `storage_path` | `title` | 자기 행 |
 | sessions | 자기 행 | `user_id`, `folder_id`, `goal` | 불가 | 불가 |
 | explanation_turns, quizzes, quiz_attempts, reports | 자기 세션의 행 | 불가 | 불가 | 불가 |
+| turn_analyses | 자기 세션의 행, **공개 칸만** (`turn_id`, 상태 3종, `action`, `message`, `question`, `created_at`) | 불가 | 불가 | 불가 |
 | xp_ledger | 자기 행 | 불가 | 불가 | 불가 |
 | character_stats (view) | 자기 행 | - | - | - |
 | material_contents, quiz_questions, ai_usage | **불가** (서버 전용) | 불가 | 불가 | 불가 |
@@ -44,6 +45,7 @@
 - `sessions.status`, `materials.status`·`key_concepts`, 보상 관련 행은 서버만 바꾼다. 기본값(`status = 'active'` 등)은 DB가 채운다.
 - `quiz_questions`에는 정답이 있어서 앱이 조회조차 할 수 없다. 앱은 API 응답(정답 제외)으로만 문항을 받는다.
 - 테이블 조회 권한은 칸이 아니라 테이블 전체에 준다. 그래서 앱이 `reports`를 직접 조회하면 서버용 칸 `xp_before`도 보인다. 지급 당시 경험치라 노출돼도 문제가 없어 그대로 두었다. API 응답에서는 `respond`가 shared 스키마로 걸러 낸다.
+- 예외: `turn_analyses`는 조회도 칸 단위로 준다. 서버 전용 칸 `analysis`(AI 내부 분석: 판단 근거, 누락·오류, 확인 개념)와 `model`은 앱에 보이면 안 되기 때문이다. 그래서 앱이 `select=*`로 조회하면 권한 오류(`42501`)가 나고, 칸 이름을 적어야 한다.
 
 ## 데이터를 지키는 제약
 
@@ -58,6 +60,7 @@
 | `xp_ledger`의 부분 unique 인덱스 (`session_id`, `reason = 'session_reward'`일 때) | 같은 세션의 보상을 두 번 지급하는 것. service role도 막힌다 |
 | `quiz_attempts.quiz_id` unique | 퀴즈를 두 번 제출하는 것. 다시 풀기는 새 퀴즈를 만든다 |
 | `reports.session_id` unique | 세션 하나에 리포트가 두 개 생기는 것 |
+| `turn_analyses`의 check: `action`이 `ask`·`explain`일 때만 `question`이 있다 | 질문 없는 꼬리 질문 저장. 다음 턴의 이전 대화가 어긋나는 것 |
 
 **삭제할 때**
 
@@ -94,6 +97,7 @@
 | `consume_ai_quota(user_id, kind, daily_limit)` | 서울 시간 기준 오늘 사용량을 1 올리고 `true`. 한도에 닿았으면 올리지 않고 `false`. 한도 값은 인자로 받는다(D22 결정 전) |
 | `grant_session_reward(user_id, session_id, xp, 리포트 칸들)` | 경험치 내역, 리포트, 세션 상태(`reported`)를 한 트랜잭션으로 기록한다. `finished` 세션에만 지급한다. 경험치는 세션이 속한 폴더에 쌓고, 폴더는 인자로 받지 않고 세션에서 읽는다 |
 | `lock_user(user_id)` | 아래 사용자별 잠금 |
+| `save_turn(user_id, session_id, seq, 턴 칸들, 분석 칸들)` | 설명 턴과 분석(`turn_analyses`)을 한 트랜잭션으로 저장하고 턴 행을 돌려준다. `active`인 자기 세션에만 저장한다. `seq`가 마지막 순번 + 1이 아니면 `INVALID_STATE`(동시 제출: 다른 턴을 보지 못하고 만든 분석은 저장하지 않는다). 세션 행을 `for update`로 잠근다 |
 
 - 모든 함수에 `set search_path = ''`를 붙이고, 함수 안에서는 `public.xp_ledger`처럼 스키마 이름을 붙여 쓴다.
 - 함수는 security invoker(기본값)다. 호출하는 `service_role`이 원래 테이블 권한을 갖고 있어 security definer가 필요 없고, definer는 권한이 잘못 열렸을 때 위험이 더 크다.

@@ -224,5 +224,66 @@ select results_eq(
   '폴더별 합계가 지급을 반영한다'
 );
 
+-- save_turn: 진행 중인 A 세션 ...a0에 턴과 분석을 저장한다
+
+set local role service_role;
+
+select is(
+  server.save_turn(
+    'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa', 'aaaaaaaa-0000-4000-8000-0000000000a0', 1, 'self', null, 'chat', '첫 설명',
+    'not_applicable', 'insufficient', 'unverified', 'ask', '발화1', '질문1', '{"k": 1}', 'm'
+  ) ->> 'seq',
+  '1',
+  'save_turn: 첫 턴을 seq 1로 저장하고 턴 행을 돌려준다'
+);
+select is(
+  server.save_turn(
+    'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa', 'aaaaaaaa-0000-4000-8000-0000000000a0', 2, 'follow_up', '앱이 보낸 질문', 'chat', '재설명',
+    'not_applicable', 'sufficient', 'unverified', 'acknowledge', '발화2', null, '{"k": 2}', 'm'
+  ) ->> 'question_text',
+  '앱이 보낸 질문',
+  'save_turn: 앱이 보낸 question_text는 받은 그대로 기록만 한다'
+);
+select throws_ok(
+  $$ select server.save_turn(
+       'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa', 'aaaaaaaa-0000-4000-8000-0000000000a0', 2, 'self', null, 'chat', '동시 제출',
+       'unverified', 'unverified', 'unverified', 'ask', '발화', '질문', '{}', 'm') $$,
+  'P0001', 'INVALID_STATE', 'save_turn: 이미 저장된 순번이면 INVALID_STATE (동시 제출)'
+);
+select throws_ok(
+  $$ select server.save_turn(
+       'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa', 'aaaaaaaa-0000-4000-8000-0000000000a0', 4, 'self', null, 'chat', '건너뜀',
+       'unverified', 'unverified', 'unverified', 'ask', '발화', '질문', '{}', 'm') $$,
+  'P0001', 'INVALID_STATE', 'save_turn: 순번을 건너뛰면 INVALID_STATE'
+);
+select throws_ok(
+  $$ select server.save_turn(
+       'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb', 'aaaaaaaa-0000-4000-8000-0000000000a0', 3, 'self', null, 'chat', 'B 행세',
+       'unverified', 'unverified', 'unverified', 'ask', '발화', '질문', '{}', 'm') $$,
+  'P0001', 'NOT_FOUND', 'save_turn: 다른 사용자의 세션이면 NOT_FOUND'
+);
+select throws_ok(
+  $$ select server.save_turn(
+       'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa', 'aaaaaaaa-0000-4000-8000-0000000000a1', 1, 'self', null, 'chat', '종료 후',
+       'unverified', 'unverified', 'unverified', 'ask', '발화', '질문', '{}', 'm') $$,
+  'P0001', 'INVALID_STATE', 'save_turn: 진행 중이 아닌 세션이면 INVALID_STATE'
+);
+select throws_ok(
+  $$ select server.save_turn(
+       'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa', 'aaaaaaaa-0000-4000-8000-0000000000a0', 3, 'self', null, 'chat', '질문 없음',
+       'unverified', 'insufficient', 'unverified', 'ask', '발화', null, '{}', 'm') $$,
+  '23514', null, 'save_turn: 질문하는 행동(ask)인데 질문이 없으면 저장하지 않는다'
+);
+
+reset role;
+
+select results_eq(
+  $$ select t.seq, a.action, a.analysis ->> 'k'
+     from public.explanation_turns t join public.turn_analyses a on a.turn_id = t.id
+     where t.session_id = 'aaaaaaaa-0000-4000-8000-0000000000a0' order by t.seq $$,
+  $$ values (1, 'ask', '1'), (2, 'acknowledge', '2') $$,
+  'save_turn: 턴과 분석이 함께 저장되고, 실패한 호출은 턴도 남기지 않는다'
+);
+
 select * from finish();
 rollback;
