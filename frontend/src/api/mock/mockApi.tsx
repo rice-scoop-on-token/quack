@@ -26,6 +26,7 @@ import { MOCK_TRANSCRIPT, mockAnalysis, mockConcept } from '@/api/mock/scenarios
 import { createMockQuiz, gradeMockQuiz } from '@/api/mock/scenarios/quiz';
 import { buildReport, rewardXp } from '@/api/mock/scenarios/report';
 import { DAILY_QUIZ, DAILY_QUIZ_ANSWER, DAILY_QUIZ_RESULT, DEFAULT_LOCK_QUIZ } from '@/api/mock/data/dailyQuiz';
+import { FRIENDS } from '@/api/mock/data/friends';
 import { mockPodcastLines } from '@/api/mock/data/podcasts';
 import type { SessionTurn, StudySession, TempLockQuizSettings, TempPodcast, TempQuizAttempt } from '@/api/tempContract';
 
@@ -70,6 +71,8 @@ function emptyDb(): Db {
 const ANALYSIS_DELAY_MS = 1000;
 const MATERIAL_DELAY_MS = 800;
 const PODCAST_DELAY_MS = 1500;
+// 조용히 공부하기는 선생님 설명이 없어서 경험치를 조금만 준다
+const QUIET_SECONDS_PER_XP = 300;
 
 // ?demo=child·adult: 모든 과목의 누적 경험치를 이 값으로 보여 준다(저장하지 않는다)
 const DEMO_XP: Record<string, number> = { child: 150, adult: 300 };
@@ -487,6 +490,42 @@ export function MockApiProvider({ children }: { children: ReactNode }) {
               ? grant
               : { ...grant, xp_before: demoBefore, xp_after: demoBefore + grant.xp },
         };
+      },
+      // 서버가 할 일을 흉내 낸다: 끝난 세션 하나로 남기고, 5분에 1 경험치를 쌓는다
+      async saveQuietStudy({ folder_id, study_seconds }) {
+        const endedAt = new Date();
+        const session: StudySession = {
+          id: tempId(),
+          user_id: TEMP_USER_ID,
+          folder_id,
+          goal: '조용히 공부하기',
+          status: 'finished',
+          started_at: new Date(endedAt.getTime() - study_seconds * 1000).toISOString(),
+          ended_at: endedAt.toISOString(),
+          study_seconds,
+          turns: [],
+          quiz: null,
+          quiet: true,
+        };
+        const amount = Math.floor(study_seconds / QUIET_SECONDS_PER_XP);
+        write((d) => ({
+          sessions: [...d.sessions, session],
+          xpLedger:
+            amount > 0
+              ? appendSessionReward(d.xpLedger, {
+                  id: tempId(),
+                  user_id: TEMP_USER_ID,
+                  folder_id,
+                  amount,
+                  reason: 'session_reward',
+                  session_id: session.id,
+                  created_at: endedAt.toISOString(),
+                })
+              : d.xpLedger,
+        }));
+      },
+      async listFriends() {
+        return FRIENDS;
       },
       async createPodcast({ folder_id, material_ids, minutes }) {
         await wait(PODCAST_DELAY_MS);

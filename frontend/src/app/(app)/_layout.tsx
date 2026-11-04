@@ -34,6 +34,9 @@ export default function AppLayout() {
       <Stack.Screen name="podcasts/[id]" options={{ title: 'AI 팟캐스트' }} />
       <Stack.Screen name="quizzes/today" options={{ title: '오늘의 퀴즈' }} />
       <Stack.Screen name="quizzes/lock-preview" options={{ title: '잠금화면 미리보기' }} />
+      <Stack.Screen name="records/analysis" options={{ title: '학습 분석' }} />
+      <Stack.Screen name="quiet" options={{ title: '조용히 공부하기' }} />
+      <Stack.Screen name="rooms/index" options={{ title: '통화방' }} />
       <Stack.Screen name="session/setup" options={{ title: '공부 준비' }} />
       {/* "공부 마치기"로만 나가도록 뒤로 버튼과 밀어서 뒤로 가기를 끈다 */}
       <Stack.Screen

@@ -21,6 +21,7 @@ import type {
   TempAiQuestion,
   TempDailyQuiz,
   TempDailyQuizResult,
+  TempFriend,
   TempLockQuizSettings,
   TempPodcast,
   TempQuizAttempt,
@@ -61,6 +62,11 @@ export interface QuackApi {
   submitQuiz(quizId: string, input: SubmitQuizRequest): Promise<SubmitQuizResponse>;
   // 여러 번 불러도 보상은 한 번만 지급되고 같은 리포트와 보상을 돌려준다
   createReport(sessionId: string): Promise<TempReportResponse>;
+
+  // 조용히 공부하기로 잰 시간을 공부 기록으로 남기고 경험치를 조금 쌓는다(화면에는 경험치를 보여 주지 않는다)
+  saveQuietStudy(input: { folder_id: string; study_seconds: number }): Promise<void>;
+  // 지금 공부 중인 친구
+  listFriends(): Promise<TempFriend[]>;
 
   // AI 팟캐스트. 자료 고르기는 listMaterials를 쓴다.
   createPodcast(input: { folder_id: string; material_ids: string[]; minutes: TempPodcast['minutes'] }): Promise<TempPodcast>;

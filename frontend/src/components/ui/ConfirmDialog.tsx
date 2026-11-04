@@ -6,20 +6,21 @@ type Props = {
   message: string;
   confirmLabel: string;
   onConfirm: () => void;
-  onCancel: () => void;
+  // 없으면 취소 버튼 없이 확인만 보여 준다
+  onCancel?: () => void;
 };
 
 // 확인 창. RN의 Alert는 웹에서 동작하지 않아서 Modal로 만든다.
 export function ConfirmDialog({ visible, title, message, confirmLabel, onConfirm, onCancel }: Props) {
   return (
-    <Modal visible={visible} transparent animationType="fade" onRequestClose={onCancel}>
+    <Modal visible={visible} transparent animationType="fade" onRequestClose={onCancel ?? onConfirm}>
       <View style={styles.backdrop}>
         <View style={styles.dialog} accessibilityRole="alert">
           <Text>{title}</Text>
           <Text>{message}</Text>
 
           <View style={styles.actions}>
-            <Button title="취소" onPress={onCancel} />
+            {onCancel ? <Button title="취소" onPress={onCancel} /> : null}
             <Button title={confirmLabel} onPress={onConfirm} />
           </View>
         </View>

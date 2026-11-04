@@ -1,4 +1,4 @@
-import type { ExplanationTurn, Report, Session } from '@quack/shared';
+import type { ExplanationTurn, Report, Session, SpeciesId } from '@quack/shared';
 
 // BE와 합의했지만 아직 shared에 반영되지 않은 타입을 이 파일 하나에 모은다.
 // shared 반영 후 교체: shared에 같은 타입이 생기면 여기 것을 지우고 shared 것을 import한다.
@@ -72,6 +72,8 @@ export type StudySession = Session & {
   turns: SessionTurn[];
   // 점검(S-04)에서 퀴즈를 풀었으면 맞힌 수와 문항 수
   quiz: { correct_count: number; total_count: number } | null;
+  // 조용히 공부하기로 잰 세션. 설명 기록이 없어서 과목 상세의 학습 탭 목록에서는 뺀다.
+  quiet?: true;
 };
 
 // ── 보상 ──
@@ -87,6 +89,21 @@ export type TempRewardGrant = {
 
 // shared CreateReportResponse에서 rewards만 위 임시 타입으로 바꾼 모양
 export type TempReportResponse = { report: Report; rewards: TempRewardGrant };
+
+// ── 친구 ──
+// 미정, BE와 합의 필요. 친구 탭 격자 카드에 필요한 값만 담은 시연용 초안이다.
+export type TempFriend = {
+  id: string;
+  name: string;
+  species_id: SpeciesId;
+  stage: GrowthStage;
+  // 지금 공부 중인지
+  studying: boolean;
+  // 공부 중인 과목 이름. 공부 중이 아니면 화면에 쓰지 않는다.
+  subject: string;
+  // 오늘 공부한 시간(초)
+  today_seconds: number;
+};
 
 // ── AI 팟캐스트 ──
 // 미정, BE·AI와 모양 합의 필요. 실제 오디오 없이 대화 문구만 돌려주는 시연용 초안이다.

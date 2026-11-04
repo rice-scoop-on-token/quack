@@ -56,14 +56,14 @@ export function MaterialsPanel({ folder }: Props) {
   );
 }
 
-// 학습: 지난 학습 리포트. 진행 중이거나 기록 없이 나간 세션(active)은 뺀다.
+// 학습: 지난 학습 리포트. 진행 중이거나 기록 없이 나간 세션(active)과 조용히 공부하기 세션은 뺀다.
 export function StudyPanel({ folder }: Props) {
   const sessions = useApiQuery((a) => a.listSessions(), []);
   if (!sessions) {
     return null;
   }
   const mine = byNewest(
-    sessions.filter((s) => s.folder_id === folder.id && s.status !== 'active'),
+    sessions.filter((s) => s.folder_id === folder.id && s.status !== 'active' && !s.quiet),
     (s) => s.ended_at ?? '',
   );
   return mine.length === 0 ? (
