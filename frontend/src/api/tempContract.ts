@@ -87,3 +87,38 @@ export type TempRewardGrant = {
 
 // shared CreateReportResponse에서 rewards만 위 임시 타입으로 바꾼 모양
 export type TempReportResponse = { report: Report; rewards: TempRewardGrant };
+
+// ── AI 팟캐스트 ──
+// 미정, BE·AI와 모양 합의 필요. 실제 오디오 없이 대화 문구만 돌려주는 시연용 초안이다.
+export type TempPodcast = {
+  id: string;
+  folder_id: string;
+  material_ids: string[];
+  minutes: 5 | 8 | 12;
+  title: string;
+  // 선생님이 들려주는 대화 문구. 재생 위치에 따라 차례로 보여 준다.
+  lines: string[];
+};
+
+// ── 오늘의 퀴즈 / 잠금화면 퀴즈 ──
+// 미정, BE와 합의 필요. 포인트·XP 없이 정답 여부와 해설만 돌려준다.
+export type TempDailyQuiz = { id: string; prompt: string; choices: string[] };
+export type TempDailyQuizResult = { correct: boolean; correct_answer: number; explanation: string };
+
+// 앱 퀴즈(공부와 별개)를 푼 기록. 과목 상세의 퀴즈 탭이 과목별로 보여 준다.
+// 오늘의 퀴즈가 과목과 상관없는 문제라, 푼 시점에 고른 과목(홈 선택, 잠금화면 출제 과목)에 붙인다.
+export type TempQuizAttempt = {
+  id: string;
+  folder_id: string;
+  source: 'app' | 'lock';
+  correct: boolean;
+  answered_at: string;
+};
+
+export type TempLockQuizSettings = {
+  enabled: boolean;
+  quiet_at_night: boolean;
+  per_day: 1 | 3 | 5;
+  // 출제 과목. null이면 고른 적이 없어 첫 과목으로 본다.
+  folder_id: string | null;
+};

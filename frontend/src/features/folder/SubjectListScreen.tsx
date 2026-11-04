@@ -1,14 +1,20 @@
 import { router } from 'expo-router';
+import { useState } from 'react';
 import { Button, StyleSheet, Text, View } from 'react-native';
 
-import { useApiQuery } from '@/api';
+import type { Folder } from '@quack/shared';
+
+import { useApiQuery, useQuackApi } from '@/api';
 import { BottomActionLayout } from '@/components/ui/BottomActionLayout';
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { SubjectCard } from '@/features/folder/SubjectCard';
 
 // L-01 과목 서랍
 export function SubjectListScreen() {
-  const folders = useApiQuery((api) => api.listFolders(), []);
-  const materials = useApiQuery((api) => api.listMaterials(), []);
+  const api = useQuackApi();
+  const [deleting, setDeleting] = useState<Folder | null>(null);
+  const folders = useApiQuery((a) => a.listFolders(), []);
+  const materials = useApiQuery((a) => a.listMaterials(), []);
   if (!folders || !materials) {
     return null;
   }
@@ -41,9 +47,26 @@ export function SubjectListScreen() {
             folder={f}
             detail={`자료 ${materials.filter((m) => m.folder_id === f.id).length}개`}
             onPress={() => router.push({ pathname: '/subjects/[id]', params: { id: f.id } })}
+            onDelete={() => setDeleting(f)}
           />
         ))
       )}
+
+      <ConfirmDialog
+        visible={deleting !== null}
+        title={`'${deleting?.name}' 과목을 삭제할까요?`}
+        message="이 과목의 캐릭터와 성장 기록도 함께 사라져요. 자료와 공부 기록도 모두 지워지고 되돌릴 수 없어요."
+        confirmLabel="삭제"
+        onConfirm={async () => {
+          // 삭제 버튼이 두 번 눌려도 한 번만 지우도록 창을 먼저 닫는다
+          if (!deleting) {
+            return;
+          }
+          setDeleting(null);
+          await api.deleteFolder(deleting.id);
+        }}
+        onCancel={() => setDeleting(null)}
+      />
     </BottomActionLayout>
   );
 }

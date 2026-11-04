@@ -17,4 +17,12 @@ export const SCREEN_ACTIONS = {
   confirmed: 'happy_jump',
   reward: 'happy_jump',
   growth: 'happy_jump',
+  quizAsking: 'think',
+  quizCorrect: 'happy_jump',
+  quizWrong: 'dejected',
+  podcastPlaying: 'idle',
+  podcastPaused: 'sleep',
+  // 팟캐스트를 만드는 동안
+  podcastCreating: 'read',
+  lockPreview: 'think',
 } as const satisfies Record<string, CharacterAction>;

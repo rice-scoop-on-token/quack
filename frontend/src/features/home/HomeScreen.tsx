@@ -41,8 +41,8 @@ export function HomeScreen() {
           />
 
           <View style={styles.row}>
-            <Button title="AI 팟캐스트 (준비 중)" disabled onPress={() => {}} />
-            <Button title="오늘의 퀴즈 (준비 중)" disabled onPress={() => {}} />
+            <Button title="AI 팟캐스트" onPress={() => router.push('/podcasts/new')} />
+            <Button title="오늘의 퀴즈" onPress={() => router.push('/quizzes/today')} />
           </View>
         </>
       }

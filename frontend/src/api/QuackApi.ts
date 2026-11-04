@@ -15,7 +15,17 @@ import type {
 } from '@quack/shared';
 import { createContext, useContext, useEffect, useState } from 'react';
 
-import type { SessionTurn, StudySession, TempAiQuestion, TempReportResponse } from '@/api/tempContract';
+import type {
+  SessionTurn,
+  StudySession,
+  TempAiQuestion,
+  TempDailyQuiz,
+  TempDailyQuizResult,
+  TempLockQuizSettings,
+  TempPodcast,
+  TempQuizAttempt,
+  TempReportResponse,
+} from '@/api/tempContract';
 
 // 화면과 훅은 이 인터페이스로만 데이터를 가져온다(CLAUDE.md Frontend). 메서드는 서버 계약(shared)에 맞춘다.
 export interface QuackApi {
@@ -51,6 +61,23 @@ export interface QuackApi {
   submitQuiz(quizId: string, input: SubmitQuizRequest): Promise<SubmitQuizResponse>;
   // 여러 번 불러도 보상은 한 번만 지급되고 같은 리포트와 보상을 돌려준다
   createReport(sessionId: string): Promise<TempReportResponse>;
+
+  // AI 팟캐스트. 자료 고르기는 listMaterials를 쓴다.
+  createPodcast(input: { folder_id: string; material_ids: string[]; minutes: TempPodcast['minutes'] }): Promise<TempPodcast>;
+  getPodcast(id: string): Promise<TempPodcast | null>;
+  listPodcasts(): Promise<TempPodcast[]>;
+  // 오늘의 퀴즈
+  getDailyQuiz(): Promise<TempDailyQuiz>;
+  // folder_id가 있으면 그 과목의 퀴즈 기록으로 남긴다(과목이 없으면 기록하지 않는다)
+  submitDailyQuiz(
+    id: string,
+    answer: number,
+    context: { folder_id: string | undefined; source: TempQuizAttempt['source'] },
+  ): Promise<TempDailyQuizResult>;
+  listQuizAttempts(): Promise<TempQuizAttempt[]>;
+  // 한계: 잠금화면 설정은 데모 안에만 저장한다. 실제 잠금화면 알림은 만들지 않는다.
+  getLockQuizSettings(): Promise<TempLockQuizSettings>;
+  saveLockQuizSettings(settings: TempLockQuizSettings): Promise<void>;
 }
 
 // version은 데이터를 바꿀 때마다 올라간다. useApiQuery가 이 값을 보고 다시 불러온다.
