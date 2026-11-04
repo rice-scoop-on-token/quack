@@ -1,6 +1,7 @@
 import { router } from 'expo-router';
-import { Button, Text } from 'react-native';
+import { Text } from 'react-native';
 
+import { Button } from '@/components/ui/Button';
 import { NewFolderFields } from '@/features/folder/NewFolderFields';
 import { useNewFolderForm } from '@/features/folder/useNewFolderForm';
 import { OnboardingStepLayout } from '@/features/onboarding/OnboardingStepLayout';
@@ -20,7 +21,7 @@ export function FirstFolderScreen() {
     <OnboardingStepLayout
       step={3}
       actions={
-        <Button title="첫 과목 만들기" onPress={handleSubmit} />
+        <Button variant="primary" title="첫 과목 만들기" onPress={handleSubmit} />
       }
     >
       <Text>첫 번째 공부를 담을 서랍을 만들어요.</Text>

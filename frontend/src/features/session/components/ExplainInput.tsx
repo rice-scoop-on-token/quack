@@ -1,6 +1,9 @@
-import { Button, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Pressable, StyleSheet, TextInput, View } from 'react-native';
 
+import { Button } from '@/components/ui/Button';
+import { Text } from '@/components/ui/Text';
 import type { ExplainDraft, InputMode } from '@/features/session/hooks/useExplainDraft';
+import { COLORS, SIZES } from '@/theme/assetTokens';
 
 const TABS: { mode: InputMode; label: string }[] = [
   { mode: 'chat', label: '글로 설명' },
@@ -103,7 +106,11 @@ const styles = StyleSheet.create({
   },
   input: {
     minHeight: 96,
-    borderWidth: 1,
+    borderWidth: SIZES.card.border,
+    borderColor: COLORS.outline,
+    borderRadius: SIZES.card.radius,
+    backgroundColor: COLORS.card,
+    color: COLORS.text,
     padding: 12,
   },
 });

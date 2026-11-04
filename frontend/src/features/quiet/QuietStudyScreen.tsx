@@ -1,7 +1,8 @@
 import { router, Stack } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { Button, StyleSheet, Text } from 'react-native';
+import { StyleSheet, Text } from 'react-native';
 
+import { Button } from '@/components/ui/Button';
 import { useQuackApi } from '@/api';
 import { MIN_QUIET_STUDY_SECONDS } from '@/api/tempContract';
 import { BottomActionLayout } from '@/components/ui/BottomActionLayout';
@@ -42,7 +43,7 @@ export function QuietStudyScreen() {
   }
   if (!selected) {
     return (
-      <BottomActionLayout actions={<Button title="과목 만들기" onPress={() => router.replace('/subjects/new')} />}>
+      <BottomActionLayout actions={<Button variant="primary" title="과목 만들기" onPress={() => router.replace('/subjects/new')} />}>
         <Text>공부 시간을 기록할 과목이 없어요. 과목을 먼저 만들어 주세요.</Text>
       </BottomActionLayout>
     );
@@ -94,10 +95,10 @@ export function QuietStudyScreen() {
               disabled={saving || finished}
               onPress={running ? pause : start}
             />
-            <Button title="공부 마치기" disabled={saving || finished} onPress={finish} />
+            <Button variant="primary" title="공부 마치기" disabled={saving || finished} onPress={finish} />
           </>
         ) : (
-          <Button title="공부 시작" onPress={start} />
+          <Button variant="primary" title="공부 시작" onPress={start} />
         )
       }
     >

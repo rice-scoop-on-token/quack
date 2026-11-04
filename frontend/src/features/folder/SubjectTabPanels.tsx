@@ -1,14 +1,16 @@
 import type { Folder } from '@quack/shared';
 import { router } from 'expo-router';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
 
 import { useApiQuery } from '@/api';
+import { Text } from '@/components/ui/Text';
 import { CharacterGrowth } from '@/features/character/CharacterGrowth';
 import { growthFromXp, STAGE_LABEL } from '@/features/character/growth';
 import { SCREEN_ACTIONS } from '@/features/character/screenActions';
 import { useCharacterXp } from '@/features/character/useCharacterXp';
 import { TeacherSummary } from '@/features/character/TeacherSummary';
 import { understoodConcepts } from '@/features/review/report';
+import { COLORS, hardShadow, SIZES } from '@/theme/assetTokens';
 
 const STATUS_LABEL = {
   uploaded: '올리는 중',
@@ -145,7 +147,14 @@ export function PodcastPanel({ folder }: Props) {
 const styles = StyleSheet.create({
   card: {
     gap: 4,
-    padding: 12,
-    borderWidth: 1,
+    paddingVertical: SIZES.card.paddingVertical,
+    paddingHorizontal: SIZES.card.paddingHorizontal,
+    borderWidth: SIZES.card.border,
+    borderColor: COLORS.outline,
+    borderRadius: SIZES.card.radius,
+    backgroundColor: COLORS.card,
+    // 그림자 자리를 아래에 비워 둔다
+    marginBottom: SIZES.card.shadow,
+    ...hardShadow(SIZES.card.shadow),
   },
 });

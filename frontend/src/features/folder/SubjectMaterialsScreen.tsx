@@ -1,7 +1,8 @@
 import type { Folder } from '@quack/shared';
 import { router, useLocalSearchParams } from 'expo-router';
-import { Button, Text } from 'react-native';
+import { Text } from 'react-native';
 
+import { Button } from '@/components/ui/Button';
 import { useApiQuery } from '@/api';
 import { BottomActionLayout } from '@/components/ui/BottomActionLayout';
 import { MaterialUploadActions, MaterialUploadBody, useMaterialUpload } from '@/features/folder/MaterialUpload';
@@ -39,7 +40,7 @@ function MaterialsForm({ folder, onDone }: { folder: Folder; onDone: () => void 
       actions={
         <>
           <MaterialUploadActions state={upload} />
-          <Button title="완료" onPress={onDone} />
+          <Button variant="primary" title="완료" onPress={onDone} />
         </>
       }
     >
@@ -53,7 +54,7 @@ function MissingFolder() {
   return (
     <BottomActionLayout
       actions={
-        <Button title="과목 서랍으로" onPress={() => router.dismissTo('/subjects')} />
+        <Button variant="primary" title="과목 서랍으로" onPress={() => router.dismissTo('/subjects')} />
       }
     >
       <Text>과목을 찾을 수 없어요.</Text>

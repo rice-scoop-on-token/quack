@@ -1,6 +1,7 @@
 import { Redirect, Stack } from 'expo-router';
 
 import { useAccessState } from '@/features/auth/useAccessState';
+import { COLORS } from '@/theme/assetTokens';
 
 const AFTER_SESSION = { headerBackVisible: false, gestureEnabled: false };
 
@@ -41,7 +42,7 @@ export default function AppLayout() {
       {/* "공부 마치기"로만 나가도록 뒤로 버튼과 밀어서 뒤로 가기를 끈다 */}
       <Stack.Screen
         name="session/timer"
-        options={{ title: '집중 타이머', headerBackVisible: false, gestureEnabled: false }}
+        options={{ title: '집중 타이머', headerShown: false, gestureEnabled: false, contentStyle: { backgroundColor: COLORS.screen } }}
       />
       {/* 세션이 끝난 뒤 화면은 뒤로 가면 홈으로 가므로(useAfterSession) 헤더 뒤로 버튼과 밀어서 뒤로 가기를 끈다. */}
       <Stack.Screen name="session/review" options={{ title: '학습 점검', ...AFTER_SESSION }} />

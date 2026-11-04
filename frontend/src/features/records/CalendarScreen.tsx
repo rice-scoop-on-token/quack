@@ -1,7 +1,10 @@
 import { router } from 'expo-router';
 import { useState } from 'react';
-import { Button, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
 
+import { Text } from '@/components/ui/Text';
+import { SIZES } from '@/theme/assetTokens';
+import { Button } from '@/components/ui/Button';
 import { useApiQuery } from '@/api';
 import { demoRecordSessions } from '@/api/mock/data/demoRecords';
 import { useDemoVariant } from '@/api/mock/useDemoVariant';
@@ -42,8 +45,9 @@ export function CalendarScreen() {
   return (
     <BottomActionLayout
       inTab
+      gutter={SIZES.gutter}
       actions={
-        <Button
+        <Button variant="primary"
           title="기간별 분석 보기"
           onPress={() => router.push({ pathname: '/records/analysis', params: demo ? { demo } : {} })}
         />

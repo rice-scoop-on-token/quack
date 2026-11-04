@@ -1,7 +1,10 @@
 import { router, useFocusEffect } from 'expo-router';
 import { useCallback, useState } from 'react';
-import { Button, StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 
+import { Text } from '@/components/ui/Text';
+import { SIZES } from '@/theme/assetTokens';
+import { Button } from '@/components/ui/Button';
 import { useApiQuery } from '@/api';
 import { useDemoVariant } from '@/api/mock/useDemoVariant';
 import { BottomActionLayout } from '@/components/ui/BottomActionLayout';
@@ -37,10 +40,11 @@ export function FriendsScreen() {
   return (
     <BottomActionLayout
       inTab
+      gutter={SIZES.gutter}
       actions={
         <>
           {/* ?demo=permission 같은 값은 화면 주소마다 따로라서 통화방 주소에도 넘긴다 */}
-          <Button
+          <Button variant="primary"
             title="통화방 입장"
             onPress={() => router.push({ pathname: '/rooms', params: demo ? { demo } : {} })}
           />

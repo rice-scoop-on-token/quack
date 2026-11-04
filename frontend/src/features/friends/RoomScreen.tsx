@@ -1,8 +1,9 @@
 import type { SpeciesId } from '@quack/shared';
 import { router, useFocusEffect } from 'expo-router';
 import { useCallback, useState } from 'react';
-import { Button, StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 
+import { Button } from '@/components/ui/Button';
 import { useApiQuery } from '@/api';
 import { useDemoVariant } from '@/api/mock/useDemoVariant';
 import type { GrowthStage } from '@/api/tempContract';
@@ -78,7 +79,7 @@ export function RoomScreen() {
     <BottomActionLayout
       actions={
         <>
-          <Button
+          <Button variant="primary"
             title={listenOnly ? '듣기 모드 (마이크 권한 꺼짐)' : micOn ? '마이크 끄기' : '마이크 켜기'}
             disabled={listenOnly}
             onPress={() => setMicOn((on) => !on)}

@@ -1,7 +1,8 @@
 import type { Folder, Material } from '@quack/shared';
 import { router } from 'expo-router';
-import { ActivityIndicator, Button, Pressable, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
 
+import { Button } from '@/components/ui/Button';
 import { useApiQuery, useQuackApi } from '@/api';
 import { useDemoVariant } from '@/api/mock/useDemoVariant';
 

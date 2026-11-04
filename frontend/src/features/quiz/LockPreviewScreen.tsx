@@ -1,7 +1,8 @@
 import { router } from 'expo-router';
 import { useState } from 'react';
-import { Button, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 
+import { Button } from '@/components/ui/Button';
 import { useApiQuery, useQuackApi } from '@/api';
 import type { TempDailyQuizResult } from '@/api/tempContract';
 import { BottomActionLayout } from '@/components/ui/BottomActionLayout';
@@ -55,7 +56,7 @@ export function LockPreviewScreen() {
       actions={
         <>
           <Button title="설정 열기" onPress={() => router.push('/settings')} />
-          <Button title="앱에서 이어보기" onPress={() => router.push('/quizzes/today')} />
+          <Button variant="primary" title="앱에서 이어보기" onPress={() => router.push('/quizzes/today')} />
         </>
       }
     >
@@ -123,7 +124,7 @@ export function LockPreviewScreen() {
           )}
         </View>
 
-        {step === 'asking' ? <Button title="이번엔 쉬기" onPress={() => setStep('skipped')} /> : <Button title="처음으로" onPress={reset} />}
+        {step === 'asking' ? <Button variant="small" title="이번엔 쉬기" onPress={() => setStep('skipped')} /> : <Button variant="small" title="처음으로" onPress={reset} />}
       </View>
     </BottomActionLayout>
   );

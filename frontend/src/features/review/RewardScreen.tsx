@@ -1,6 +1,7 @@
 import { router, useLocalSearchParams } from 'expo-router';
-import { Button, Text } from 'react-native';
+import { Text } from 'react-native';
 
+import { Button } from '@/components/ui/Button';
 import { useApiQuery } from '@/api';
 import { BottomActionLayout } from '@/components/ui/BottomActionLayout';
 import { NoRecord } from '@/components/ui/NoRecord';
@@ -31,7 +32,7 @@ export function RewardScreen() {
             title="과목 상세로"
             onPress={() => leave(() => router.dismissTo({ pathname: '/subjects/[id]', params: { id: folder.id } }))}
           />
-          <Button title="홈으로" onPress={() => leave(() => router.dismissTo('/home'))} />
+          <Button variant="primary" title="홈으로" onPress={() => leave(() => router.dismissTo('/home'))} />
         </>
       }
     >

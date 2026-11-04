@@ -1,6 +1,7 @@
 import { router } from 'expo-router';
-import { Button, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
+import { StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 
+import { Button } from '@/components/ui/Button';
 import { CharacterBox } from '@/components/ui/CharacterBox';
 import { OnboardingStepLayout } from '@/features/onboarding/OnboardingStepLayout';
 
@@ -24,7 +25,7 @@ export function IntroScreen() {
     <OnboardingStepLayout
       step={1}
       actions={
-        <Button title="나의 학습 친구 만나기" onPress={() => router.push('/name')} />
+        <Button variant="primary" title="나의 학습 친구 만나기" onPress={() => router.push('/name')} />
       }
     >
       <Text>나의 작은 학습 친구</Text>

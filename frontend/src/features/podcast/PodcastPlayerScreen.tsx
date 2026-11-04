@@ -1,7 +1,8 @@
 import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
-import { Button, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 
+import { Button } from '@/components/ui/Button';
 import { useApiQuery } from '@/api';
 import { BottomActionLayout } from '@/components/ui/BottomActionLayout';
 import { CharacterBox } from '@/components/ui/CharacterBox';
@@ -70,9 +71,9 @@ export function PodcastPlayerScreen() {
     <BottomActionLayout
       actions={
         finished ? (
-          <Button title="홈으로" onPress={() => router.dismissTo('/home')} />
+          <Button variant="primary" title="홈으로" onPress={() => router.dismissTo('/home')} />
         ) : (
-          <Button title={playing ? '일시정지' : '재생'} onPress={() => setPlaying((p) => !p)} />
+          <Button variant="primary" title={playing ? '일시정지' : '재생'} onPress={() => setPlaying((p) => !p)} />
         )
       }
     >

@@ -1,7 +1,10 @@
 import { router } from 'expo-router';
 import { useState } from 'react';
-import { Button, Pressable, StyleSheet, Switch, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Switch, View } from 'react-native';
 
+import { Text } from '@/components/ui/Text';
+import { SIZES } from '@/theme/assetTokens';
+import { Button } from '@/components/ui/Button';
 import { useApiQuery, useQuackApi } from '@/api';
 import type { TempLockQuizSettings } from '@/api/tempContract';
 import { BottomActionLayout } from '@/components/ui/BottomActionLayout';
@@ -33,9 +36,10 @@ export function SettingsScreen() {
   return (
     <BottomActionLayout
       inTab
+      gutter={SIZES.gutter}
       actions={
         <>
-          <Button title="잠금화면 미리보기" onPress={() => router.push('/quizzes/lock-preview')} />
+          <Button variant="primary" title="잠금화면 미리보기" onPress={() => router.push('/quizzes/lock-preview')} />
           <Button title="앱에서 오늘의 퀴즈" onPress={() => router.push('/quizzes/today')} />
         </>
       }

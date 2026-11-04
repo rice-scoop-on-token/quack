@@ -1,5 +1,7 @@
 import { useState, type ReactNode } from 'react';
-import { Button, Text } from 'react-native';
+import { Text } from 'react-native';
+
+import { Button } from '@/components/ui/Button';
 
 const PAGE = 5;
 
@@ -20,7 +22,7 @@ export function MoreList({ items, empty }: Props) {
     <>
       {items.slice(0, shown)}
       {items.length > shown ? (
-        <Button title={`더 보기 (${items.length - shown}개 남음)`} onPress={() => setShown((n) => n + PAGE)} />
+        <Button variant="small" title={`더 보기 (${items.length - shown}개 남음)`} onPress={() => setShown((n) => n + PAGE)} />
       ) : null}
     </>
   );

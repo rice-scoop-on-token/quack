@@ -1,7 +1,8 @@
 import { router } from 'expo-router';
 import { useState } from 'react';
-import { Button, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 
+import { Button } from '@/components/ui/Button';
 import { useApiQuery, useQuackApi } from '@/api';
 import type { TempDailyQuizResult } from '@/api/tempContract';
 import { BottomActionLayout } from '@/components/ui/BottomActionLayout';
@@ -38,9 +39,9 @@ export function DailyQuizScreen() {
       actions={
         <>
           {result ? (
-            <Button title="잠금화면에서도 복습하기" onPress={() => router.push('/settings')} />
+            <Button variant="primary" title="잠금화면에서도 복습하기" onPress={() => router.push('/settings')} />
           ) : (
-            <Button
+            <Button variant="primary"
               title="답 확인하기"
               disabled={picked === null || submitting}
               onPress={async () => {

@@ -1,7 +1,8 @@
 import { router, useFocusEffect } from 'expo-router';
 import { useCallback, useRef, useState } from 'react';
-import { Button, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 
+import { Button } from '@/components/ui/Button';
 import { useApiQuery, useQuackApi } from '@/api';
 import { useDemoVariant } from '@/api/mock/useDemoVariant';
 import type { TempPodcast } from '@/api/tempContract';
@@ -39,7 +40,7 @@ export function NewPodcastScreen() {
   }
   if (!selected) {
     return (
-      <BottomActionLayout actions={<Button title="과목 만들기" onPress={() => router.replace('/subjects/new')} />}>
+      <BottomActionLayout actions={<Button variant="primary" title="과목 만들기" onPress={() => router.replace('/subjects/new')} />}>
         <Text>팟캐스트를 만들 과목이 없어요. 과목을 먼저 만들어 주세요.</Text>
       </BottomActionLayout>
     );
@@ -86,9 +87,9 @@ export function NewPodcastScreen() {
     <BottomActionLayout
       actions={
         state === 'failed' ? (
-          <Button title="다시 생성" onPress={() => create(true)} />
+          <Button variant="primary" title="다시 생성" onPress={() => create(true)} />
         ) : (
-          <Button title="팟캐스트 만들기" disabled={chosen.length === 0} onPress={() => create()} />
+          <Button variant="primary" title="팟캐스트 만들기" disabled={chosen.length === 0} onPress={() => create()} />
         )
       }
     >

@@ -1,4 +1,8 @@
-import { Button, Modal, StyleSheet, Text, View } from 'react-native';
+import { Modal, StyleSheet, View } from 'react-native';
+
+import { Button } from '@/components/ui/Button';
+import { Text } from '@/components/ui/Text';
+import { COLORS, SIZES } from '@/theme/assetTokens';
 
 type Props = {
   visible: boolean;
@@ -20,8 +24,8 @@ export function ConfirmDialog({ visible, title, message, confirmLabel, onConfirm
           <Text>{message}</Text>
 
           <View style={styles.actions}>
-            {onCancel ? <Button title="취소" onPress={onCancel} /> : null}
-            <Button title={confirmLabel} onPress={onConfirm} />
+            {onCancel ? <Button style={styles.half} title="취소" onPress={onCancel} /> : null}
+            <Button variant="primary" style={styles.half} title={confirmLabel} onPress={onConfirm} />
           </View>
         </View>
       </View>
@@ -30,17 +34,22 @@ export function ConfirmDialog({ visible, title, message, confirmLabel, onConfirm
 }
 
 const styles = StyleSheet.create({
+  // 나란히 놓은 버튼이 폭을 반씩 나눈다
+  half: {
+    flex: 1,
+  },
   backdrop: {
     flex: 1,
     justifyContent: 'center',
     padding: 24,
   },
-  // 창 위치가 보이도록 테두리만 둔다. 배경이 비치지 않게 흰 배경을 임시로 둔다.
   dialog: {
     gap: 12,
     padding: 24,
-    borderWidth: 1,
-    backgroundColor: '#fff',
+    borderWidth: SIZES.card.border,
+    borderColor: COLORS.outline,
+    borderRadius: SIZES.card.radius,
+    backgroundColor: COLORS.card,
   },
   actions: {
     flexDirection: 'row',

@@ -1,7 +1,8 @@
 import type { QuizPublic, QuizQuestionResult } from '@quack/shared';
 import { useState, type ReactNode } from 'react';
-import { Button, Pressable, StyleSheet, Text } from 'react-native';
+import { Pressable, StyleSheet, Text } from 'react-native';
 
+import { Button } from '@/components/ui/Button';
 import { useQuackApi } from '@/api';
 import { BottomActionLayout } from '@/components/ui/BottomActionLayout';
 
@@ -41,11 +42,11 @@ export function QuizRunner({ quiz, header, finishLabel, onFinish }: Props) {
     <BottomActionLayout
       actions={
         !result ? (
-          <Button title="답 확인하기" disabled={picked === null} onPress={checkAnswer} />
+          <Button variant="primary" title="답 확인하기" disabled={picked === null} onPress={checkAnswer} />
         ) : page + 1 < total ? (
-          <Button title="다음 문제" onPress={() => setPage(page + 1)} />
+          <Button variant="primary" title="다음 문제" onPress={() => setPage(page + 1)} />
         ) : (
-          <Button title={finishLabel} onPress={onFinish} />
+          <Button variant="primary" title={finishLabel} onPress={onFinish} />
         )
       }
     >

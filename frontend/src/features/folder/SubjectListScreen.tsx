@@ -1,9 +1,12 @@
 import { router } from 'expo-router';
 import { useState } from 'react';
-import { Button, StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 
 import type { Folder } from '@quack/shared';
 
+import { Text } from '@/components/ui/Text';
+import { SIZES } from '@/theme/assetTokens';
+import { Button } from '@/components/ui/Button';
 import { useApiQuery, useQuackApi } from '@/api';
 import { BottomActionLayout } from '@/components/ui/BottomActionLayout';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
@@ -22,8 +25,9 @@ export function SubjectListScreen() {
   return (
     <BottomActionLayout
       inTab
+      gutter={SIZES.gutter}
       actions={
-        <Button
+        <Button variant="primary"
           title={folders.length === 0 ? '첫 과목 만들기' : '+ 과목 추가'}
           onPress={() => router.push('/subjects/new')}
         />

@@ -1,8 +1,9 @@
 import type { QuizPublic } from '@quack/shared';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { Button, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 
+import { Button } from '@/components/ui/Button';
 import { useQuackApi } from '@/api';
 import type { ExplanationAnalysis } from '@/api/tempContract';
 import { BottomActionLayout } from '@/components/ui/BottomActionLayout';
@@ -112,7 +113,7 @@ export function ReviewScreen() {
     <BottomActionLayout
       actions={
         <>
-          <Button
+          <Button variant="primary"
             title={sending ? '살펴보고 있어요…' : '설명 보내기'}
             disabled={sending || sendable.length === 0}
             onPress={sendAll}

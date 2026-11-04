@@ -1,6 +1,7 @@
 import { router, useLocalSearchParams } from 'expo-router';
-import { Button, Text } from 'react-native';
+import { Text } from 'react-native';
 
+import { Button } from '@/components/ui/Button';
 import { BottomActionLayout } from '@/components/ui/BottomActionLayout';
 import { NoRecord } from '@/components/ui/NoRecord';
 import { stageChange } from '@/features/review/report';
@@ -25,7 +26,7 @@ export function ReportScreen() {
   return (
     <BottomActionLayout
       actions={
-        <Button title="확인" onPress={() => leave(() => router.replace({ pathname: next, params }))} />
+        <Button variant="primary" title="확인" onPress={() => leave(() => router.replace({ pathname: next, params }))} />
       }
     >
       <Text>오늘의 공부 · 완료</Text>

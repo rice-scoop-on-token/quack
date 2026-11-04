@@ -1,24 +1,21 @@
 import type { Folder } from '@quack/shared';
 import type { ReactNode } from 'react';
-import { Button, StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 
+import { Button } from '@/components/ui/Button';
 import { PERSONAS } from '@/api/mock/data/personas';
-import type { GrowthStage } from '@/api/tempContract';
-import { CharacterBox } from '@/components/ui/CharacterBox';
 import { SpeechBubble } from '@/components/ui/SpeechBubble';
+import { Text } from '@/components/ui/Text';
+import type { CharacterAction } from '@/features/character/characterAssets';
 import { SCREEN_ACTIONS } from '@/features/character/screenActions';
 import { ExplainActions, ExplainInput } from '@/features/session/components/ExplainInput';
 import type { useExplanation } from '@/features/session/hooks/useExplanation';
 import type { useSessionTimer } from '@/features/session/hooks/useSessionTimer';
 import { MAX_FOLLOW_UPS } from '@/features/session/machine';
-
-// 단계가 바뀔 때 캐릭터 크기가 바뀌지 않게 모든 단계에서 같은 크기를 쓴다.
-// 동작 시트 한 칸이 256px라, 더 키우면 고해상도 화면에서 확대되어 흐려진다.
-const CHARACTER_SIZE = 120;
+import { COLORS, hardShadow, SIZES } from '@/theme/assetTokens';
 
 type Props = {
   folder: Folder;
-  stage: GrowthStage;
   goal: string;
   timer: ReturnType<typeof useSessionTimer>;
   explanation: ReturnType<typeof useExplanation>;
@@ -28,9 +25,11 @@ type Props = {
 // 타이머 화면의 단계별 본문과 하단 버튼. 버튼은 모두 화면 하단 고정 영역에 두므로 둘을 나눠 돌려준다.
 // 위쪽의 경과 시간과 하단의 쉬기·공부 마치기는 TimerScreen이 늘 보여 준다.
 // 질문 내용(꼬리 질문, 선생님이 먼저 묻는 질문)은 서버가 정하고, 앞뒤에 붙는 말투 문구만 그 과목 선생님의 성격(personas)을 따른다.
-export function phaseView({ folder, stage, goal, timer, explanation, onFinish }: Props): {
+export function phaseView({ folder, goal, timer, explanation, onFinish }: Props): {
   body: ReactNode;
   actions: ReactNode;
+  // 위쪽 장면(StudyScene)의 캐릭터가 보여 줄 동작
+  characterAction: CharacterAction;
 } {
   const lines = PERSONAS[folder.species_id].lines;
   const { last, draft, prompt } = explanation;
@@ -38,18 +37,13 @@ export function phaseView({ folder, stage, goal, timer, explanation, onFinish }:
   switch (timer.state.phase) {
     case 'timing':
       return {
+        characterAction: timer.running ? SCREEN_ACTIONS.timing : SCREEN_ACTIONS.paused,
         body: (
           <>
-            <Text>{goal}</Text>
-            <View style={styles.center}>
-              <CharacterBox
-                speciesId={folder.species_id}
-                stage={stage}
-                size={CHARACTER_SIZE}
-                action={timer.running ? SCREEN_ACTIONS.timing : SCREEN_ACTIONS.paused}
-              />
-              <Text>{timer.running ? '나도 옆에서 읽고 있을게.' : '잠깐 쉬어가자.'}</Text>
+            <View style={styles.card}>
+              <Text>{goal}</Text>
             </View>
+            <Text>{timer.running ? '나도 옆에서 읽고 있을게.' : '잠깐 쉬어가자.'}</Text>
             {/* 넘어간 개념은 리포트의 보완할 개념이 된다 */}
             {explanation.skipped ? <Text accessibilityLiveRegion="polite">{lines.skip}</Text> : null}
             <Text>말이나 채팅이 없으면 선생님이 먼저 가볍게 질문해요.</Text>
@@ -65,16 +59,9 @@ export function phaseView({ folder, stage, goal, timer, explanation, onFinish }:
 
     case 'aiQuestion':
       return {
+        characterAction: SCREEN_ACTIONS.aiQuestion,
         body: (
           <>
-            <View style={styles.center}>
-              <CharacterBox
-                speciesId={folder.species_id}
-                stage={stage}
-                size={CHARACTER_SIZE}
-                action={SCREEN_ACTIONS.aiQuestion}
-              />
-            </View>
             <SpeechBubble>{explanation.aiQuestion}</SpeechBubble>
             <Text>설명이 없는 동안 책을 읽으며 기다렸어요.</Text>
           </>
@@ -93,6 +80,7 @@ export function phaseView({ folder, stage, goal, timer, explanation, onFinish }:
 
     case 'explaining':
       return {
+        characterAction: SCREEN_ACTIONS.explaining,
         body: (
           <>
             {prompt.question ? <Text style={styles.bubble}>{prompt.question}</Text> : <Text>네 말로 설명해 줘</Text>}
@@ -111,16 +99,11 @@ export function phaseView({ folder, stage, goal, timer, explanation, onFinish }:
 
     case 'analyzing':
       return {
+        characterAction: SCREEN_ACTIONS.analyzing,
         body: (
           <>
             <Text style={styles.bubble}>{draft.text}</Text>
             <View style={styles.center} accessibilityRole="progressbar" accessibilityLiveRegion="polite">
-              <CharacterBox
-                speciesId={folder.species_id}
-                stage={stage}
-                size={CHARACTER_SIZE}
-                action={SCREEN_ACTIONS.analyzing}
-              />
               <Text>설명을 살펴보고 있어요…</Text>
               <Text>{lines.thinking}</Text>
             </View>
@@ -131,23 +114,12 @@ export function phaseView({ folder, stage, goal, timer, explanation, onFinish }:
 
     case 'followUp':
       return {
+        characterAction: last?.verdict === 'ambiguous' ? SCREEN_ACTIONS.followUpAmbiguous : SCREEN_ACTIONS.followUpInsufficient,
         body: (
           <>
             <Text>
               꼬리 질문 {timer.state.followUpCount} / {MAX_FOLLOW_UPS}
             </Text>
-            <View style={styles.center}>
-              <CharacterBox
-                speciesId={folder.species_id}
-                stage={stage}
-                size={CHARACTER_SIZE}
-                action={
-                  last?.verdict === 'ambiguous'
-                    ? SCREEN_ACTIONS.followUpAmbiguous
-                    : SCREEN_ACTIONS.followUpInsufficient
-                }
-              />
-            </View>
             <SpeechBubble>
               {lines.followUpLead} {last?.follow_up_question}
             </SpeechBubble>
@@ -171,16 +143,9 @@ export function phaseView({ folder, stage, goal, timer, explanation, onFinish }:
     // 충분 판정을 받았을 때만 온다(꼬리 질문 한도·넘어가기는 바로 공부로 돌아간다)
     case 'confirmed':
       return {
+        characterAction: SCREEN_ACTIONS.confirmed,
         body: (
           <>
-            <View style={styles.center}>
-              <CharacterBox
-                speciesId={folder.species_id}
-                stage={stage}
-                size={CHARACTER_SIZE}
-                action={SCREEN_ACTIONS.confirmed}
-              />
-            </View>
             <SpeechBubble>{lines.praise}</SpeechBubble>
             {last?.next_topic ? <Text>다음 주제: {last.next_topic}</Text> : null}
           </>
@@ -194,7 +159,7 @@ export function phaseView({ folder, stage, goal, timer, explanation, onFinish }:
       };
 
     default:
-      return { body: null, actions: null };
+      return { body: null, actions: null, characterAction: SCREEN_ACTIONS.explaining };
   }
 }
 
@@ -203,9 +168,23 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 8,
   },
-  // 말풍선 자리가 보이도록 테두리만 둔다 (임시 스타일)
+  // 지금 공부하는 목표를 종이 카드에 담는다
+  card: {
+    paddingVertical: SIZES.card.paddingVertical,
+    paddingHorizontal: SIZES.card.paddingHorizontal,
+    borderWidth: SIZES.card.border,
+    borderColor: COLORS.outline,
+    borderRadius: SIZES.card.radius,
+    backgroundColor: COLORS.card,
+    // 그림자 자리를 아래에 비워 둔다
+    marginBottom: SIZES.card.shadow,
+    ...hardShadow(SIZES.card.shadow),
+  },
   bubble: {
     padding: 12,
-    borderWidth: 1,
+    borderWidth: SIZES.card.border,
+    borderColor: COLORS.outline,
+    borderRadius: SIZES.card.radius,
+    backgroundColor: COLORS.card,
   },
 });

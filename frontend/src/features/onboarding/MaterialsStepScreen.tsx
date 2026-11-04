@@ -1,7 +1,8 @@
 import type { Folder } from '@quack/shared';
 import { router, useLocalSearchParams } from 'expo-router';
-import { Button, Text } from 'react-native';
+import { Text } from 'react-native';
 
+import { Button } from '@/components/ui/Button';
 import { useApiQuery, useQuackApi } from '@/api';
 import { MaterialUploadActions, MaterialUploadBody, useMaterialUpload } from '@/features/folder/MaterialUpload';
 import { OnboardingStepLayout } from '@/features/onboarding/OnboardingStepLayout';
@@ -20,7 +21,7 @@ export function MaterialsStepScreen() {
       <OnboardingStepLayout
         step={4}
         actions={
-          <Button title="과목 만들러 가기" onPress={() => router.replace('/subject')} />
+          <Button variant="primary" title="과목 만들러 가기" onPress={() => router.replace('/subject')} />
         }
       >
         {/* 주소로 바로 들어오거나 새로고침하면 과목이 없을 수 있다 */}
@@ -50,7 +51,7 @@ function MaterialsStep({ folder }: { folder: Folder }) {
       actions={
         <>
           <MaterialUploadActions state={upload} />
-          <Button title="이제 시작할게요" disabled={!hasReadyMaterial} onPress={finish} />
+          <Button variant="primary" title="이제 시작할게요" disabled={!hasReadyMaterial} onPress={finish} />
         </>
       }
     >
