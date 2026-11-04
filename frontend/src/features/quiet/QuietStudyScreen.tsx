@@ -1,7 +1,8 @@
 import { router, Stack } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { StyleSheet, Text } from 'react-native';
+import { StyleSheet } from 'react-native';
 
+import { Text } from '@/components/ui/Text';
 import { Button } from '@/components/ui/Button';
 import { useQuackApi } from '@/api';
 import { MIN_QUIET_STUDY_SECONDS } from '@/api/tempContract';
@@ -144,6 +145,7 @@ const styles = StyleSheet.create({
   time: {
     textAlign: 'center',
     fontSize: 48,
+    fontWeight: '700',
     paddingVertical: 24,
   },
 });

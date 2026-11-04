@@ -1,5 +1,8 @@
 import type { Report } from '@quack/shared';
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
+
+import { Text } from '@/components/ui/Text';
+import { PAPER } from '@/theme/assetTokens';
 
 // 리포트 본문(공부 시간, 설명한 개념, 설명 시도, 퀴즈 결과, 이해한 개념, 보완할 개념).
 // 학습 리포트(S-05)와 과목 상세의 지난 리포트에서 같이 쓴다.
@@ -49,8 +52,7 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   card: {
+    ...PAPER.card,
     gap: 4,
-    padding: 12,
-    borderWidth: 1,
   },
 });

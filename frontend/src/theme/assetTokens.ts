@@ -35,3 +35,48 @@ export const FONT = {
 
 // 번지지 않는 단단한 그림자(blur 0). 눌렸을 때는 그림자를 빼고 버튼을 그만큼 내린다.
 export const hardShadow = (offset: number) => ({ boxShadow: `0px ${offset}px 0px ${COLORS.outline}` }) as const;
+
+// 퀴즈 정답·오답 칸과 녹음 버튼 표시용. 기존 토큰에 없는 의미라서 채도를 낮춰 따로 둔다.
+// 정답·오답은 색만으로 알리지 않고 글자(정답, 내 답)도 함께 쓴다.
+export const FEEDBACK = {
+  positive: '#CFE3B5',
+  negative: '#F2C4B4',
+  record: '#D64545',
+} as const;
+
+// 종이 UI 공용 표면 스타일. 카드(테두리 2, 모서리 14, 하드 그림자 3), 입력창, 고르는 칸이 같은 값을 쓴다.
+export const PAPER = {
+  card: {
+    paddingVertical: SIZES.card.paddingVertical,
+    paddingHorizontal: SIZES.card.paddingHorizontal,
+    borderWidth: SIZES.card.border,
+    borderColor: COLORS.outline,
+    borderRadius: SIZES.card.radius,
+    backgroundColor: COLORS.card,
+    // 그림자 자리를 아래에 비워 둔다
+    marginBottom: SIZES.card.shadow,
+    ...hardShadow(SIZES.card.shadow),
+  },
+  input: {
+    minHeight: SIZES.touchMin,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    borderWidth: SIZES.row.border,
+    borderColor: COLORS.outline,
+    borderRadius: SIZES.row.radius,
+    backgroundColor: COLORS.card,
+    color: COLORS.text,
+    ...FONT.body,
+  },
+  // 고르는 칸(보기, 탭, 길이 선택 등). 고른 칸은 주요색, 정답·오답은 FEEDBACK 색으로 칠한다.
+  option: {
+    minHeight: SIZES.touchMin,
+    justifyContent: 'center',
+    paddingVertical: 10,
+    paddingHorizontal: 14,
+    borderWidth: SIZES.row.border,
+    borderColor: COLORS.outline,
+    borderRadius: SIZES.row.radius,
+    backgroundColor: COLORS.card,
+  },
+} as const;

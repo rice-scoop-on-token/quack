@@ -2,8 +2,8 @@ import { router, useFocusEffect } from 'expo-router';
 import { useCallback, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 
+import { COLORS, SIZES } from '@/theme/assetTokens';
 import { Text } from '@/components/ui/Text';
-import { SIZES } from '@/theme/assetTokens';
 import { Button } from '@/components/ui/Button';
 import { useApiQuery } from '@/api';
 import { useDemoVariant } from '@/api/mock/useDemoVariant';
@@ -95,12 +95,15 @@ const styles = StyleSheet.create({
     paddingHorizontal: 4,
     borderRadius: 16,
   },
-  // 강조색과 회색 톤은 임시 색이다. 디자인 작업 때 바꾼다.
   studying: {
-    backgroundColor: '#ffd77a',
+    backgroundColor: COLORS.primary,
+    borderWidth: 2,
+    borderColor: COLORS.outline,
   },
   resting: {
-    backgroundColor: '#e3e3e3',
-    opacity: 0.6,
+    backgroundColor: COLORS.disabledBg,
+    borderWidth: 2,
+    borderColor: COLORS.textSub,
+    opacity: 0.85,
   },
 });

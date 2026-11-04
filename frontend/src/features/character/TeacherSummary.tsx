@@ -1,6 +1,7 @@
 import type { Folder } from '@quack/shared';
 import { StyleSheet, View } from 'react-native';
 
+import { PersonaTags } from '@/features/character/PersonaTags';
 import { PERSONAS } from '@/api/mock/data/personas';
 import { SPECIES } from '@/api/mock/data/species';
 import { CharacterBox } from '@/components/ui/CharacterBox';
@@ -43,13 +44,7 @@ export function TeacherSummary({ folder, showCharacter = false }: Props) {
         </View>
       ) : null}
       <Text>{persona.label}</Text>
-      <View style={styles.tags}>
-        {persona.tags.map((tag) => (
-          <Text key={tag} style={styles.tag}>
-            {tag}
-          </Text>
-        ))}
-      </View>
+      <PersonaTags tags={persona.tags} />
     </View>
   );
 }
@@ -72,15 +67,5 @@ const styles = StyleSheet.create({
     height: CHARACTER_SLOT,
     alignItems: 'center',
     justifyContent: 'flex-end',
-  },
-  tags: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
-  },
-  tag: {
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderWidth: 1,
   },
 });

@@ -1,7 +1,9 @@
 import { router } from 'expo-router';
 import { useState } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
 
+import { Text } from '@/components/ui/Text';
+import { COLORS, PAPER, SIZES } from '@/theme/assetTokens';
 import { Button } from '@/components/ui/Button';
 import { useApiQuery, useQuackApi } from '@/api';
 import type { TempDailyQuizResult } from '@/api/tempContract';
@@ -136,20 +138,18 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   tab: {
+    ...PAPER.option,
     flex: 1,
     alignItems: 'center',
-    padding: 12,
-    borderWidth: 1,
   },
   selected: {
-    borderWidth: 3,
+    backgroundColor: COLORS.primary,
   },
   // 단계가 바뀌어도 가짜 화면이 흔들리지 않도록 최소 높이를 잡는다
   phone: {
+    ...PAPER.card,
     gap: 8,
     minHeight: 520,
-    padding: 12,
-    borderWidth: 1,
   },
   character: {
     height: CHARACTER_SIZE,
@@ -157,13 +157,12 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
   },
   card: {
+    ...PAPER.card,
     gap: 8,
     minHeight: 200,
-    padding: 12,
-    borderWidth: 1,
   },
   choice: {
-    padding: 8,
-    borderWidth: 1,
+    ...PAPER.option,
+    minHeight: SIZES.touchMin,
   },
 });

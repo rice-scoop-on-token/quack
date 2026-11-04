@@ -1,7 +1,9 @@
 import { router } from 'expo-router';
 import { useState } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
 
+import { Text } from '@/components/ui/Text';
+import { COLORS, PAPER } from '@/theme/assetTokens';
 import { Button } from '@/components/ui/Button';
 import { useApiQuery } from '@/api';
 import { demoRecordSessions } from '@/api/mock/data/demoRecords';
@@ -125,17 +127,18 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   tab: {
+    ...PAPER.option,
     flex: 1,
     alignItems: 'center',
-    padding: 12,
-    borderWidth: 1,
   },
   selected: {
-    borderWidth: 3,
+    backgroundColor: COLORS.primary,
   },
   chart: {
+    ...PAPER.card,
     flexDirection: 'row',
     gap: 4,
+    paddingHorizontal: 8,
   },
   barColumn: {
     flex: 1,
@@ -146,15 +149,18 @@ const styles = StyleSheet.create({
     alignSelf: 'stretch',
     justifyContent: 'flex-end',
     alignItems: 'center',
+    borderBottomWidth: 2,
+    borderBottomColor: COLORS.outline,
   },
-  // 막대가 보이도록 임시 배경색 하나만 둔다. 디자인 작업 때 바꾼다.
   bar: {
     width: '60%',
-    backgroundColor: '#888',
+    backgroundColor: COLORS.accent,
+    borderWidth: 2,
+    borderBottomWidth: 0,
+    borderColor: COLORS.outline,
   },
   card: {
+    ...PAPER.card,
     gap: 4,
-    padding: 12,
-    borderWidth: 1,
   },
 });

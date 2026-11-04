@@ -2,8 +2,8 @@ import { router } from 'expo-router';
 import { useState } from 'react';
 import { Pressable, StyleSheet, Switch, View } from 'react-native';
 
+import { COLORS, PAPER, SIZES } from '@/theme/assetTokens';
 import { Text } from '@/components/ui/Text';
-import { SIZES } from '@/theme/assetTokens';
 import { Button } from '@/components/ui/Button';
 import { useApiQuery, useQuackApi } from '@/api';
 import type { TempLockQuizSettings } from '@/api/tempContract';
@@ -77,30 +77,35 @@ function ToggleRow({ label, value, onChange }: { label: string; value: boolean; 
   return (
     <View style={styles.toggle}>
       <Text>{label}</Text>
-      <Switch value={value} onValueChange={onChange} accessibilityLabel={label} />
+      <Switch
+        value={value}
+        onValueChange={onChange}
+        accessibilityLabel={label}
+        trackColor={{ false: COLORS.disabledBg, true: COLORS.primary }}
+        thumbColor={COLORS.card}
+        ios_backgroundColor={COLORS.disabledBg}
+      />
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   toggle: {
+    ...PAPER.option,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    padding: 12,
-    borderWidth: 1,
   },
   row: {
     flexDirection: 'row',
     gap: 8,
   },
   option: {
+    ...PAPER.option,
     flex: 1,
     alignItems: 'center',
-    padding: 12,
-    borderWidth: 1,
   },
   selected: {
-    borderWidth: 3,
+    backgroundColor: COLORS.primary,
   },
 });

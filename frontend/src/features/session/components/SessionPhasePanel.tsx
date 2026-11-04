@@ -90,9 +90,8 @@ export function phaseView({ folder, goal, timer, explanation, onFinish }: Props)
         ),
         actions: (
           <>
-            <ExplainActions draft={draft} onSend={explanation.send} />
-            {/* 꼬리 질문에 답하던 중이면 넘어가기와 같다. 임시 구현, 팀 확인 필요 */}
-            <Button title="돌아가기" onPress={explanation.cancel} />
+            {/* 돌아가기는 꼬리 질문에 답하던 중이면 넘어가기와 같다. 임시 구현, 팀 확인 필요 */}
+            <ExplainActions draft={draft} onSend={explanation.send} onCancel={explanation.cancel} />
           </>
         ),
       };

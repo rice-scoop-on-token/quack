@@ -1,6 +1,6 @@
 import { router, useLocalSearchParams } from 'expo-router';
-import { Text } from 'react-native';
 
+import { Text } from '@/components/ui/Text';
 import { Button } from '@/components/ui/Button';
 import { useApiQuery } from '@/api';
 import { BottomActionLayout } from '@/components/ui/BottomActionLayout';

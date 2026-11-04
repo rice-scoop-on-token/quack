@@ -93,14 +93,17 @@ export function TimerScreen() {
       actions={
         <>
           {view.actions}
-          <View style={styles.row}>
-            {timer.running ? (
-              <Button style={styles.half} title="잠깐 쉬기" onPress={timer.pause} />
-            ) : (
-              <Button style={styles.half} title="다시 시작" onPress={timer.resume} />
-            )}
-            <Button variant="primary" style={styles.half} title="공부 마치기" disabled={!canFinish} onPress={() => setConfirmingFinish(true)} />
-          </View>
+          {/* 설명하는 동안에는 쉬기·공부 마치기를 숨긴다. 끝내려면 답을 보내거나 돌아가기로 나온다 */}
+          {phase === 'explaining' ? null : (
+            <View style={styles.row}>
+              {timer.running ? (
+                <Button style={styles.half} title="잠깐 쉬기" onPress={timer.pause} />
+              ) : (
+                <Button style={styles.half} title="다시 시작" onPress={timer.resume} />
+              )}
+              <Button variant="primary" style={styles.half} title="공부 마치기" disabled={!canFinish} onPress={() => setConfirmingFinish(true)} />
+            </View>
+          )}
         </>
       }
     >
@@ -110,6 +113,7 @@ export function TimerScreen() {
         stage={stage}
         action={view.characterAction}
         onBack={() => setConfirmingLeave(true)}
+        compact={phase === 'explaining'}
       />
 
       {/* 모든 단계에서 시간이 흐르고, 쉬기를 눌렀을 때만 멈춘다. AI와 대화하는 동안 멈출지는 미정이고 지금은 임시 구현이다 */}
@@ -120,7 +124,10 @@ export function TimerScreen() {
         <Text style={styles.time} accessibilityRole="timer">
           {formatElapsed(timer.elapsedMs)}
         </Text>
-        <Text style={styles.sub}>{timer.running ? '지금 쌓이는 공부 시간' : '잠시 쉬어가는 중'}</Text>
+        {/* 설명 입력 단계는 한 화면에 들어가도록 보조 문구를 줄인다 */}
+        {phase === 'explaining' ? null : (
+          <Text style={styles.sub}>{timer.running ? '지금 쌓이는 공부 시간' : '잠시 쉬어가는 중'}</Text>
+        )}
       </View>
 
       {view.body}

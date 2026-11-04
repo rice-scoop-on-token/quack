@@ -1,7 +1,9 @@
 import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
 
+import { Text } from '@/components/ui/Text';
+import { COLORS, PAPER } from '@/theme/assetTokens';
 import { Button } from '@/components/ui/Button';
 import { useApiQuery } from '@/api';
 import { BottomActionLayout } from '@/components/ui/BottomActionLayout';
@@ -129,13 +131,16 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
   },
   bar: {
-    height: 12,
-    borderWidth: 1,
+    height: 14,
+    borderWidth: 2,
+    borderColor: COLORS.outline,
+    borderRadius: 7,
+    backgroundColor: COLORS.cream,
+    overflow: 'hidden',
   },
-  // 채운 부분이 보이도록 임시 배경색 하나만 둔다. 디자인 작업 때 바꾼다.
   fill: {
     height: '100%',
-    backgroundColor: '#888',
+    backgroundColor: COLORS.accent,
   },
   row: {
     flexDirection: 'row',
@@ -143,13 +148,13 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   control: {
+    ...PAPER.option,
     flex: 1,
     alignItems: 'center',
-    padding: 12,
-    borderWidth: 1,
   },
   // 문구·결과가 바뀌어도 아래가 밀리지 않도록 최소 높이를 잡는다
   panel: {
+    ...PAPER.card,
     gap: 8,
     minHeight: 120,
   },

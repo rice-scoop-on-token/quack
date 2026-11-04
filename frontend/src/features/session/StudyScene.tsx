@@ -6,6 +6,7 @@ import type { GrowthStage } from '@/api/tempContract';
 import { CharacterBox } from '@/components/ui/CharacterBox';
 import { SceneBackButton } from '@/components/ui/SceneBackButton';
 import type { CharacterAction } from '@/features/character/characterAssets';
+import { FOOT_RATIO } from '@/features/character/footAnchor';
 import { COLORS, hardShadow, SIZES } from '@/theme/assetTokens';
 import { useDayNight } from '@/theme/useDayNight';
 
@@ -17,10 +18,12 @@ const BACKGROUNDS = {
 const IMAGE_RATIO = 1.667;
 
 const CHARACTER_SIZE = 130;
-// 러그 위에 서 있도록 캐릭터 칸의 아래쪽 위치를 장면 높이에 대한 비율로 둔다(장면 아래에서 이 비율만큼 위, 음수면 아래).
-// 시트 칸 아래쪽에는 발 밑 여백이 있어서(캐릭터가 칸 안에서 위쪽에 그려진다) 칸 아래를 장면 아래보다 조금 내려야 발이 러그 위에 온다.
-// 한계: 칸 안 발끝 위치가 동물·단계·동작마다 조금씩 달라서 모든 경우에 러그 한가운데에 닿지는 않는다. 어긋나면 이 값만 고친다.
-const CELL_BOTTOM_FROM_SCENE_BOTTOM = -0.07;
+// compact일 때 장면 카드 폭과 캐릭터 크기를 이 비율로 줄인다
+const COMPACT_SCALE = 0.55;
+// 발이 닿는 기준선: 러그 한가운데가 장면 높이의 아래에서 약 10% 위다(낮·밤 이미지 모두 같다).
+const RUG_FEET_FROM_BOTTOM = 0.1;
+// 발끝 위치를 모를 때(단계를 불러오는 중)의 칸 안 발끝 비율
+const DEFAULT_FOOT_RATIO = 0.9;
 
 type Props = {
   folder: Folder;
@@ -28,18 +31,23 @@ type Props = {
   action: CharacterAction;
   // 왼쪽 위 뒤로가기 버튼을 눌렀을 때
   onBack: () => void;
+  // 설명 입력처럼 아래 내용이 많은 단계에서 장면을 줄여 한 화면에 들어가게 한다(이미지 전체와 비율은 그대로)
+  compact?: boolean;
 };
 
 // 공부 화면 위쪽 장면 카드: 낮/밤 실내 배경 위 러그에 캐릭터가 서고, 왼쪽 위에 뒤로가기 버튼이 있다.
 // 배경 이미지는 이 카드 안에서만, 잘리지 않게 전체를 그린다. 카드 크기는 카드가 놓인 폭과 이미지 비율(IMAGE_RATIO)로 정한다.
 // 헤더를 숨긴 화면이라 상단 안전 영역만큼 위를 띄운다.
-export function StudyScene({ folder, stage, action, onBack }: Props) {
+export function StudyScene({ folder, stage, action, onBack, compact = false }: Props) {
   const insets = useSafeAreaInsets();
   const time = useDayNight();
+  const scale = compact ? COMPACT_SCALE : 1;
+  const characterSize = CHARACTER_SIZE * scale;
+  const footRatio = stage ? FOOT_RATIO[folder.species_id][stage] : DEFAULT_FOOT_RATIO;
 
   return (
     // 바깥은 그림자 자리, 안쪽은 이미지를 둥근 테두리 안에 가두는 틀
-    <View style={[styles.shadow, { marginTop: insets.top }]}>
+    <View style={[styles.shadow, { marginTop: insets.top, width: `${scale * 100}%`, alignSelf: 'center' }]}>
       <View style={styles.card} accessible={false}>
         {/* 웹의 Image는 불러온 이미지의 원래 픽셀 크기를 width·height로 먼저 정한다. 폭·높이를 직접 지정해야 카드 크기에 맞게 들어간다 */}
         <Image
@@ -48,8 +56,11 @@ export function StudyScene({ folder, stage, action, onBack }: Props) {
           resizeMode="contain"
           accessibilityLabel={`공부 장면, ${time === 'day' ? '낮' : '밤'}`}
         />
-        <View style={[styles.character, { bottom: `${CELL_BOTTOM_FROM_SCENE_BOTTOM * 100}%` }]}>
-          <CharacterBox speciesId={folder.species_id} stage={stage} size={CHARACTER_SIZE} action={action} />
+        {/* 칸 아래가 아니라 발끝을 러그 기준선에 맞춘다: 기준선에 칸 아래를 맞춘 뒤, 칸 안 발 아래 여백만큼 칸을 내린다 */}
+        <View style={[styles.character, { bottom: `${RUG_FEET_FROM_BOTTOM * 100}%` }]}>
+          <View style={{ transform: [{ translateY: (1 - footRatio) * characterSize }] }}>
+            <CharacterBox speciesId={folder.species_id} stage={stage} size={characterSize} action={action} />
+          </View>
         </View>
         <View style={styles.back}>
           <SceneBackButton onPress={onBack} />

@@ -22,7 +22,15 @@ export default function AppLayout() {
   }
 
   return (
-    <Stack>
+    <Stack
+      screenOptions={{
+        contentStyle: { backgroundColor: COLORS.screen },
+        headerStyle: { backgroundColor: COLORS.screen },
+        headerTintColor: COLORS.text,
+        headerTitleStyle: { color: COLORS.text },
+        headerShadowVisible: false,
+      }}
+    >
       {/* 탭 화면은 탭 레이아웃이 자기 헤더를 그린다 */}
       {/* title은 다음 화면의 뒤로 버튼 이름으로 쓰인다("(tabs)" 대신 "홈") */}
       <Stack.Screen name="(tabs)" options={{ headerShown: false, title: '홈' }} />

@@ -1,7 +1,9 @@
 import type { QuizPublic, QuizQuestionResult } from '@quack/shared';
 import { useState, type ReactNode } from 'react';
-import { Pressable, StyleSheet, Text } from 'react-native';
+import { Pressable, StyleSheet } from 'react-native';
 
+import { Text } from '@/components/ui/Text';
+import { COLORS, FEEDBACK, PAPER } from '@/theme/assetTokens';
 import { Button } from '@/components/ui/Button';
 import { useQuackApi } from '@/api';
 import { BottomActionLayout } from '@/components/ui/BottomActionLayout';
@@ -100,20 +102,16 @@ export function QuizRunner({ quiz, header, finishLabel, onFinish }: Props) {
 
 const styles = StyleSheet.create({
   choice: {
-    padding: 12,
-    borderWidth: 1,
+    ...PAPER.option,
   },
-  // 고른 보기 강조 (임시 스타일)
+  // 고른 보기는 주요색, 정답·오답은 FEEDBACK 색(글자 "(정답)", "(내 답)"도 함께 쓴다)
   selected: {
-    borderWidth: 3,
+    backgroundColor: COLORS.primary,
   },
-  // 정답·오답 표시 색 (임시 색, 디자인 작업 때 바꾼다)
   correct: {
-    borderColor: '#2e7d32',
-    backgroundColor: '#e8f5e9',
+    backgroundColor: FEEDBACK.positive,
   },
   wrong: {
-    borderColor: '#c62828',
-    backgroundColor: '#ffebee',
+    backgroundColor: FEEDBACK.negative,
   },
 });

@@ -1,5 +1,6 @@
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 
+import { Text } from '@/components/ui/Text';
 import { PERSONAS } from '@/api/mock/data/personas';
 import { CharacterBox } from '@/components/ui/CharacterBox';
 import { SpeechBubble } from '@/components/ui/SpeechBubble';

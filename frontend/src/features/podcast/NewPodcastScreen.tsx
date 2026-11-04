@@ -1,7 +1,10 @@
 import { router, useFocusEffect } from 'expo-router';
 import { useCallback, useRef, useState } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
 
+import { Text } from '@/components/ui/Text';
+import { COLORS, PAPER } from '@/theme/assetTokens';
+import { FolderCard } from '@/components/ui/FolderCard';
 import { Button } from '@/components/ui/Button';
 import { useApiQuery, useQuackApi } from '@/api';
 import { useDemoVariant } from '@/api/mock/useDemoVariant';
@@ -103,12 +106,18 @@ export function NewPodcastScreen() {
         ready.map((m) => (
           <Pressable
             key={m.id}
-            style={[styles.card, materialIds.includes(m.id) && styles.selected]}
             onPress={() => toggle(m.id)}
             accessibilityRole="checkbox"
             accessibilityState={{ checked: materialIds.includes(m.id) }}
           >
-            <Text>{m.title}</Text>
+            <FolderCard>
+              <View style={styles.materialRow}>
+                <View style={[styles.checkbox, materialIds.includes(m.id) && styles.checkboxOn]}>
+                  <Text style={styles.check}>{materialIds.includes(m.id) ? '✓' : ''}</Text>
+                </View>
+                <Text style={styles.materialTitle}>{m.title}</Text>
+              </View>
+            </FolderCard>
           </Pressable>
         ))
       )}
@@ -137,13 +146,12 @@ export function NewPodcastScreen() {
 }
 
 const styles = StyleSheet.create({
+  // 길이 고르는 칸
   card: {
-    padding: 12,
-    borderWidth: 1,
+    ...PAPER.option,
   },
-  // 고른 항목 강조 (임시 스타일)
   selected: {
-    borderWidth: 3,
+    backgroundColor: COLORS.primary,
   },
   row: {
     flexDirection: 'row',
@@ -152,5 +160,32 @@ const styles = StyleSheet.create({
   minute: {
     flex: 1,
     alignItems: 'center',
+  },
+  materialRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  materialTitle: {
+    flex: 1,
+    fontWeight: '700',
+  },
+  // 체크 칸은 색만이 아니라 ✓ 표시로도 고른 것을 알린다
+  checkbox: {
+    width: 28,
+    height: 28,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 2,
+    borderColor: COLORS.outline,
+    borderRadius: 6,
+    backgroundColor: COLORS.card,
+  },
+  checkboxOn: {
+    backgroundColor: COLORS.primary,
+  },
+  check: {
+    fontWeight: '700',
+    lineHeight: 20,
   },
 });

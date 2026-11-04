@@ -1,6 +1,6 @@
 import { useState, type ReactNode } from 'react';
-import { Text } from 'react-native';
 
+import { Text } from '@/components/ui/Text';
 import { Button } from '@/components/ui/Button';
 
 const PAGE = 5;

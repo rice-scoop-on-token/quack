@@ -1,7 +1,9 @@
 import { router, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
-import { StyleSheet, Text, TextInput, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 
+import { Text } from '@/components/ui/Text';
+import { PaperInput } from '@/components/ui/PaperInput';
 import { Button } from '@/components/ui/Button';
 import { useQuackApi } from '@/api';
 import { useDemoVariant } from '@/api/mock/useDemoVariant';
@@ -74,8 +76,7 @@ export function SessionSetupScreen() {
 
       <View style={styles.form}>
         <Text>오늘의 학습 목표 (필수)</Text>
-        <TextInput
-          style={styles.input}
+        <PaperInput
           value={goal}
           onChangeText={(value) => {
             setGoal(value);
@@ -98,9 +99,5 @@ export function SessionSetupScreen() {
 const styles = StyleSheet.create({
   form: {
     gap: 8,
-  },
-  input: {
-    borderWidth: 1,
-    padding: 12,
   },
 });
