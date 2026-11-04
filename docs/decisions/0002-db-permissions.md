@@ -45,6 +45,7 @@
 - `sessions.status`, `materials.status`·`key_concepts`, 보상 관련 행은 서버만 바꾼다. 기본값(`status = 'active'` 등)은 DB가 채운다.
 - `quiz_questions`에는 정답이 있어서 앱이 조회조차 할 수 없다. 앱은 API 응답(정답 제외)으로만 문항을 받는다.
 - 테이블 조회 권한은 칸이 아니라 테이블 전체에 준다. 그래서 앱이 `reports`를 직접 조회하면 서버용 칸 `xp_before`도 보인다. 지급 당시 경험치라 노출돼도 문제가 없어 그대로 두었다. API 응답에서는 `respond`가 shared 스키마로 걸러 낸다.
+- `service_role`(서버 코드의 `adminDb`, security invoker인 `server` 함수)의 권한은 플랫폼 기본값에 기대지 않고 마이그레이션으로 명시한다(`20261104150000_service_role_grants.sql`). public의 모든 테이블에 조회·추가·수정·삭제를 주고, 앞으로 만들 테이블에도 같은 기본 권한을 준다. 로컬은 이 권한을 기본으로 주지만 원격 프로젝트는 `postgres`가 만든 테이블에 `DELETE`·`TRUNCATE`·`REFERENCES`·`TRIGGER`만 주어서, 원격의 `/finish`·`/turns`가 42501로 실패했다(2026-11-04). 원격 HTTP 시험은 `adminDb`를 쓰는 경로를 시험하지 않아 이를 잡지 못했다.
 - 예외: `turn_analyses`는 조회도 칸 단위로 준다. 서버 전용 칸 `analysis`(AI 내부 분석: 판단 근거, 누락·오류, 확인 개념)와 `model`은 앱에 보이면 안 되기 때문이다. 그래서 앱이 `select=*`로 조회하면 권한 오류(`42501`)가 나고, 칸 이름을 적어야 한다.
 
 ## 데이터를 지키는 제약

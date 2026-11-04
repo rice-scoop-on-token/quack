@@ -51,6 +51,17 @@ select ok(not has_schema_privilege('anon', 'server', 'USAGE'), 'anon은 server �
 select ok(not has_schema_privilege('authenticated', 'server', 'USAGE'), 'authenticated는 server 스키마를 쓸 수 없다');
 select ok(has_schema_privilege('service_role', 'server', 'USAGE'), 'service_role은 server 스키마를 쓸 수 있다');
 
+-- server 함수(security invoker)와 서버 코드(adminDb)는 service_role의 테이블 권한으로 동작한다.
+-- 원격은 이 권한을 기본으로 주지 않아 마이그레이션으로 명시했다(20261104150000_service_role_grants.sql).
+select is_empty(
+  $$ select c.relname, p.priv
+     from pg_class c
+     cross join (values ('SELECT'), ('INSERT'), ('UPDATE'), ('DELETE')) as p (priv)
+     where c.relnamespace = 'public'::regnamespace and c.relkind in ('r', 'p')
+       and not has_table_privilege('service_role', c.oid, p.priv) $$,
+  'service_role은 public의 모든 테이블을 조회·추가·수정·삭제할 수 있다'
+);
+
 -- 준비 (postgres 권한)
 
 insert into auth.users (id) values
