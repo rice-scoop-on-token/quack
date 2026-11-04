@@ -5,6 +5,7 @@ import { useApiQuery } from '@/api';
 import { BottomActionLayout } from '@/components/ui/BottomActionLayout';
 import { NoRecord } from '@/components/ui/NoRecord';
 import { CharacterGrowth } from '@/features/character/CharacterGrowth';
+import { SCREEN_ACTIONS } from '@/features/character/screenActions';
 import { useAfterSession, useSessionReport } from '@/features/review/useAfterSession';
 
 // C-01 성장 보상. 성장 단계가 그대로일 때 리포트에서 온다(성장했으면 성장 축하 화면으로 간다).
@@ -39,7 +40,7 @@ export function RewardScreen() {
 
       <Text>+{result.rewards.xp} XP</Text>
 
-      <CharacterGrowth folder={folder} />
+      <CharacterGrowth folder={folder} action={SCREEN_ACTIONS.reward} />
     </BottomActionLayout>
   );
 }

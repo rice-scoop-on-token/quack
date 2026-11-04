@@ -1,4 +1,4 @@
-import { router } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
 import { Button, StyleSheet, Text, TextInput, View } from 'react-native';
 
@@ -16,7 +16,9 @@ export function SessionSetupScreen() {
   // 홈이나 과목 상세(L-02)에서 고른 과목을 기본값으로 쓴다
   const { folders, selected: selectedFolder, select } = useSelectedFolder();
   const api = useQuackApi();
-  const [goal, setGoal] = useState('');
+  // 학습 분석(R-02)의 추천 목표로 들어오면 목표를 미리 채운다
+  const { goal: presetGoal } = useLocalSearchParams<{ goal?: string }>();
+  const [goal, setGoal] = useState((presetGoal ?? '').slice(0, GOAL_MAX_LENGTH));
   const [error, setError] = useState('');
   const [starting, setStarting] = useState(false);
   const demo = useDemoVariant();
@@ -67,7 +69,7 @@ export function SessionSetupScreen() {
       {/* 홈의 과목 선택과 같은 값을 쓴다 */}
       <SubjectSelect folders={folders} value={selectedFolder} onChange={(f) => select(f.id)} />
 
-      <TeacherSummary folder={selectedFolder} />
+      <TeacherSummary folder={selectedFolder} showCharacter />
 
       <View style={styles.form}>
         <Text>오늘의 학습 목표 (필수)</Text>

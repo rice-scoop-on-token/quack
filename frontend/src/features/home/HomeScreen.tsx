@@ -5,6 +5,7 @@ import { SPECIES } from '@/api/mock/data/species';
 import { useApiQuery } from '@/api';
 import { BottomActionLayout } from '@/components/ui/BottomActionLayout';
 import { CharacterGrowth } from '@/features/character/CharacterGrowth';
+import { SCREEN_ACTIONS } from '@/features/character/screenActions';
 import { useSelectedFolder } from '@/features/folder/SelectedFolder';
 import { SubjectSelect } from '@/features/folder/SubjectSelect';
 import { TodayStats } from '@/features/home/TodayStats';
@@ -40,8 +41,8 @@ export function HomeScreen() {
           />
 
           <View style={styles.row}>
-            <Button title="AI 팟캐스트 (준비 중)" disabled onPress={() => {}} />
-            <Button title="오늘의 퀴즈 (준비 중)" disabled onPress={() => {}} />
+            <Button title="AI 팟캐스트" onPress={() => router.push('/podcasts/new')} />
+            <Button title="오늘의 퀴즈" onPress={() => router.push('/quizzes/today')} />
           </View>
         </>
       }
@@ -52,7 +53,7 @@ export function HomeScreen() {
       <Text>나의 작은 공부 습관</Text>
       <Text>{profile?.display_name}님, 오늘도 한 걸음 함께 자라볼까?</Text>
 
-      <CharacterGrowth folder={selected} />
+      <CharacterGrowth folder={selected} action={SCREEN_ACTIONS.home} />
 
       {/* 디자인 예정: 성장 표시 아래부터 하단 버튼 위까지가 오늘의 학습 기록 영역이다 */}
       <TodayStats />

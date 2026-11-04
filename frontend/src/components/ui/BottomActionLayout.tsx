@@ -1,5 +1,5 @@
 import { useEffect, useState, type ReactNode } from 'react';
-import { Keyboard, Platform, ScrollView, StyleSheet, View } from 'react-native';
+import { Keyboard, Platform, ScrollView, StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 type Props = {
@@ -10,18 +10,25 @@ type Props = {
   centered?: boolean;
   // 하단 탭 안의 화면이면 true. 탭 바가 홈 바 영역을 맡으므로 그만큼 띄우지 않는다.
   inTab?: boolean;
+  // 스크롤 영역 오른쪽에 고정할 영역(세로 탭 라벨 등)
+  side?: ReactNode;
+  // 스크롤 영역 자체의 스타일(배경, 둥근 모서리 등)
+  scrollStyle?: StyleProp<ViewStyle>;
 };
 
 // 화면 내용은 위에서 스크롤되고, 다음 단계 버튼은 화면 맨 아래에 고정되는 레이아웃이다.
-export function BottomActionLayout({ children, actions, centered = false, inTab = false }: Props) {
+export function BottomActionLayout({ children, actions, centered = false, inTab = false, side, scrollStyle }: Props) {
   const insets = useSafeAreaInsets();
   const keyboardHeight = useKeyboardHeight();
 
   return (
     <View style={styles.screen}>
-      <ScrollView contentContainerStyle={[styles.content, centered && styles.centered]}>
-        {children}
-      </ScrollView>
+      <View style={styles.body}>
+        <ScrollView style={scrollStyle} contentContainerStyle={[styles.content, centered && styles.centered]}>
+          {children}
+        </ScrollView>
+        {side}
+      </View>
 
       {/* 키보드가 열려 있으면 키보드 높이만큼, 아니면 아이폰 홈 바 영역만큼 띄운다.
           키보드가 홈 바 영역을 덮으므로 둘을 더하지 않는다. */}
@@ -60,6 +67,10 @@ function useKeyboardHeight(): number {
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
+  },
+  body: {
+    flex: 1,
+    flexDirection: 'row',
   },
   content: {
     gap: 12,

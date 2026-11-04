@@ -1,4 +1,4 @@
-import type { ExplanationTurn, Report, Session } from '@quack/shared';
+import type { ExplanationTurn, Report, Session, SpeciesId } from '@quack/shared';
 
 // BE와 합의했지만 아직 shared에 반영되지 않은 타입을 이 파일 하나에 모은다.
 // shared 반영 후 교체: shared에 같은 타입이 생기면 여기 것을 지우고 shared 것을 import한다.
@@ -72,6 +72,8 @@ export type StudySession = Session & {
   turns: SessionTurn[];
   // 점검(S-04)에서 퀴즈를 풀었으면 맞힌 수와 문항 수
   quiz: { correct_count: number; total_count: number } | null;
+  // 조용히 공부하기로 잰 세션. 설명 기록이 없어서 과목 상세의 학습 탭 목록에서는 뺀다.
+  quiet?: true;
 };
 
 // ── 보상 ──
@@ -87,3 +89,56 @@ export type TempRewardGrant = {
 
 // shared CreateReportResponse에서 rewards만 위 임시 타입으로 바꾼 모양
 export type TempReportResponse = { report: Report; rewards: TempRewardGrant };
+
+// ── 친구 ──
+// 미정, BE와 합의 필요. 친구 탭 격자 카드에 필요한 값만 담은 시연용 초안이다.
+export type TempFriend = {
+  id: string;
+  name: string;
+  species_id: SpeciesId;
+  stage: GrowthStage;
+  // 지금 공부 중인지
+  studying: boolean;
+  // 공부 중인 과목 이름. 공부 중이 아니면 화면에 쓰지 않는다.
+  subject: string;
+  // 오늘 공부한 시간(초)
+  today_seconds: number;
+};
+
+// 조용히 공부하기는 이 시간(초) 미만이면 공부 기록으로 남기지 않는다. 미정, 팀 확인 필요.
+export const MIN_QUIET_STUDY_SECONDS = 60;
+
+// ── AI 팟캐스트 ──
+// 미정, BE·AI와 모양 합의 필요. 실제 오디오 없이 대화 문구만 돌려주는 시연용 초안이다.
+export type TempPodcast = {
+  id: string;
+  folder_id: string;
+  material_ids: string[];
+  minutes: 5 | 8 | 12;
+  title: string;
+  // 선생님이 들려주는 대화 문구. 재생 위치에 따라 차례로 보여 준다.
+  lines: string[];
+};
+
+// ── 오늘의 퀴즈 / 잠금화면 퀴즈 ──
+// 미정, BE와 합의 필요. 포인트·XP 없이 정답 여부와 해설만 돌려준다.
+export type TempDailyQuiz = { id: string; prompt: string; choices: string[] };
+export type TempDailyQuizResult = { correct: boolean; correct_answer: number; explanation: string };
+
+// 앱 퀴즈(공부와 별개)를 푼 기록. 과목 상세의 퀴즈 탭이 과목별로 보여 준다.
+// 오늘의 퀴즈가 과목과 상관없는 문제라, 푼 시점에 고른 과목(홈 선택, 잠금화면 출제 과목)에 붙인다.
+export type TempQuizAttempt = {
+  id: string;
+  folder_id: string;
+  source: 'app' | 'lock';
+  correct: boolean;
+  answered_at: string;
+};
+
+export type TempLockQuizSettings = {
+  enabled: boolean;
+  quiet_at_night: boolean;
+  per_day: 1 | 3 | 5;
+  // 출제 과목. null이면 고른 적이 없어 첫 과목으로 본다.
+  folder_id: string | null;
+};

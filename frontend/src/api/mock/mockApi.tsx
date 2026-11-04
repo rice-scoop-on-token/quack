@@ -25,7 +25,17 @@ import { appendSessionReward, folderXp, rewardGrantFor } from '@/api/mock/ledger
 import { MOCK_TRANSCRIPT, mockAnalysis, mockConcept } from '@/api/mock/scenarios/analysis';
 import { createMockQuiz, gradeMockQuiz } from '@/api/mock/scenarios/quiz';
 import { buildReport, rewardXp } from '@/api/mock/scenarios/report';
-import type { SessionTurn, StudySession } from '@/api/tempContract';
+import { DAILY_QUIZ, DAILY_QUIZ_ANSWER, DAILY_QUIZ_RESULT, DEFAULT_LOCK_QUIZ } from '@/api/mock/data/dailyQuiz';
+import { FRIENDS } from '@/api/mock/data/friends';
+import { mockPodcastLines } from '@/api/mock/data/podcasts';
+import {
+  MIN_QUIET_STUDY_SECONDS,
+  type SessionTurn,
+  type StudySession,
+  type TempLockQuizSettings,
+  type TempPodcast,
+  type TempQuizAttempt,
+} from '@/api/tempContract';
 
 // QuackApi의 mock 구현. 서버가 할 계산(분석, 세션 종료 상태, 퀴즈 채점, 리포트, 경험치 지급)도 여기서 서버 역할로 한다.
 // 앱(iOS/Android)에서는 메모리에만 있어서 앱을 다시 켜면 처음 상태로 돌아간다.
@@ -42,6 +52,9 @@ type Db = {
   // 경험치 지급 내역. 값을 덮어쓰지 않고 쌓는다.
   xpLedger: XpLedgerEntry[];
   reports: Report[];
+  podcasts: TempPodcast[];
+  lockQuiz: TempLockQuizSettings;
+  quizAttempts: TempQuizAttempt[];
 };
 
 function emptyDb(): Db {
@@ -55,12 +68,18 @@ function emptyDb(): Db {
     sessions: [],
     xpLedger: [],
     reports: [],
+    podcasts: [],
+    lockQuiz: DEFAULT_LOCK_QUIZ,
+    quizAttempts: [],
   };
 }
 
 // 분석은 LLM 호출, 자료 읽기는 서버 처리 시간을 흉내 낸다
 const ANALYSIS_DELAY_MS = 1000;
 const MATERIAL_DELAY_MS = 800;
+const PODCAST_DELAY_MS = 1500;
+// 조용히 공부하기는 선생님 설명이 없어서 경험치를 조금만 준다
+const QUIET_SECONDS_PER_XP = 300;
 
 // ?demo=child·adult: 모든 과목의 누적 경험치를 이 값으로 보여 준다(저장하지 않는다)
 const DEMO_XP: Record<string, number> = { child: 150, adult: 300 };
@@ -134,6 +153,9 @@ function loadSaved(): Db | null {
     data.sessions ??= [];
     data.xpLedger ??= [];
     data.reports ??= [];
+    data.podcasts ??= [];
+    data.lockQuiz ??= DEFAULT_LOCK_QUIZ;
+    data.quizAttempts ??= [];
     if (Array.isArray(data.sessions)) {
       data.sessions = data.sessions.map((s: Partial<StudySession>) => ({ turns: [], quiz: null, ...s }));
     }
@@ -160,6 +182,9 @@ function loadSaved(): Db | null {
       sessions: data.sessions,
       xpLedger: data.xpLedger,
       reports: data.reports,
+      podcasts: Array.isArray(data.podcasts) ? data.podcasts : [],
+      lockQuiz: { ...DEFAULT_LOCK_QUIZ, ...data.lockQuiz },
+      quizAttempts: Array.isArray(data.quizAttempts) ? data.quizAttempts : [],
     };
     // 읽는 중에 새로고침하면 완료 처리(setTimeout)가 사라져 "읽는 중"에 멈추므로 완료로 바꾼다.
     db.materials = db.materials.map((m) => (m.status === 'processing' ? { ...m, status: 'ready' } : m));
@@ -273,6 +298,8 @@ export function MockApiProvider({ children }: { children: ReactNode }) {
           sessions: d.sessions.filter((s) => s.folder_id !== id),
           xpLedger: d.xpLedger.filter((e) => e.folder_id !== id),
           reports: d.reports.filter((r) => !sessionIds.has(r.session_id)),
+          podcasts: d.podcasts.filter((p) => p.folder_id !== id),
+          quizAttempts: d.quizAttempts.filter((q) => q.folder_id !== id),
         }));
       },
       async listCharacterStats() {
@@ -470,6 +497,96 @@ export function MockApiProvider({ children }: { children: ReactNode }) {
               ? grant
               : { ...grant, xp_before: demoBefore, xp_after: demoBefore + grant.xp },
         };
+      },
+      // 서버가 할 일을 흉내 낸다: 끝난 세션 하나로 남기고, 5분에 1 경험치를 쌓는다
+      // 팀 결정 전 임시: 경험치 기준(docs/decisions/0003)과 다르다
+      async saveQuietStudy({ folder_id, study_seconds }) {
+        if (study_seconds < MIN_QUIET_STUDY_SECONDS) {
+          return;
+        }
+        const endedAt = new Date();
+        const session: StudySession = {
+          id: tempId(),
+          user_id: TEMP_USER_ID,
+          folder_id,
+          goal: '조용히 공부하기',
+          status: 'finished',
+          started_at: new Date(endedAt.getTime() - study_seconds * 1000).toISOString(),
+          ended_at: endedAt.toISOString(),
+          study_seconds,
+          turns: [],
+          quiz: null,
+          quiet: true,
+        };
+        const amount = Math.floor(study_seconds / QUIET_SECONDS_PER_XP);
+        write((d) => ({
+          sessions: [...d.sessions, session],
+          xpLedger:
+            amount > 0
+              ? appendSessionReward(d.xpLedger, {
+                  id: tempId(),
+                  user_id: TEMP_USER_ID,
+                  folder_id,
+                  amount,
+                  reason: 'session_reward',
+                  session_id: session.id,
+                  created_at: endedAt.toISOString(),
+                })
+              : d.xpLedger,
+        }));
+      },
+      async listFriends() {
+        return FRIENDS;
+      },
+      async createPodcast({ folder_id, material_ids, minutes }) {
+        await wait(PODCAST_DELAY_MS);
+        const picked = db.current.materials.filter((m) => material_ids.includes(m.id));
+        if (picked.length === 0) {
+          throw new Error('자료가 없다');
+        }
+        const title = picked.length === 1 ? picked[0].title : `${picked[0].title} 외 ${picked.length - 1}개`;
+        const podcast: TempPodcast = {
+          id: tempId(),
+          folder_id,
+          material_ids,
+          minutes,
+          title,
+          lines: mockPodcastLines(title),
+        };
+        write((d) => ({ podcasts: [...d.podcasts, podcast] }));
+        return podcast;
+      },
+      async getPodcast(id) {
+        return db.current.podcasts.find((p) => p.id === id) ?? null;
+      },
+      async listPodcasts() {
+        return db.current.podcasts;
+      },
+      async getDailyQuiz() {
+        return DAILY_QUIZ;
+      },
+      async submitDailyQuiz(_id, answer, { folder_id, source }) {
+        const correct = answer === DAILY_QUIZ_ANSWER;
+        if (folder_id) {
+          const attempt: TempQuizAttempt = {
+            id: tempId(),
+            folder_id,
+            source,
+            correct,
+            answered_at: new Date().toISOString(),
+          };
+          write((d) => ({ quizAttempts: [...d.quizAttempts, attempt] }));
+        }
+        return { correct, ...DAILY_QUIZ_RESULT };
+      },
+      async listQuizAttempts() {
+        return db.current.quizAttempts;
+      },
+      async getLockQuizSettings() {
+        return db.current.lockQuiz;
+      },
+      async saveLockQuizSettings(settings) {
+        write(() => ({ lockQuiz: settings }));
       },
     };
   }, [demo]);
