@@ -20,10 +20,11 @@ const IMAGE_RATIO = 1500 / 1049;
 const CHARACTER_SIZE = 150;
 // 한계: 캐릭터 시트 칸 안에서 발끝 위치가 동물·단계마다 조금씩 달라서, 발이 풀밭에 정확히 닿는지는 이 값으로 맞춘다.
 const CHARACTER_FOOT_OFFSET = 23;
-// 불꽃 위치(장면 카드의 폭·높이에 대한 비율, 불꽃 칸의 중심). 위치가 어긋나면 이 두 값만 고친다.
+// 불꽃 위치(장면 카드의 폭·높이에 대한 비율). X는 불꽃 칸의 가로 중심, BOTTOM_Y는 불꽃 칸의 아래(불꽃 바닥)가 닿는 높이다.
+// 불꽃 바닥을 장작 윗부분에 두면 불이 장작 위로 솟는다. 위치가 어긋나면 이 두 값만 고친다.
 const FLAME_X = 0.8;
-const FLAME_Y = 0.76;
-const FLAME_SIZE = 26;
+const FLAME_BOTTOM_Y = 0.76;
+const FLAME_SIZE = 40;
 
 // 홈 위쪽 장면 카드: 낮/밤 야외 배경 위에 캐릭터가 서 있고, 밤에는 모닥불이 탄다.
 // 배경 이미지는 이 카드 안에서만, 잘리지 않게 전체를 그린다. 카드 크기는 카드가 놓인 폭과 이미지 비율(IMAGE_RATIO)로 정한다.
@@ -46,9 +47,9 @@ export function HomeScene({ folder }: { folder: Folder }) {
             style={{
               position: 'absolute',
               left: `${FLAME_X * 100}%`,
-              top: `${FLAME_Y * 100}%`,
+              top: `${FLAME_BOTTOM_Y * 100}%`,
               marginLeft: -FLAME_SIZE / 2,
-              marginTop: -FLAME_SIZE / 2,
+              marginTop: -FLAME_SIZE,
             }}
           >
             <CampfireFlame size={FLAME_SIZE} />
