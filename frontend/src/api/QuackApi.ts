@@ -1,6 +1,7 @@
 import type {
   CharacterStats,
   CreateTurnRequest,
+  CreateTurnResponse,
   FinishSessionResponse,
   Folder,
   Material,
@@ -56,6 +57,9 @@ export interface QuackApi {
   requestAiQuestion(sessionId: string): Promise<TempAiQuestion>;
   // 어느 개념에 대한 설명인지와 꼬리 질문 수는 서버가 지난 설명 기록으로 정해 응답에 넣는다
   sendTurn(sessionId: string, input: CreateTurnRequest): Promise<SessionTurn>;
+  // 타이머 화면의 설명 제출. 응답은 shared 계약(POST /sessions/:id/turns)을 따른다.
+  // 점검 화면의 다시 설명하기는 아직 위의 sendTurn(옛 임시 모양)을 쓴다. 시연 영상용으로 타이머 흐름만 먼저 옮겼다(이슈 #22).
+  explain(sessionId: string, input: CreateTurnRequest): Promise<CreateTurnResponse>;
   // 쉬기 버튼은 앱만 알아서 공부 시간은 앱이 잰다. 요청 본문(study_seconds)은 shared 반영 전이다.
   finishSession(sessionId: string, input: { study_seconds: number }): Promise<FinishSessionResponse>;
   createQuiz(sessionId: string): Promise<QuizResponse>;

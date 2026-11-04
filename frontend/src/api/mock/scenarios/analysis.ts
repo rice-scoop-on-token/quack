@@ -1,6 +1,6 @@
-import type { ExplanationTurn } from '@quack/shared';
+import { createTurnResponseSchema, type CreateTurnResponse, type ExplanationTurn } from '@quack/shared';
 
-import type { ExplanationAnalysis, ExplanationVerdict } from '@/api/tempContract';
+import type { ExplanationAnalysis, ExplanationVerdict, SessionTurn } from '@/api/tempContract';
 import { josa } from '@/lib/josa';
 
 // 설명 분석 mock(POST /sessions/:id/turns 의 분석 부분). 고정값이 아니라 시나리오로 판정을 바꿔 모든 분기를 화면에서 확인한다(CLAUDE.md).
@@ -61,4 +61,46 @@ export function mockAnalysis(req: AnalyzeRequest): ExplanationAnalysis {
     next_topic: sufficient ? req.nextConcept : null,
     follow_up_count: req.followUpCount,
   };
+}
+
+// 옛 mock 판정을 shared 응답(CreateTurnResponse) 모양으로 바꾼다. 타이머 화면의 explain이 쓴다.
+// 점검·기록 화면은 옛 모양을 계속 쓰므로 mock 안에는 옛 모양으로 저장하고, 돌려줄 때만 바꾼다(이슈 #22).
+// 부족·모호는 질문하고(ask), 충분은 질문 없이 마무리한다(acknowledge). 상태는 shared의 공개 조합 규칙을 따른다.
+export function toCreateTurnResponse(
+  turn: SessionTurn,
+  meta: { id: string; sessionId: string; createdAt: string },
+): CreateTurnResponse {
+  const { analysis } = turn;
+  const sufficient = analysis.verdict === 'sufficient';
+  const response = sufficient
+    ? {
+        action: 'acknowledge' as const,
+        message: `'${analysis.concept}'에 대한 설명이 잘 이어졌어. 고마워!`,
+        question: null,
+      }
+    : {
+        action: 'ask' as const,
+        message: `'${analysis.concept}'에 대해 설명한 부분은 따라갔어. 한 가지만 더 듣고 싶어.`,
+        question: analysis.follow_up_question ?? '조금 더 자세히 설명해 줄래?',
+      };
+
+  // mock 응답이 계약과 다르면 바로 알 수 있게 shared 스키마로 검사한다
+  return createTurnResponseSchema.parse({
+    turn: {
+      id: meta.id,
+      session_id: meta.sessionId,
+      seq: turn.seq,
+      trigger: turn.trigger,
+      question_text: turn.question_text,
+      input_mode: turn.input_mode,
+      text: turn.text,
+      created_at: meta.createdAt,
+    },
+    analysis: {
+      answer_status: 'not_applicable',
+      understanding_status: analysis.verdict,
+      independent_performance_status: 'unverified',
+      response,
+    },
+  });
 }

@@ -11,7 +11,6 @@ import { SCREEN_ACTIONS } from '@/features/character/screenActions';
 import { ExplainActions, ExplainInput } from '@/features/session/components/ExplainInput';
 import type { useExplanation } from '@/features/session/hooks/useExplanation';
 import type { useSessionTimer } from '@/features/session/hooks/useSessionTimer';
-import { MAX_FOLLOW_UPS } from '@/features/session/machine';
 import { COLORS, hardShadow, SIZES } from '@/theme/assetTokens';
 
 type Props = {
@@ -111,27 +110,22 @@ export function phaseView({ folder, goal, timer, explanation, onFinish }: Props)
         actions: null,
       };
 
+    // AI가 질문했을 때(ask, explain). AI의 message와 question을 고치지 않고 그대로 보여 준다(#17 합의).
     case 'followUp':
       return {
-        characterAction: last?.verdict === 'ambiguous' ? SCREEN_ACTIONS.followUpAmbiguous : SCREEN_ACTIONS.followUpInsufficient,
+        characterAction:
+          last?.understanding_status === 'ambiguous' ? SCREEN_ACTIONS.followUpAmbiguous : SCREEN_ACTIONS.followUpInsufficient,
         body: (
           <>
-            <Text>
-              꼬리 질문 {timer.state.followUpCount} / {MAX_FOLLOW_UPS}
-            </Text>
-            <SpeechBubble>
-              {lines.followUpLead} {last?.follow_up_question}
-            </SpeechBubble>
-            {last && last.missing_concepts.length > 0 ? (
-              <Text>더 채우면 좋은 부분: {last.missing_concepts.join(', ')}</Text>
-            ) : null}
+            <SpeechBubble>{last?.response.message}</SpeechBubble>
+            {last?.response.question ? <Text style={styles.bubble}>{last.response.question}</Text> : null}
           </>
         ),
         actions: (
           <>
             <Button
               title="답할게"
-              onPress={() => explanation.start({ trigger: 'follow_up', question: last?.follow_up_question ?? null })}
+              onPress={() => explanation.start({ trigger: 'follow_up', question: last?.response.question ?? null })}
             />
             {/* 넘어간 개념은 리포트에서 보완할 개념이 된다 */}
             <Button title="넘어가기" onPress={explanation.skip} />
@@ -139,16 +133,12 @@ export function phaseView({ folder, goal, timer, explanation, onFinish }: Props)
         ),
       };
 
-    // 충분 판정을 받았을 때만 온다(꼬리 질문 한도·넘어가기는 바로 공부로 돌아간다)
+    // AI가 대화를 마무리했을 때(correct, acknowledge). 넘어가기는 여기를 거치지 않고 바로 공부로 돌아간다.
+    // 다음 주제 제안은 시연에서 뺐다(#17 합의).
     case 'confirmed':
       return {
         characterAction: SCREEN_ACTIONS.confirmed,
-        body: (
-          <>
-            <SpeechBubble>{lines.praise}</SpeechBubble>
-            {last?.next_topic ? <Text>다음 주제: {last.next_topic}</Text> : null}
-          </>
-        ),
+        body: <SpeechBubble>{last?.response.message ?? lines.praise}</SpeechBubble>,
         actions: (
           <>
             <Button title="이어서 공부하기" onPress={explanation.continueStudy} />

@@ -22,7 +22,7 @@ import { PERSONAS } from '@/api/mock/data/personas';
 import { demoTodaySessions } from '@/api/mock/data/demoToday';
 import { TEMP_USER_ID, tempId } from '@/api/mock/ids';
 import { appendSessionReward, folderXp, rewardGrantFor } from '@/api/mock/ledger';
-import { MOCK_TRANSCRIPT, mockAnalysis, mockConcept } from '@/api/mock/scenarios/analysis';
+import { MOCK_TRANSCRIPT, mockAnalysis, mockConcept, toCreateTurnResponse } from '@/api/mock/scenarios/analysis';
 import { createMockQuiz, gradeMockQuiz } from '@/api/mock/scenarios/quiz';
 import { buildReport, rewardXp } from '@/api/mock/scenarios/report';
 import { DAILY_QUIZ, DAILY_QUIZ_ANSWER, DAILY_QUIZ_RESULT, DEFAULT_LOCK_QUIZ } from '@/api/mock/data/dailyQuiz';
@@ -248,7 +248,8 @@ export function MockApiProvider({ children }: { children: ReactNode }) {
       return session;
     }
 
-    return {
+    // explain이 sendTurn을 부르므로 이름을 붙여 둔다
+    const methods: QuackApi = {
       async getProfile() {
         const d = db.current;
         if (!d.displayName) {
@@ -404,6 +405,11 @@ export function MockApiProvider({ children }: { children: ReactNode }) {
         const turn: SessionTurn = { seq: session.turns.length + 1, ...input, analysis };
         updateSession(sessionId, (s) => ({ ...s, turns: [...s.turns, turn] }));
         return turn;
+      },
+      // 판정 시나리오는 sendTurn과 같고, 돌려주는 모양만 shared 응답으로 바꾼다
+      async explain(sessionId, input) {
+        const turn = await methods.sendTurn(sessionId, input);
+        return toCreateTurnResponse(turn, { id: tempId(), sessionId, createdAt: new Date().toISOString() });
       },
       async finishSession(sessionId, { study_seconds }) {
         updateSession(sessionId, (s) => ({
@@ -589,6 +595,7 @@ export function MockApiProvider({ children }: { children: ReactNode }) {
         write(() => ({ lockQuiz: settings }));
       },
     };
+    return methods;
   }, [demo]);
 
   const value = useMemo(() => ({ api, version }), [api, version]);

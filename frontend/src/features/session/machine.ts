@@ -1,4 +1,7 @@
-import type { ExplanationVerdict } from '@/api/tempContract';
+import type { ExplanationAnalysis } from '@quack/shared';
+
+// AI의 대화 행동. ask·explain은 답을 기다리고, correct·acknowledge는 그 대화를 마무리한다(#17 계약).
+type TurnAction = ExplanationAnalysis['response']['action'];
 
 // 세션 상태 머신 (CLAUDE.md "세션 상태"). 화면과 상관없는 순수 함수만 둔다.
 
@@ -15,10 +18,9 @@ type SessionPhase =
 // 미정, 팀과 확정 필요. 지금 값은 임시값이다.
 export const NO_EXPLANATION_MS = 10 * 60 * 1000;
 
-// 한 개념에서 꼬리 질문을 묻는 최대 횟수. 다 묻고도 부족하면 바로 공부(timing)로 돌아가 다음 개념으로 넘어가고,
-// 그 개념은 리포트에서 보완할 개념이 된다.
-// 꼬리 질문 단계의 "넘어가기" 버튼 허용도 함께 정한다.
-// 미정, 팀과 확정 필요. 지금 값(2번, 넘어가기 허용)은 임시값이다.
+// 한 개념에서 꼬리 질문을 묻는 최대 횟수. 미정, 팀과 확정 필요(CLAUDE.md 미정 사항).
+// 타이머 흐름에서는 쓰지 않는다. 질문 여부는 AI가 정하고, 사용자는 '넘어가기'로 멈춘다(#17 합의, 이슈 #22).
+// 점검 화면의 mock 계산(features/review/report.ts)만 아직 이 값을 쓴다.
 export const MAX_FOLLOW_UPS = 2;
 
 type SessionState = {
@@ -50,7 +52,7 @@ export type SessionEvent =
   // explaining의 "돌아가기". 꼬리 질문에 답하던 중이면 이 이벤트 대신 skip을 보낸다(넘어가기와 같다).
   // 임시 구현, 팀 확인 필요: CLAUDE.md "세션 상태"에 없는 전환(explaining → timing)이다.
   | { type: 'cancelExplain'; now: number }
-  | { type: 'analyzed'; verdict: ExplanationVerdict; now: number }
+  | { type: 'analyzed'; action: TurnAction; now: number }
   // 분석 요청 실패. 입력을 그대로 두고 다시 보낼 수 있게 explaining으로 돌아간다.
   | { type: 'analysisFailed' }
   // followUp의 "넘어가기". 이어서 공부하기 버튼을 거치지 않고 바로 공부(timing)로 돌아간다.
@@ -59,7 +61,7 @@ export type SessionEvent =
   | { type: 'continue'; now: number }
   | { type: 'finish'; now: number };
 
-// 단계 전환표. 표에 없는 이벤트는 무시한다. analyzed는 판정에 따라 갈라져서 아래 reducer에서 처리한다.
+// 단계 전환표. 표에 없는 이벤트는 무시한다. analyzed는 AI 행동에 따라 갈라져서 아래 reducer에서 처리한다.
 // 공부 마치기(finish)는 분석 중(analyzing)에만 막는다.
 const NEXT: Partial<Record<SessionPhase, Partial<Record<SessionEvent['type'], SessionPhase>>>> = {
   timing: { idleTimeout: 'aiQuestion', startExplain: 'explaining', finish: 'finished' },
@@ -109,14 +111,12 @@ export function sessionReducer(state: SessionState, event: SessionEvent): Sessio
       if (state.phase !== 'analyzing') {
         return state;
       }
-      // 충분이면 이해 확인. 부족·모호면 한도까지 꼬리 질문, 한도를 넘으면 넘어가기처럼 바로 공부로 돌아간다.
-      if (event.verdict === 'sufficient') {
-        return { ...state, phase: 'confirmed' };
-      }
-      if (state.followUpCount < MAX_FOLLOW_UPS) {
+      // AI가 질문하면(ask, explain) 꼬리 질문, 마무리하면(correct, acknowledge) 이해 확인으로 간다.
+      // 횟수 한도로 자동으로 넘기지 않는다. 멈추고 싶으면 사용자가 '넘어가기'를 누른다.
+      if (event.action === 'ask' || event.action === 'explain') {
         return { ...state, phase: 'followUp', followUpCount: state.followUpCount + 1 };
       }
-      return { ...state, phase: 'timing', timingSinceMs: elapsedMs(state, event.now), followUpCount: 0 };
+      return { ...state, phase: 'confirmed' };
     default: {
       const next = NEXT[state.phase]?.[event.type];
       if (!next) {
