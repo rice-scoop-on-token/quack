@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import { Button, StyleSheet, Text } from 'react-native';
 
 import { useQuackApi } from '@/api';
+import { MIN_QUIET_STUDY_SECONDS } from '@/api/tempContract';
 import { BottomActionLayout } from '@/components/ui/BottomActionLayout';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { useSelectedFolder } from '@/features/folder/SelectedFolder';
@@ -68,7 +69,10 @@ export function QuietStudyScreen() {
     // 시간을 멈추고 저장한다
     setAccumulatedMs(totalMs);
     setRunningSince(null);
-    await api.saveQuietStudy({ folder_id: selected!.id, study_seconds: total });
+    // 짧은 시간은 저장하지 않는다(서버도 같은 기준으로 거른다)
+    if (total >= MIN_QUIET_STUDY_SECONDS) {
+      await api.saveQuietStudy({ folder_id: selected!.id, study_seconds: total });
+    }
     setDoneSeconds(total);
     setSaving(false);
   }
@@ -114,7 +118,11 @@ export function QuietStudyScreen() {
       <ConfirmDialog
         visible={finished}
         title="공부를 마쳤어요"
-        message={`오늘 ${hms(seconds)} 공부했어요. 공부 기록에 남겼어요.`}
+        message={
+          seconds < MIN_QUIET_STUDY_SECONDS
+            ? '1분 미만은 기록하지 않아요.'
+            : `오늘 ${hms(seconds)} 공부했어요. 공부 기록에 남겼어요.`
+        }
         confirmLabel="확인"
         onConfirm={() => router.dismissTo('/home')}
       />

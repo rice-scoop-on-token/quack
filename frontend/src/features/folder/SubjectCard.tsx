@@ -21,8 +21,7 @@ export function SubjectCard({ folder, detail, onPress, onDelete }: Props) {
   const { stage } = growthFromXp(useCharacterXp(folder.id) ?? 0);
 
   return (
-    // 펼친 메뉴가 아래 카드 위에 보이도록 열린 카드의 순서를 올린다
-    <View style={[styles.card, menuOpen && styles.open]}>
+    <View style={styles.card}>
       <Pressable style={styles.main} onPress={onPress} accessibilityRole="button">
         <CharacterBox speciesId={folder.species_id} stage={stage} size={56} />
         <View style={styles.text}>
@@ -67,10 +66,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     borderWidth: 1,
   },
-  open: {
-    zIndex: 1,
-    elevation: 1,
-  },
   main: {
     flex: 1,
     flexDirection: 'row',
@@ -81,12 +76,15 @@ const styles = StyleSheet.create({
   kebab: {
     padding: 12,
   },
-  // 케밥 바로 아래에 띄운다. 아래 카드가 비치지 않게 흰 배경을 임시로 둔다(디자인 작업 때 바꾼다).
+  // 케밥 왼쪽, 카드 안쪽에 띄운다. 카드 밖으로 나가면 목록 맨 아래 카드에서 스크롤 영역에 잘려 눌리지 않기 때문이다.
+  // 글자가 비치지 않게 흰 배경을 임시로 둔다(디자인 작업 때 바꾼다).
   menu: {
     position: 'absolute',
-    top: '100%',
-    right: 0,
-    padding: 12,
+    top: 6,
+    bottom: 6,
+    right: 48,
+    justifyContent: 'center',
+    paddingHorizontal: 12,
     borderWidth: 1,
     backgroundColor: '#fff',
   },

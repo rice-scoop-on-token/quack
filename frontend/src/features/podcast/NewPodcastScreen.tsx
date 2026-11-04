@@ -1,5 +1,5 @@
-import { router } from 'expo-router';
-import { useState } from 'react';
+import { router, useFocusEffect } from 'expo-router';
+import { useCallback, useRef, useState } from 'react';
 import { Button, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { useApiQuery, useQuackApi } from '@/api';
@@ -23,6 +23,16 @@ export function NewPodcastScreen() {
   const [materialIds, setMaterialIds] = useState<string[]>([]);
   const [minutes, setMinutes] = useState<TempPodcast['minutes']>(8);
   const [state, setState] = useState<'idle' | 'creating' | 'failed'>('idle');
+  // 만드는 동안 다른 화면으로 나갔다면 끝나도 이 화면에서 이동하지 않는다(화면을 벗어나거나 닫히면 false)
+  const focused = useRef(true);
+  useFocusEffect(
+    useCallback(() => {
+      focused.current = true;
+      return () => {
+        focused.current = false;
+      };
+    }, []),
+  );
 
   if (folders === undefined || !materials) {
     return null;
@@ -60,7 +70,9 @@ export function NewPodcastScreen() {
     }
     try {
       const podcast = await api.createPodcast({ folder_id: selected!.id, material_ids: chosen.map((m) => m.id), minutes });
-      router.replace({ pathname: '/podcasts/[id]', params: { id: podcast.id } });
+      if (focused.current) {
+        router.replace({ pathname: '/podcasts/[id]', params: { id: podcast.id } });
+      }
     } catch {
       setState('failed');
     }

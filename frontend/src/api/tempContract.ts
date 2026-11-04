@@ -105,6 +105,9 @@ export type TempFriend = {
   today_seconds: number;
 };
 
+// 조용히 공부하기는 이 시간(초) 미만이면 공부 기록으로 남기지 않는다. 미정, 팀 확인 필요.
+export const MIN_QUIET_STUDY_SECONDS = 60;
+
 // ── AI 팟캐스트 ──
 // 미정, BE·AI와 모양 합의 필요. 실제 오디오 없이 대화 문구만 돌려주는 시연용 초안이다.
 export type TempPodcast = {

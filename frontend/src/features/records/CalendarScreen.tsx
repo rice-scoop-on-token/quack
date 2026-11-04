@@ -105,21 +105,33 @@ export function CalendarScreen() {
         <MoreList
           key={selected}
           empty="이 날은 공부 기록이 없어요."
-          items={daySessions.map((s) => (
-            <Pressable
-              key={s.id}
-              style={styles.card}
-              onPress={() =>
-                router.push({ pathname: '/subjects/[id]/sessions/[sessionId]', params: { id: s.folder_id, sessionId: s.id } })
-              }
-              accessibilityRole="button"
-            >
-              <Text>{s.goal}</Text>
-              <Text>
-                {folders.find((f) => f.id === s.folder_id)?.name ?? ''} · {Math.floor(s.study_seconds / 60)}분
-              </Text>
-            </Pressable>
-          ))}
+          items={daySessions.map((s) => {
+            const info = (
+              <>
+                <Text>{s.goal}</Text>
+                <Text>
+                  {folders.find((f) => f.id === s.folder_id)?.name ?? ''} · {Math.floor(s.study_seconds / 60)}분
+                </Text>
+              </>
+            );
+            // 조용히 공부한 세션은 볼 리포트가 없어서 누를 수 없는 카드로 둔다
+            return s.quiet ? (
+              <View key={s.id} style={styles.card}>
+                {info}
+              </View>
+            ) : (
+              <Pressable
+                key={s.id}
+                style={styles.card}
+                onPress={() =>
+                  router.push({ pathname: '/subjects/[id]/sessions/[sessionId]', params: { id: s.folder_id, sessionId: s.id } })
+                }
+                accessibilityRole="button"
+              >
+                {info}
+              </Pressable>
+            );
+          })}
         />
       ) : null}
     </BottomActionLayout>

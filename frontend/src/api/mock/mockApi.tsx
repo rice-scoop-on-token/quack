@@ -28,7 +28,14 @@ import { buildReport, rewardXp } from '@/api/mock/scenarios/report';
 import { DAILY_QUIZ, DAILY_QUIZ_ANSWER, DAILY_QUIZ_RESULT, DEFAULT_LOCK_QUIZ } from '@/api/mock/data/dailyQuiz';
 import { FRIENDS } from '@/api/mock/data/friends';
 import { mockPodcastLines } from '@/api/mock/data/podcasts';
-import type { SessionTurn, StudySession, TempLockQuizSettings, TempPodcast, TempQuizAttempt } from '@/api/tempContract';
+import {
+  MIN_QUIET_STUDY_SECONDS,
+  type SessionTurn,
+  type StudySession,
+  type TempLockQuizSettings,
+  type TempPodcast,
+  type TempQuizAttempt,
+} from '@/api/tempContract';
 
 // QuackApi의 mock 구현. 서버가 할 계산(분석, 세션 종료 상태, 퀴즈 채점, 리포트, 경험치 지급)도 여기서 서버 역할로 한다.
 // 앱(iOS/Android)에서는 메모리에만 있어서 앱을 다시 켜면 처음 상태로 돌아간다.
@@ -493,6 +500,9 @@ export function MockApiProvider({ children }: { children: ReactNode }) {
       },
       // 서버가 할 일을 흉내 낸다: 끝난 세션 하나로 남기고, 5분에 1 경험치를 쌓는다
       async saveQuietStudy({ folder_id, study_seconds }) {
+        if (study_seconds < MIN_QUIET_STUDY_SECONDS) {
+          return;
+        }
         const endedAt = new Date();
         const session: StudySession = {
           id: tempId(),

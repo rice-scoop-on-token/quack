@@ -11,7 +11,8 @@ import {
   QuizPanel,
   StudyPanel,
 } from '@/features/folder/SubjectTabPanels';
-import { PANEL_MARGIN, SubjectTabBar, TAB_COLORS, type SubjectTabId } from '@/features/folder/subjectTabs';
+import { PANEL_MARGIN, SubjectTabBar } from '@/features/folder/SubjectTabBar';
+import { TAB_COLORS, type SubjectTabId } from '@/features/folder/subjectTabColors';
 
 // L-02 과목 상세. 세로 탭 라벨과 하단 버튼은 고정이고 내용(종이)만 스크롤된다.
 export function SubjectDetailScreen() {
