@@ -28,6 +28,7 @@ export function LockPreviewScreen() {
   const [os, setOs] = useState<'android' | 'ios'>('android');
   const [step, setStep] = useState<'asking' | 'answered' | 'skipped'>('asking');
   const [result, setResult] = useState<TempDailyQuizResult | null>(null);
+  const [submitting, setSubmitting] = useState(false);
 
   if (!settings || !quiz || folders === undefined) {
     return null;
@@ -39,8 +40,14 @@ export function LockPreviewScreen() {
     setResult(null);
   };
   const answer = async (ci: number) => {
-    setResult(await api.submitDailyQuiz(quiz.id, ci, { folder_id: folder?.id, source: 'lock' }));
-    setStep('answered');
+    // 보내는 중에 다시 눌러 풀이가 두 번 기록되지 않게 막는다
+    setSubmitting(true);
+    try {
+      setResult(await api.submitDailyQuiz(quiz.id, ci, { folder_id: folder?.id, source: 'lock' }));
+      setStep('answered');
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -97,7 +104,7 @@ export function LockPreviewScreen() {
                 <Pressable
                   key={ci}
                   style={styles.choice}
-                  disabled={step === 'answered'}
+                  disabled={step === 'answered' || submitting}
                   onPress={() => answer(ci)}
                   accessibilityRole="button"
                 >

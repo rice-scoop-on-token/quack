@@ -26,6 +26,7 @@ export function QuietStudyScreen() {
   const [now, setNow] = useState(Date.now);
   const [doneSeconds, setDoneSeconds] = useState<number | null>(null);
   const [saving, setSaving] = useState(false);
+  const [saveFailed, setSaveFailed] = useState(false);
 
   useEffect(() => {
     if (runningSince === null) {
@@ -65,16 +66,22 @@ export function QuietStudyScreen() {
   // 한계: 앱을 닫거나 새로고침하면 재던 시간이 사라진다. 끝내기 전에는 뒤로 가기를 막아 둔다.
   async function finish() {
     setSaving(true);
+    setSaveFailed(false);
     const total = Math.floor(totalMs / 1000);
-    // 시간을 멈추고 저장한다
+    // 시간을 멈추고 저장한다. 저장에 실패해도 잰 시간은 그대로 두어 다시 마칠 수 있다.
     setAccumulatedMs(totalMs);
     setRunningSince(null);
-    // 짧은 시간은 저장하지 않는다(서버도 같은 기준으로 거른다)
-    if (total >= MIN_QUIET_STUDY_SECONDS) {
-      await api.saveQuietStudy({ folder_id: selected!.id, study_seconds: total });
+    try {
+      // 짧은 시간은 저장하지 않는다(서버도 같은 기준으로 거른다)
+      if (total >= MIN_QUIET_STUDY_SECONDS) {
+        await api.saveQuietStudy({ folder_id: selected!.id, study_seconds: total });
+      }
+      setDoneSeconds(total);
+    } catch {
+      setSaveFailed(true);
+    } finally {
+      setSaving(false);
     }
-    setDoneSeconds(total);
-    setSaving(false);
   }
 
   return (
@@ -107,12 +114,14 @@ export function QuietStudyScreen() {
         {hms(seconds)}
       </Text>
       {/* 안내 자리는 늘 한 줄을 잡아 둔다 */}
-      <Text>
-        {!started
-          ? '시작하면 공부 시간만 재요.'
-          : running
-            ? '조용히 공부하는 중이에요.'
-            : '잠시 쉬는 중이에요. 쉬는 시간은 기록하지 않아요.'}
+      <Text accessibilityRole={saveFailed ? 'alert' : undefined}>
+        {saveFailed
+          ? '기록을 저장하지 못했어요. 다시 눌러 주세요.'
+          : !started
+            ? '시작하면 공부 시간만 재요.'
+            : running
+              ? '조용히 공부하는 중이에요.'
+              : '잠시 쉬는 중이에요. 쉬는 시간은 기록하지 않아요.'}
       </Text>
 
       <ConfirmDialog

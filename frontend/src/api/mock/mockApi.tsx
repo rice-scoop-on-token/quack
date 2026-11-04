@@ -499,6 +499,7 @@ export function MockApiProvider({ children }: { children: ReactNode }) {
         };
       },
       // 서버가 할 일을 흉내 낸다: 끝난 세션 하나로 남기고, 5분에 1 경험치를 쌓는다
+      // 팀 결정 전 임시: 경험치 기준(docs/decisions/0003)과 다르다
       async saveQuietStudy({ folder_id, study_seconds }) {
         if (study_seconds < MIN_QUIET_STUDY_SECONDS) {
           return;

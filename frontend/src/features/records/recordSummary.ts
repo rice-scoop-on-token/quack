@@ -96,15 +96,17 @@ export function percentChange(current: number, previous: number): number | null 
 
 export type WeakConcept = { concept: string; folder_id: string; count: number };
 
-// 보완할 개념: 세션마다 다룬 개념 중 충분 판정을 받지 못한 것. 여러 세션에서 부족했을수록 앞에 둔다.
+// 보완할 개념: 넘겨 받은 기간 안에서 끝내 충분 판정을 받지 못한 개념. 여러 세션에서 부족했을수록 앞에 둔다.
 // folder_id는 그 개념을 가장 최근에 공부한 과목이다.
 export function weakConcepts(sessions: StudySession[]): WeakConcept[] {
   const map = new Map<string, WeakConcept>();
-  const oldestFirst = [...endedSessions(sessions)].sort((a, b) => a.ended_at!.localeCompare(b.ended_at!));
+  const ended = endedSessions(sessions);
+  // 기간 안에서 한 번이라도 충분을 받았으면 뺀다 (월요일에 부족해도 화요일에 충분이면 보완할 개념이 아니다)
+  const everUnderstood = new Set(ended.flatMap(understood));
+  const oldestFirst = [...ended].sort((a, b) => a.ended_at!.localeCompare(b.ended_at!));
   for (const s of oldestFirst) {
-    const ok = understood(s);
     for (const concept of new Set(s.turns.map((t) => t.analysis.concept))) {
-      if (ok.includes(concept)) {
+      if (everUnderstood.has(concept)) {
         continue;
       }
       const prev = map.get(concept);

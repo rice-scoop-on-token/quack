@@ -1,4 +1,5 @@
 import { router } from 'expo-router';
+import { useState } from 'react';
 import { Button, Pressable, StyleSheet, Switch, Text, View } from 'react-native';
 
 import { useApiQuery, useQuackApi } from '@/api';
@@ -13,14 +14,21 @@ const PER_DAY: TempLockQuizSettings['per_day'][] = [1, 3, 5];
 // 한계: 실제 잠금화면 알림은 네이티브 기능이라 만들지 않는다. 설정값만 데모 안에 저장한다.
 export function SettingsScreen() {
   const api = useQuackApi();
-  const settings = useApiQuery((a) => a.getLockQuizSettings(), []);
+  const saved = useApiQuery((a) => a.getLockQuizSettings(), []);
+  // 바꾼 값을 화면 안에 두고 그 위에 다음 변경을 쌓는다. 저장된 값이 다시 올 때까지 기다리면 연달아 바꾼 앞의 변경이 사라진다.
+  const [local, setLocal] = useState<TempLockQuizSettings | null>(null);
   const { folders, selected } = useSelectedFolder();
 
-  if (!settings || folders === undefined) {
+  if (!saved || folders === undefined) {
     return null;
   }
+  const settings = local ?? saved;
   const folder = folders.find((f) => f.id === settings.folder_id) ?? selected;
-  const change = (patch: Partial<TempLockQuizSettings>) => api.saveLockQuizSettings({ ...settings, ...patch });
+  const change = (patch: Partial<TempLockQuizSettings>) => {
+    const next = { ...settings, ...patch };
+    setLocal(next);
+    api.saveLockQuizSettings(next);
+  };
 
   return (
     <BottomActionLayout

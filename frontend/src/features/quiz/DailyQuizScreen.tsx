@@ -21,6 +21,7 @@ export function DailyQuizScreen() {
   const xp = useCharacterXp(selected?.id ?? '');
   const [picked, setPicked] = useState<number | null>(null);
   const [result, setResult] = useState<TempDailyQuizResult | null>(null);
+  const [submitting, setSubmitting] = useState(false);
 
   if (!quiz) {
     return null;
@@ -41,8 +42,16 @@ export function DailyQuizScreen() {
           ) : (
             <Button
               title="답 확인하기"
-              disabled={picked === null}
-              onPress={async () => setResult(await api.submitDailyQuiz(quiz.id, picked!, { folder_id: selected?.id, source: 'app' }))}
+              disabled={picked === null || submitting}
+              onPress={async () => {
+                // 보내는 중에 다시 눌러 풀이가 두 번 기록되지 않게 막는다
+                setSubmitting(true);
+                try {
+                  setResult(await api.submitDailyQuiz(quiz.id, picked!, { folder_id: selected?.id, source: 'app' }));
+                } finally {
+                  setSubmitting(false);
+                }
+              }}
             />
           )}
         </>

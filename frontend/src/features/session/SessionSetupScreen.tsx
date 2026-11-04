@@ -18,7 +18,7 @@ export function SessionSetupScreen() {
   const api = useQuackApi();
   // 학습 분석(R-02)의 추천 목표로 들어오면 목표를 미리 채운다
   const { goal: presetGoal } = useLocalSearchParams<{ goal?: string }>();
-  const [goal, setGoal] = useState(presetGoal ?? '');
+  const [goal, setGoal] = useState((presetGoal ?? '').slice(0, GOAL_MAX_LENGTH));
   const [error, setError] = useState('');
   const [starting, setStarting] = useState(false);
   const demo = useDemoVariant();
