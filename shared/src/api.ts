@@ -60,6 +60,7 @@ const explanationResponseSchema = z.discriminatedUnion('action', [
 
 // 공개 상태와 발화만 선택한다. 내부 판단 근거·개념 목록·사용량은 respond에서 제외한다.
 // FE가 상태를 다른 값으로 바꾸지 않고 분기할 수 있도록 다음 공개 조합만 허용한다.
+// response.action의 correct는 계산 등의 교정 행동, answer_status의 correct는 답이 정답이라는 뜻이다.
 // action      | understanding_status             | question | 추가 조건
 // ask         | insufficient/ambiguous/unverified | 문자열   | 없음
 // explain     | unverified                        | 문자열   | independent_performance_status=unverified

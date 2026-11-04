@@ -224,3 +224,39 @@ Deno.test('기존 설명 제출 요청과 나중의 음성 전사 입력 경로�
     assert(canonicalJson(createTurnRequestSchema.parse(request)) === canonicalJson(request), '기존 요청이 바뀜');
   }
 });
+
+Deno.test('공개 조합 표의 상태·행동·질문 유무 256개 조합을 허용·거절한다', () => {
+  let accepted = 0;
+  let rejected = 0;
+  for (const action of ['ask', 'explain', 'correct', 'acknowledge'] as const) {
+    for (const understanding_status of ['sufficient', 'insufficient', 'ambiguous', 'unverified'] as const) {
+      for (const answer_status of ['correct', 'incorrect', 'not_applicable', 'unverified'] as const) {
+        for (const independent_performance_status of ['confirmed', 'unverified'] as const) {
+          for (const question of ['어떤 연결인지 설명해 줄래?', null]) {
+            const allowed = {
+              ask: question !== null && understanding_status !== 'sufficient',
+              explain: question !== null && understanding_status === 'unverified'
+                && independent_performance_status === 'unverified',
+              correct: question === null && understanding_status === 'sufficient',
+              acknowledge: question === null && answer_status !== 'incorrect'
+                && (understanding_status === 'sufficient' || understanding_status === 'unverified'),
+            }[action];
+            const result = createTurnResponseSchema.safeParse({
+              ...sample(),
+              analysis: {
+                answer_status, understanding_status, independent_performance_status,
+                response: { action, message: '네 설명을 따라가 봤어.', question },
+              },
+            });
+            assert(result.success === allowed, `공개 조합 표와 다름: ${JSON.stringify({
+              action, understanding_status, answer_status, independent_performance_status, question,
+            })}`);
+            if (result.success) accepted++;
+            else rejected++;
+          }
+        }
+      }
+    }
+  }
+  assert(accepted === 48 && rejected === 208, '조합 검사 범위가 바뀜');
+});
