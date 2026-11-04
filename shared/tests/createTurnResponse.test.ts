@@ -106,6 +106,49 @@ Deno.test('질문 없는 미확인 인정도 충분으로 바꾸지 않는다', 
   assert(parsed.analysis.understanding_status === 'unverified', '이해 미확인이 바뀜');
 });
 
+Deno.test('오답을 인정만으로 끝내는 incorrect + acknowledge 조합을 거절한다', () => {
+  for (const understanding_status of ['sufficient', 'unverified'] as const) {
+    for (const independent_performance_status of ['confirmed', 'unverified'] as const) {
+      const result = createTurnResponseSchema.safeParse({
+        ...sample(),
+        analysis: {
+          ...sample().analysis, answer_status: 'incorrect', understanding_status,
+          independent_performance_status,
+          response: { action: 'acknowledge', message: '이해됐어.', question: null },
+        },
+      });
+      assert(!result.success, '오답을 교정·확인 없이 인정함');
+      assert(result.error.issues.some((issue) => issue.path.join('.') === 'analysis.answer_status'), '답 상태의 충돌을 검출하지 못함');
+    }
+  }
+});
+
+Deno.test('acknowledge는 correct/not_applicable/unverified 답 상태를 그대로 허용한다', () => {
+  for (const answer_status of ['correct', 'not_applicable', 'unverified'] as const) {
+    for (const understanding_status of ['sufficient', 'unverified'] as const) {
+      const parsed = createTurnResponseSchema.parse({
+        ...sample(),
+        analysis: {
+          ...sample().analysis, answer_status, understanding_status,
+          response: { action: 'acknowledge', message: '지금 말한 내용은 따라왔어.', question: null },
+        },
+      });
+      assert(parsed.analysis.answer_status === answer_status, '답 상태를 바꿈');
+      assert(parsed.analysis.understanding_status === understanding_status, '이해 상태를 바꿈');
+    }
+  }
+});
+
+Deno.test('correct + insufficient + ask를 허용해 정답과 개념 이해를 분리한다', () => {
+  const parsed = createTurnResponseSchema.parse({
+    ...sample(),
+    analysis: { ...sample().analysis, answer_status: 'correct', understanding_status: 'insufficient' },
+  });
+  assert(parsed.analysis.answer_status === 'correct', '맞는 답을 오답으로 바꿈');
+  assert(parsed.analysis.understanding_status === 'insufficient', '정답만으로 충분 처리함');
+  assert(parsed.analysis.response.action === 'ask', '필요한 확인 질문을 없앰');
+});
+
 Deno.test('실제 본문과 질문의 공백·줄바꿈을 그대로 보존한다', () => {
   const response = { action: 'ask', message: '  따라가 봤어.\n그런데 여기서 막혔어.  ', question: '  이 연결은 어떻게 이해하면 돼?\n' };
   const parsed = createTurnResponseSchema.parse({

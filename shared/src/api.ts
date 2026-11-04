@@ -39,6 +39,8 @@ export const createTurnRequestSchema = explanationTurnSchema.pick({
   trigger: true,
   input_mode: true,
   text: true,
+  // 앱 값은 표시·요청 기록용이다. AI 분석 이력에는 서버에 저장된 실제 이전 AI 질문을 사용한다.
+  // 이 스키마는 입력 형식만 검사하며 실제 이력 조회·대조는 서버 서비스에서 수행한다.
   question_text: true,
 });
 export type CreateTurnRequest = z.infer<typeof createTurnRequestSchema>;
@@ -57,6 +59,13 @@ const explanationResponseSchema = z.discriminatedUnion('action', [
 ]);
 
 // 공개 상태와 발화만 선택한다. 내부 판단 근거·개념 목록·사용량은 respond에서 제외한다.
+// FE가 상태를 다른 값으로 바꾸지 않고 분기할 수 있도록 다음 공개 조합만 허용한다.
+// action      | understanding_status             | question | 추가 조건
+// ask         | insufficient/ambiguous/unverified | 문자열   | 없음
+// explain     | unverified                        | 문자열   | independent_performance_status=unverified
+// correct     | sufficient                        | null     | 없음
+// acknowledge | sufficient/unverified             | null     | answer_status가 incorrect가 아님
+// 내부 오류·근거의 타당성 검증은 이 공개 조합 검사와 별도로 수행한다.
 export const explanationAnalysisSchema = z.object({
   answer_status: z.enum(['correct', 'incorrect', 'not_applicable', 'unverified']),
   understanding_status: z.enum(['sufficient', 'insufficient', 'ambiguous', 'unverified']),
@@ -77,6 +86,13 @@ export const explanationAnalysisSchema = z.object({
     ctx.addIssue({
       code: 'custom', path: ['understanding_status'],
       message: '짧은 계산 교정은 개념·접근이 충분한 경우에 사용합니다.',
+    });
+  }
+
+  if (action === 'acknowledge' && analysis.answer_status === 'incorrect') {
+    ctx.addIssue({
+      code: 'custom', path: ['answer_status'],
+      message: '틀린 답을 교정·확인 없이 인정하고 종료할 수 없습니다.',
     });
   }
 
