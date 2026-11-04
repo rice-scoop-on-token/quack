@@ -43,7 +43,7 @@ const envelopeSchema = z.object({
 });
 
 const errorMessages = {
-  MISSING_API_KEY: "OPENAI_API_KEY가 설정되지 않았습니다.",
+  MISSING_API_KEY: "AI 호출에 필요한 API 키가 설정되지 않았습니다.",
   INVALID_OPTIONS: "모델·출력 토큰 한도·대기 시간 설정을 확인해 주세요.",
   INVALID_INPUT: "평가 입력의 필드와 내용을 확인해 주세요.",
   HTTP_ERROR: "OpenAI API가 요청을 거절했습니다. 상태 코드를 확인해 주세요.",
