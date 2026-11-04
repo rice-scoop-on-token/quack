@@ -1,6 +1,8 @@
 import { router, useLocalSearchParams } from 'expo-router';
-import { Button, StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 
+import { Text } from '@/components/ui/Text';
+import { Button } from '@/components/ui/Button';
 import { useApiQuery } from '@/api';
 import { BottomActionLayout } from '@/components/ui/BottomActionLayout';
 import { NoRecord } from '@/components/ui/NoRecord';
@@ -31,7 +33,7 @@ export function GrowthScreen() {
     <BottomActionLayout
       centered
       actions={
-        <Button title="확인" onPress={goHome} />
+        <Button variant="primary" title="확인" onPress={goHome} />
       }
     >
       <Text style={styles.center} accessibilityRole="header">

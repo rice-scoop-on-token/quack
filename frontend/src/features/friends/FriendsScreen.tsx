@@ -1,7 +1,10 @@
 import { router, useFocusEffect } from 'expo-router';
 import { useCallback, useState } from 'react';
-import { Button, StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 
+import { COLORS, SIZES } from '@/theme/assetTokens';
+import { Text } from '@/components/ui/Text';
+import { Button } from '@/components/ui/Button';
 import { useApiQuery } from '@/api';
 import { useDemoVariant } from '@/api/mock/useDemoVariant';
 import { BottomActionLayout } from '@/components/ui/BottomActionLayout';
@@ -37,10 +40,11 @@ export function FriendsScreen() {
   return (
     <BottomActionLayout
       inTab
+      gutter={SIZES.gutter}
       actions={
         <>
           {/* ?demo=permission 같은 값은 화면 주소마다 따로라서 통화방 주소에도 넘긴다 */}
-          <Button
+          <Button variant="primary"
             title="통화방 입장"
             onPress={() => router.push({ pathname: '/rooms', params: demo ? { demo } : {} })}
           />
@@ -91,12 +95,15 @@ const styles = StyleSheet.create({
     paddingHorizontal: 4,
     borderRadius: 16,
   },
-  // 강조색과 회색 톤은 임시 색이다. 디자인 작업 때 바꾼다.
   studying: {
-    backgroundColor: '#ffd77a',
+    backgroundColor: COLORS.primary,
+    borderWidth: 2,
+    borderColor: COLORS.outline,
   },
   resting: {
-    backgroundColor: '#e3e3e3',
-    opacity: 0.6,
+    backgroundColor: COLORS.disabledBg,
+    borderWidth: 2,
+    borderColor: COLORS.textSub,
+    opacity: 0.85,
   },
 });

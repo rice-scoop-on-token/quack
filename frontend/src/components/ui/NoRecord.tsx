@@ -1,5 +1,6 @@
-import { Button, Text } from 'react-native';
 
+import { Text } from '@/components/ui/Text';
+import { Button } from '@/components/ui/Button';
 import { BottomActionLayout } from '@/components/ui/BottomActionLayout';
 
 type Props = {
@@ -12,7 +13,7 @@ export function NoRecord({ message, onHome }: Props) {
   return (
     <BottomActionLayout
       actions={
-        <Button title="홈으로" onPress={onHome} />
+        <Button variant="primary" title="홈으로" onPress={onHome} />
       }
     >
       <Text>{message}</Text>

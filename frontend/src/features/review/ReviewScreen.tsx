@@ -1,8 +1,12 @@
 import type { QuizPublic } from '@quack/shared';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { Button, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
 
+import { Text } from '@/components/ui/Text';
+import { PAPER } from '@/theme/assetTokens';
+import { PaperInput } from '@/components/ui/PaperInput';
+import { Button } from '@/components/ui/Button';
 import { useQuackApi } from '@/api';
 import type { ExplanationAnalysis } from '@/api/tempContract';
 import { BottomActionLayout } from '@/components/ui/BottomActionLayout';
@@ -112,7 +116,7 @@ export function ReviewScreen() {
     <BottomActionLayout
       actions={
         <>
-          <Button
+          <Button variant="primary"
             title={sending ? '살펴보고 있어요…' : '설명 보내기'}
             disabled={sending || sendable.length === 0}
             onPress={sendAll}
@@ -141,7 +145,7 @@ export function ReviewScreen() {
             </Pressable>
             {expanded ? (
               <>
-                <TextInput
+                <PaperInput
                   style={styles.input}
                   value={drafts[it.concept] ?? ''}
                   onChangeText={(value) => setDrafts((prev) => ({ ...prev, [it.concept]: value }))}
@@ -173,14 +177,12 @@ export function ReviewScreen() {
 }
 
 const styles = StyleSheet.create({
+  // 꼬리 질문을 담는 종이 카드
   block: {
+    ...PAPER.card,
     gap: 8,
-    padding: 12,
-    borderWidth: 1,
   },
   input: {
     minHeight: 72,
-    borderWidth: 1,
-    padding: 12,
   },
 });

@@ -1,7 +1,10 @@
 import { router, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
-import { Button, StyleSheet, Text, TextInput, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 
+import { Text } from '@/components/ui/Text';
+import { PaperInput } from '@/components/ui/PaperInput';
+import { Button } from '@/components/ui/Button';
 import { useQuackApi } from '@/api';
 import { useDemoVariant } from '@/api/mock/useDemoVariant';
 import { BottomActionLayout } from '@/components/ui/BottomActionLayout';
@@ -30,7 +33,7 @@ export function SessionSetupScreen() {
     return (
       <BottomActionLayout
         actions={
-          <Button title="과목 만들기" onPress={() => router.replace('/subjects/new')} />
+          <Button variant="primary" title="과목 만들기" onPress={() => router.replace('/subjects/new')} />
         }
       >
         <Text>공부할 과목이 없어요. 과목을 먼저 만들어 주세요.</Text>
@@ -59,7 +62,7 @@ export function SessionSetupScreen() {
   return (
     <BottomActionLayout
       actions={
-        <Button title="타이머 시작" disabled={starting} onPress={handleStart} />
+        <Button variant="primary" title="타이머 시작" disabled={starting} onPress={handleStart} />
       }
     >
       <Text>오늘은 무엇을 알아볼까요?</Text>
@@ -73,8 +76,7 @@ export function SessionSetupScreen() {
 
       <View style={styles.form}>
         <Text>오늘의 학습 목표 (필수)</Text>
-        <TextInput
-          style={styles.input}
+        <PaperInput
           value={goal}
           onChangeText={(value) => {
             setGoal(value);
@@ -97,9 +99,5 @@ export function SessionSetupScreen() {
 const styles = StyleSheet.create({
   form: {
     gap: 8,
-  },
-  input: {
-    borderWidth: 1,
-    padding: 12,
   },
 });

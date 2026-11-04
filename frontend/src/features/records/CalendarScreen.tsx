@@ -1,7 +1,10 @@
 import { router } from 'expo-router';
 import { useState } from 'react';
-import { Button, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
 
+import { Text } from '@/components/ui/Text';
+import { COLORS, FEEDBACK, PAPER, SIZES } from '@/theme/assetTokens';
+import { Button } from '@/components/ui/Button';
 import { useApiQuery } from '@/api';
 import { demoRecordSessions } from '@/api/mock/data/demoRecords';
 import { useDemoVariant } from '@/api/mock/useDemoVariant';
@@ -42,22 +45,33 @@ export function CalendarScreen() {
   return (
     <BottomActionLayout
       inTab
+      gutter={SIZES.gutter}
       actions={
-        <Button
+        <Button variant="primary"
           title="기간별 분석 보기"
           onPress={() => router.push({ pathname: '/records/analysis', params: demo ? { demo } : {} })}
         />
       }
     >
       <View style={styles.monthRow}>
-        <Pressable style={styles.arrow} onPress={() => moveMonth(-1)} accessibilityRole="button" accessibilityLabel="이전 달">
-          <Text>‹</Text>
+        <Pressable
+          style={({ pressed }) => [styles.arrow, pressed && styles.arrowPressed]}
+          onPress={() => moveMonth(-1)}
+          accessibilityRole="button"
+          accessibilityLabel="이전 달"
+        >
+          <Text style={styles.arrowMark}>‹</Text>
         </Pressable>
-        <Text>
+        <Text style={styles.month}>
           {cursor.year}년 {cursor.month + 1}월
         </Text>
-        <Pressable style={styles.arrow} onPress={() => moveMonth(1)} accessibilityRole="button" accessibilityLabel="다음 달">
-          <Text>›</Text>
+        <Pressable
+          style={({ pressed }) => [styles.arrow, pressed && styles.arrowPressed]}
+          onPress={() => moveMonth(1)}
+          accessibilityRole="button"
+          accessibilityLabel="다음 달"
+        >
+          <Text style={styles.arrowMark}>›</Text>
         </Pressable>
       </View>
 
@@ -142,18 +156,37 @@ const styles = StyleSheet.create({
   monthRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
+    gap: 8,
   },
+  // 터치 영역 44×44, 화살표 글자는 28로 크게 보이게 한다
   arrow: {
-    minWidth: 44,
-    minHeight: 44,
+    width: SIZES.touchMin,
+    height: SIZES.touchMin,
     alignItems: 'center',
     justifyContent: 'center',
+    borderWidth: SIZES.row.border,
+    borderColor: COLORS.outline,
+    borderRadius: SIZES.row.radius,
+    backgroundColor: COLORS.card,
+  },
+  arrowPressed: {
+    backgroundColor: COLORS.cream,
+  },
+  arrowMark: {
+    fontSize: 28,
+    lineHeight: 32,
+    fontWeight: '700',
+  },
+  // 연·월은 두 버튼 사이 가운데에 둔다
+  month: {
+    flex: 1,
+    textAlign: 'center',
+    fontSize: 17,
+    fontWeight: '700',
   },
   summary: {
+    ...PAPER.card,
     gap: 4,
-    padding: 12,
-    borderWidth: 1,
   },
   week: {
     flexDirection: 'row',
@@ -172,19 +205,19 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  // 공부한 날은 칸을 초록으로 칠한다 (임시 색, 디자인 작업 때 바꾼다). 스크린 리더에는 접근성 라벨로 알린다.
+  // 공부한 날은 칸을 칠한다. 스크린 리더에는 접근성 라벨로 알린다.
   studied: {
-    backgroundColor: '#a8d5a2',
+    backgroundColor: FEEDBACK.positive,
   },
   selected: {
     borderWidth: 2,
+    borderColor: COLORS.outline,
   },
   today: {
     fontWeight: '700',
   },
   card: {
+    ...PAPER.card,
     gap: 4,
-    padding: 12,
-    borderWidth: 1,
   },
 });

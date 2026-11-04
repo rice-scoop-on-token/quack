@@ -1,8 +1,11 @@
 import type { SpeciesId } from '@quack/shared';
 import { router, useFocusEffect } from 'expo-router';
 import { useCallback, useState } from 'react';
-import { Button, StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 
+import { Text } from '@/components/ui/Text';
+import { COLORS } from '@/theme/assetTokens';
+import { Button } from '@/components/ui/Button';
 import { useApiQuery } from '@/api';
 import { useDemoVariant } from '@/api/mock/useDemoVariant';
 import type { GrowthStage } from '@/api/tempContract';
@@ -78,7 +81,7 @@ export function RoomScreen() {
     <BottomActionLayout
       actions={
         <>
-          <Button
+          <Button variant="primary"
             title={listenOnly ? '듣기 모드 (마이크 권한 꺼짐)' : micOn ? '마이크 끄기' : '마이크 켜기'}
             disabled={listenOnly}
             onPress={() => setMicOn((on) => !on)}
@@ -134,14 +137,14 @@ const styles = StyleSheet.create({
   },
   // 말하는 링 색은 임시다. 디자인 작업 때 바꾼다.
   speaking: {
-    borderColor: '#2e9e4f',
+    borderColor: COLORS.accent,
   },
   avatar: {
     width: AVATAR_SIZE,
     height: AVATAR_SIZE,
     borderRadius: AVATAR_SIZE / 2,
     overflow: 'hidden',
-    backgroundColor: '#f0e6d2',
+    backgroundColor: COLORS.cream,
   },
   nameRow: {
     flexDirection: 'row',

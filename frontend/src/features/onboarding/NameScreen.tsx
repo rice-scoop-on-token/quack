@@ -1,7 +1,8 @@
 import { router } from 'expo-router';
 import { useState } from 'react';
-import { Button, StyleSheet, Text, TextInput } from 'react-native';
+import { StyleSheet, Text, TextInput } from 'react-native';
 
+import { Button } from '@/components/ui/Button';
 import { useApiQuery, useQuackApi } from '@/api';
 import { OnboardingStepLayout } from '@/features/onboarding/OnboardingStepLayout';
 
@@ -28,7 +29,7 @@ export function NameScreen() {
     <OnboardingStepLayout
       step={2}
       actions={
-        <Button title="다음" onPress={handleNext} />
+        <Button variant="primary" title="다음" onPress={handleNext} />
       }
     >
       <Text>뭐라고 부르면 될까요?</Text>

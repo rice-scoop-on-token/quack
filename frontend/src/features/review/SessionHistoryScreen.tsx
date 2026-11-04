@@ -1,8 +1,11 @@
 import type { ExplanationTurn, QuizPublic } from '@quack/shared';
 import { router, Stack, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
-import { Button, StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 
+import { Text } from '@/components/ui/Text';
+import { PAPER } from '@/theme/assetTokens';
+import { Button } from '@/components/ui/Button';
 import { useApiQuery, useQuackApi } from '@/api';
 import { BottomActionLayout } from '@/components/ui/BottomActionLayout';
 import { NoRecord } from '@/components/ui/NoRecord';
@@ -50,7 +53,7 @@ export function SessionHistoryScreen() {
   return (
     <BottomActionLayout
       actions={
-        <Button
+        <Button variant="primary"
           title="퀴즈 다시 풀기"
           onPress={() => api.createQuiz(session.id).then((r) => setPractice(r.quiz))}
         />
@@ -84,8 +87,7 @@ export function SessionHistoryScreen() {
 
 const styles = StyleSheet.create({
   card: {
+    ...PAPER.card,
     gap: 4,
-    padding: 12,
-    borderWidth: 1,
   },
 });

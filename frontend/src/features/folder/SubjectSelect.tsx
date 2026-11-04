@@ -1,6 +1,9 @@
 import type { Folder } from '@quack/shared';
 import { useState } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
+
+import { Text } from '@/components/ui/Text';
+import { COLORS, SIZES } from '@/theme/assetTokens';
 
 type Props = {
   folders: Folder[];
@@ -61,20 +64,28 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    padding: 12,
-    borderWidth: 1,
+    minHeight: SIZES.row.height,
+    paddingHorizontal: 12,
+    borderWidth: SIZES.row.border,
+    borderColor: COLORS.outline,
+    borderRadius: SIZES.row.radius,
+    backgroundColor: COLORS.card,
   },
-  // 선택 바 바로 아래에 띄운다. 아래 내용이 비치지 않게 흰 배경을 임시로 둔다(디자인 작업 때 바꾼다).
+  // 선택 바 바로 아래에 띄운다. 아래 내용이 비치지 않게 카드 색 배경을 둔다.
   list: {
     position: 'absolute',
     top: '100%',
     left: 0,
     right: 0,
     marginTop: 4,
-    borderWidth: 1,
-    backgroundColor: '#fff',
+    borderWidth: SIZES.row.border,
+    borderColor: COLORS.outline,
+    borderRadius: SIZES.row.radius,
+    backgroundColor: COLORS.card,
   },
   item: {
-    padding: 12,
+    minHeight: SIZES.touchMin,
+    justifyContent: 'center',
+    paddingHorizontal: 12,
   },
 });

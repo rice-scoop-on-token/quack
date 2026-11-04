@@ -1,7 +1,11 @@
 import type { Folder, Material } from '@quack/shared';
 import { router } from 'expo-router';
-import { ActivityIndicator, Button, Pressable, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Pressable, StyleSheet, View } from 'react-native';
 
+import { Text } from '@/components/ui/Text';
+import { COLORS, PAPER } from '@/theme/assetTokens';
+import { FolderCard } from '@/components/ui/FolderCard';
+import { Button } from '@/components/ui/Button';
 import { useApiQuery, useQuackApi } from '@/api';
 import { useDemoVariant } from '@/api/mock/useDemoVariant';
 
@@ -63,23 +67,27 @@ export function MaterialUploadBody({ state, onSkip }: BodyProps) {
       <Text>PDF · 텍스트 · 이미지 자료를 올릴 수 있어요.</Text>
 
       {state.loading ? (
-        <View style={styles.card}>
-          <Text>자료에서 텍스트를 읽고 있어요…</Text>
-          <ActivityIndicator />
-        </View>
+        <FolderCard>
+          <View style={styles.inner}>
+            <Text>자료에서 텍스트를 읽고 있어요…</Text>
+            <ActivityIndicator color={COLORS.accent} />
+          </View>
+        </FolderCard>
       ) : null}
 
       {state.failed ? (
-        <View style={styles.card}>
+        <FolderCard>
           <Text accessibilityRole="alert">자료를 읽지 못했어요. 텍스트가 있는 파일로 다시 시도해 주세요.</Text>
-        </View>
+        </FolderCard>
       ) : null}
 
       {state.folderMaterials.map((m) => (
-        <View key={m.id} style={styles.card}>
-          <Text>{m.title}</Text>
-          <Text>{STATUS_LABEL[m.status]}</Text>
-        </View>
+        <FolderCard key={m.id}>
+          <View style={styles.inner}>
+            <Text style={styles.title}>{m.title}</Text>
+            <Text style={styles.status}>{STATUS_LABEL[m.status]}</Text>
+          </View>
+        </FolderCard>
       ))}
     </View>
   );
@@ -99,10 +107,21 @@ const styles = StyleSheet.create({
   container: {
     gap: 12,
   },
+  // 과목 폴더 안내 카드
   card: {
+    ...PAPER.card,
     gap: 4,
-    padding: 12,
-    borderWidth: 1,
+  },
+  inner: {
+    gap: 4,
+  },
+  title: {
+    fontWeight: '700',
+  },
+  status: {
+    fontSize: 13,
+    fontWeight: '500',
+    color: COLORS.textSub,
   },
   // 버튼이 가로 전체로 늘어나지 않게 하고 가로 중앙에 둔다
   skipButton: {
@@ -110,5 +129,6 @@ const styles = StyleSheet.create({
   },
   skip: {
     fontSize: 12,
+    color: COLORS.textSub,
   },
 });

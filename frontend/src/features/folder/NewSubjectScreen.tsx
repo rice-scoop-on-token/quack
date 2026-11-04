@@ -1,6 +1,6 @@
 import { router } from 'expo-router';
-import { Button } from 'react-native';
 
+import { Button } from '@/components/ui/Button';
 import { BottomActionLayout } from '@/components/ui/BottomActionLayout';
 import { NewFolderFields } from '@/features/folder/NewFolderFields';
 import { useNewFolderForm } from '@/features/folder/useNewFolderForm';
@@ -23,7 +23,7 @@ export function NewSubjectScreen() {
     <BottomActionLayout
       centered
       actions={
-        <Button title="과목 만들기" onPress={handleSubmit} />
+        <Button variant="primary" title="과목 만들기" onPress={handleSubmit} />
       }
     >
       <NewFolderFields form={form} />

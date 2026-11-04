@@ -2,6 +2,8 @@ import { useEffect, useState, type ReactNode } from 'react';
 import { Keyboard, Platform, ScrollView, StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+const CONTENT_PADDING = 24;
+
 type Props = {
   children: ReactNode;
   // 하단에 고정할 버튼. 여러 개면 넣은 순서대로 세로로 쌓인다.
@@ -10,6 +12,10 @@ type Props = {
   centered?: boolean;
   // 하단 탭 안의 화면이면 true. 탭 바가 홈 바 영역을 맡으므로 그만큼 띄우지 않는다.
   inTab?: boolean;
+  // 좌우 여백. 기본 24이고, 에셋을 적용한 화면(홈, 공부, 과목 상세, 탭 화면)은 16을 넘긴다.
+  gutter?: number;
+  // 스크롤 내용 맨 위에 여백 없이 화면 폭 전체로 그릴 영역(장면 이미지 등)
+  header?: ReactNode;
   // 스크롤 영역 오른쪽에 고정할 영역(세로 탭 라벨 등)
   side?: ReactNode;
   // 스크롤 영역 자체의 스타일(배경, 둥근 모서리 등)
@@ -17,14 +23,28 @@ type Props = {
 };
 
 // 화면 내용은 위에서 스크롤되고, 다음 단계 버튼은 화면 맨 아래에 고정되는 레이아웃이다.
-export function BottomActionLayout({ children, actions, centered = false, inTab = false, side, scrollStyle }: Props) {
+export function BottomActionLayout({
+  children,
+  actions,
+  centered = false,
+  inTab = false,
+  gutter = CONTENT_PADDING,
+  header,
+  side,
+  scrollStyle,
+}: Props) {
   const insets = useSafeAreaInsets();
   const keyboardHeight = useKeyboardHeight();
 
   return (
     <View style={styles.screen}>
       <View style={styles.body}>
-        <ScrollView style={scrollStyle} contentContainerStyle={[styles.content, centered && styles.centered]}>
+        <ScrollView
+          style={scrollStyle}
+          contentContainerStyle={[styles.content, { paddingHorizontal: gutter }, centered && styles.centered]}
+        >
+          {/* 안쪽 여백만큼 당겨서 화면 폭 전체로 그린다 */}
+          {header ? <View style={{ marginHorizontal: -gutter, marginTop: -CONTENT_PADDING }}>{header}</View> : null}
           {children}
         </ScrollView>
         {side}
@@ -33,7 +53,10 @@ export function BottomActionLayout({ children, actions, centered = false, inTab 
       {/* 키보드가 열려 있으면 키보드 높이만큼, 아니면 아이폰 홈 바 영역만큼 띄운다.
           키보드가 홈 바 영역을 덮으므로 둘을 더하지 않는다. */}
       <View
-        style={[styles.actions, { paddingBottom: (inTab ? keyboardHeight : Math.max(keyboardHeight, insets.bottom)) + 12 }]}
+        style={[
+          styles.actions,
+          { paddingHorizontal: gutter, paddingBottom: (inTab ? keyboardHeight : Math.max(keyboardHeight, insets.bottom)) + 12 },
+        ]}
       >
         {actions}
       </View>
@@ -74,7 +97,7 @@ const styles = StyleSheet.create({
   },
   content: {
     gap: 12,
-    padding: 24,
+    padding: CONTENT_PADDING,
   },
   // flexGrow로 스크롤 영역을 화면 높이만큼 채워야 그 안에서 세로 중앙에 둘 수 있다
   centered: {
@@ -83,7 +106,6 @@ const styles = StyleSheet.create({
   },
   actions: {
     gap: 8,
-    paddingHorizontal: 24,
     paddingTop: 12,
   },
 });

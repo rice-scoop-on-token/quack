@@ -1,4 +1,8 @@
-import { StyleSheet, Text, TextInput, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
+
+import { Text } from '@/components/ui/Text';
+import { COLORS } from '@/theme/assetTokens';
+import { PaperInput } from '@/components/ui/PaperInput';
 
 const MAX_LENGTH = 30;
 
@@ -27,15 +31,14 @@ export function FolderNameForm({ value, onChangeText, error }: Props) {
   return (
     <View style={styles.form}>
       <Text>과목 이름 (필수)</Text>
-      <TextInput
-        style={styles.input}
+      <PaperInput
         value={value}
         onChangeText={onChangeText}
         maxLength={MAX_LENGTH}
         placeholder="예: 컴퓨터 네트워크"
       />
       {error ? <Text accessibilityRole="alert">{error}</Text> : null}
-      <Text>공백만 입력할 수 없어요. 최대 {MAX_LENGTH}자예요.</Text>
+      <Text style={styles.hint}>공백만 입력할 수 없어요. 최대 {MAX_LENGTH}자예요.</Text>
     </View>
   );
 }
@@ -44,8 +47,9 @@ const styles = StyleSheet.create({
   form: {
     gap: 8,
   },
-  input: {
-    borderWidth: 1,
-    padding: 12,
+  hint: {
+    fontSize: 12,
+    fontWeight: '500',
+    color: COLORS.textSub,
   },
 });

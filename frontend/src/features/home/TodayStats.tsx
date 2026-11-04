@@ -1,7 +1,9 @@
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 
 import { useApiQuery } from '@/api';
+import { Text } from '@/components/ui/Text';
 import { summarizeToday } from '@/features/home/todaySummary';
+import { COLORS, hardShadow, SIZES } from '@/theme/assetTokens';
 
 // 홈 오늘의 학습 기록. 모든 과목의 합이다.
 export function TodayStats() {
@@ -50,6 +52,15 @@ export function TodayStats() {
 const styles = StyleSheet.create({
   container: {
     gap: 8,
+    paddingVertical: SIZES.card.paddingVertical,
+    paddingHorizontal: SIZES.card.paddingHorizontal,
+    borderWidth: SIZES.card.border,
+    borderColor: COLORS.outline,
+    borderRadius: SIZES.card.radius,
+    backgroundColor: COLORS.card,
+    // 그림자 자리를 아래에 비워 둔다
+    marginBottom: SIZES.card.shadow,
+    ...hardShadow(SIZES.card.shadow),
   },
   row: {
     flexDirection: 'row',

@@ -1,18 +1,22 @@
 import type { Folder } from '@quack/shared';
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 
 import { CharacterBox } from '@/components/ui/CharacterBox';
+import { Text } from '@/components/ui/Text';
 import type { CharacterAction } from '@/features/character/characterAssets';
 import { growthFromXp } from '@/features/character/growth';
 import { useCharacterXp } from '@/features/character/useCharacterXp';
+import { COLORS } from '@/theme/assetTokens';
 
 type Props = {
   folder: Folder;
-  action: CharacterAction;
+  action?: CharacterAction;
+  // 캐릭터는 다른 곳(홈 장면)에 있고 성장 표시만 필요할 때
+  hideCharacter?: boolean;
 };
 
 // 과목 캐릭터와 성장 표시. 홈(H-01)과 과목 상세(L-02)에서 같이 쓴다.
-export function CharacterGrowth({ folder, action }: Props) {
+export function CharacterGrowth({ folder, action, hideCharacter = false }: Props) {
   const xp = useCharacterXp(folder.id);
   // 불러오는 중에도 같은 자리를 잡아 둬서, 다 불러왔을 때 아래 요소가 밀리지 않게 한다
   const growth = xp === undefined ? undefined : growthFromXp(xp);
@@ -20,7 +24,9 @@ export function CharacterGrowth({ folder, action }: Props) {
 
   return (
     <View style={styles.container}>
-      <CharacterBox speciesId={folder.species_id} stage={growth?.stage} size={140} action={action} />
+      {hideCharacter ? null : (
+        <CharacterBox speciesId={folder.species_id} stage={growth?.stage} size={140} action={action} />
+      )}
 
       <Text>
         {!growth
@@ -49,11 +55,12 @@ const styles = StyleSheet.create({
   bar: {
     alignSelf: 'stretch',
     height: 12,
-    borderWidth: 1,
+    borderWidth: 2,
+    borderColor: COLORS.outline,
+    backgroundColor: COLORS.cream,
   },
-  // 채운 부분이 보이도록 임시 배경색 하나만 둔다. 디자인 작업 때 바꾼다.
   fill: {
     height: '100%',
-    backgroundColor: '#888',
+    backgroundColor: COLORS.accent,
   },
 });

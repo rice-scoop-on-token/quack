@@ -1,18 +1,22 @@
 import { router, useLocalSearchParams, usePreventRemove } from 'expo-router';
 import { useState } from 'react';
-import { Button, Platform, StyleSheet, Text, View } from 'react-native';
+import { Platform, StyleSheet, View } from 'react-native';
 
+import { Button } from '@/components/ui/Button';
 import { useApiQuery, useQuackApi } from '@/api';
 import { useDemoVariant } from '@/api/mock/useDemoVariant';
 import { BottomActionLayout } from '@/components/ui/BottomActionLayout';
 import { NoRecord } from '@/components/ui/NoRecord';
+import { Text } from '@/components/ui/Text';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { growthFromXp } from '@/features/character/growth';
 import { useCharacterXp } from '@/features/character/useCharacterXp';
 import { phaseView } from '@/features/session/components/SessionPhasePanel';
+import { StudyScene } from '@/features/session/StudyScene';
 import { useExplanation } from '@/features/session/hooks/useExplanation';
 import { useSessionTimer } from '@/features/session/hooks/useSessionTimer';
 import { formatElapsed } from '@/features/session/machine';
+import { COLORS, FONT, SIZES } from '@/theme/assetTokens';
 
 // S-02 집중 타이머와 S-03 설명·꼬리 질문. 시간이 끊기지 않도록 한 화면 안에서 단계별 본문만 바꾼다.
 export function TimerScreen() {
@@ -77,7 +81,6 @@ export function TimerScreen() {
 
   const view = phaseView({
     folder,
-    stage,
     goal,
     timer,
     explanation,
@@ -86,20 +89,33 @@ export function TimerScreen() {
 
   return (
     <BottomActionLayout
+      gutter={SIZES.gutter}
       actions={
         <>
           {view.actions}
-          <View style={styles.row}>
-            {timer.running ? (
-              <Button title="잠깐 쉬기" onPress={timer.pause} />
-            ) : (
-              <Button title="다시 시작" onPress={timer.resume} />
-            )}
-            <Button title="공부 마치기" disabled={!canFinish} onPress={() => setConfirmingFinish(true)} />
-          </View>
+          {/* 설명하는 동안에는 쉬기·공부 마치기를 숨긴다. 끝내려면 답을 보내거나 돌아가기로 나온다 */}
+          {phase === 'explaining' ? null : (
+            <View style={styles.row}>
+              {timer.running ? (
+                <Button style={styles.half} title="잠깐 쉬기" onPress={timer.pause} />
+              ) : (
+                <Button style={styles.half} title="다시 시작" onPress={timer.resume} />
+              )}
+              <Button variant="primary" style={styles.half} title="공부 마치기" disabled={!canFinish} onPress={() => setConfirmingFinish(true)} />
+            </View>
+          )}
         </>
       }
     >
+      {/* 장면 카드 안에만 배경 이미지를 그리고, 그 아래는 크림 바탕 위의 정보 영역이다 */}
+      <StudyScene
+        folder={folder}
+        stage={stage}
+        action={view.characterAction}
+        onBack={() => setConfirmingLeave(true)}
+        compact={phase === 'explaining'}
+      />
+
       {/* 모든 단계에서 시간이 흐르고, 쉬기를 눌렀을 때만 멈춘다. AI와 대화하는 동안 멈출지는 미정이고 지금은 임시 구현이다 */}
       <View style={styles.top}>
         <Text>
@@ -108,7 +124,10 @@ export function TimerScreen() {
         <Text style={styles.time} accessibilityRole="timer">
           {formatElapsed(timer.elapsedMs)}
         </Text>
-        <Text>{timer.running ? '지금 쌓이는 공부 시간' : '잠시 쉬어가는 중'}</Text>
+        {/* 설명 입력 단계는 한 화면에 들어가도록 보조 문구를 줄인다 */}
+        {phase === 'explaining' ? null : (
+          <Text style={styles.sub}>{timer.running ? '지금 쌓이는 공부 시간' : '잠시 쉬어가는 중'}</Text>
+        )}
       </View>
 
       {view.body}
@@ -137,17 +156,25 @@ export function TimerScreen() {
 }
 
 const styles = StyleSheet.create({
-  // 경과 시간을 크게 보여 준다 (임시 크기, 디자인 작업 때 바꾼다)
+  // 나란히 놓은 버튼이 폭을 반씩 나눈다
+  half: {
+    flex: 1,
+  },
+  // 경과 시간을 크게 보여 준다
   time: {
-    fontSize: 48,
+    fontSize: 52,
+    fontWeight: FONT.title.fontWeight,
   },
   top: {
     alignItems: 'center',
     gap: 8,
   },
+  sub: {
+    color: COLORS.textSub,
+  },
   row: {
     flexDirection: 'row',
     justifyContent: 'center',
-    gap: 8,
+    gap: 12,
   },
 });

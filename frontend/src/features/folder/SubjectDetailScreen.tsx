@@ -1,8 +1,10 @@
 import { router, Stack, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
-import { Button, StyleSheet, Text } from 'react-native';
+import { StyleSheet } from 'react-native';
 
+import { Button } from '@/components/ui/Button';
 import { BottomActionLayout } from '@/components/ui/BottomActionLayout';
+import { Text } from '@/components/ui/Text';
 import { useSelectedFolder } from '@/features/folder/SelectedFolder';
 import {
   InfoPanel,
@@ -13,6 +15,7 @@ import {
 } from '@/features/folder/SubjectTabPanels';
 import { PANEL_MARGIN, SubjectTabBar } from '@/features/folder/SubjectTabBar';
 import { TAB_COLORS, type SubjectTabId } from '@/features/folder/subjectTabColors';
+import { COLORS, SIZES } from '@/theme/assetTokens';
 
 // L-02 과목 상세. 세로 탭 라벨과 하단 버튼은 고정이고 내용(종이)만 스크롤된다.
 export function SubjectDetailScreen() {
@@ -28,7 +31,7 @@ export function SubjectDetailScreen() {
     return (
       <BottomActionLayout
         actions={
-          <Button title="과목 서랍으로" onPress={() => router.dismissTo('/subjects')} />
+          <Button variant="primary" title="과목 서랍으로" onPress={() => router.dismissTo('/subjects')} />
         }
       >
         {/* 주소로 바로 들어오거나 새로고침하면 과목이 없을 수 있다 */}
@@ -45,11 +48,12 @@ export function SubjectDetailScreen() {
 
   return (
     <BottomActionLayout
+      gutter={SIZES.gutter}
       side={<SubjectTabBar value={tab} onChange={setTab} />}
       scrollStyle={[styles.panel, { backgroundColor: TAB_COLORS[tab].paper }]}
       actions={
         <>
-          <Button title="이 과목 공부하기" onPress={startStudy} />
+          <Button variant="primary" title="이 과목 공부하기" onPress={startStudy} />
           <Button
             title="+ 자료 추가"
             onPress={() => router.push({ pathname: '/subjects/[id]/materials', params: { id: folder.id } })}
@@ -73,7 +77,8 @@ const styles = StyleSheet.create({
   panel: {
     marginLeft: PANEL_MARGIN,
     marginBottom: 8,
-    borderWidth: 1,
+    borderWidth: 2,
+    borderColor: COLORS.outline,
     borderTopLeftRadius: 16,
     borderBottomLeftRadius: 16,
   },

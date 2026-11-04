@@ -1,7 +1,10 @@
 import { router } from 'expo-router';
 import { useState } from 'react';
-import { Button, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
 
+import { Text } from '@/components/ui/Text';
+import { COLORS, FEEDBACK, PAPER } from '@/theme/assetTokens';
+import { Button } from '@/components/ui/Button';
 import { useApiQuery, useQuackApi } from '@/api';
 import type { TempDailyQuizResult } from '@/api/tempContract';
 import { BottomActionLayout } from '@/components/ui/BottomActionLayout';
@@ -38,9 +41,9 @@ export function DailyQuizScreen() {
       actions={
         <>
           {result ? (
-            <Button title="잠금화면에서도 복습하기" onPress={() => router.push('/settings')} />
+            <Button variant="primary" title="잠금화면에서도 복습하기" onPress={() => router.push('/settings')} />
           ) : (
-            <Button
+            <Button variant="primary"
               title="답 확인하기"
               disabled={picked === null || submitting}
               onPress={async () => {
@@ -89,9 +92,12 @@ export function DailyQuizScreen() {
       })}
 
       {/* 해설 자리는 늘 잡아 두어 답을 확인해도 보기가 밀리지 않는다 */}
-      <Text style={styles.explanation} accessibilityLiveRegion="polite">
-        {result ? `${result.correct ? '맞았어요! ' : '괜찮아요, 다시 연결해 봐요. '}${result.explanation}` : ' '}
-      </Text>
+      <View style={styles.explanation}>
+        <Text style={styles.label}>해설</Text>
+        <Text accessibilityLiveRegion="polite">
+          {result ? `${result.correct ? '맞았어요! ' : '괜찮아요, 다시 연결해 봐요. '}${result.explanation}` : ' '}
+        </Text>
+      </View>
     </BottomActionLayout>
   );
 }
@@ -103,20 +109,27 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
   },
   choice: {
-    padding: 12,
-    borderWidth: 1,
+    ...PAPER.option,
   },
+  // 고른 보기는 주요색, 정답·오답은 FEEDBACK 색(글자 "(정답)", "(내 답)"도 함께 쓴다)
   selected: {
-    borderWidth: 3,
+    backgroundColor: COLORS.primary,
   },
-  // 정답·오답 표시 색 (임시 색, 디자인 작업 때 바꾼다)
   correct: {
-    backgroundColor: '#cfe8cf',
+    backgroundColor: FEEDBACK.positive,
   },
   wrong: {
-    backgroundColor: '#f1cccc',
+    backgroundColor: FEEDBACK.negative,
   },
   explanation: {
-    minHeight: 60,
+    ...PAPER.card,
+    gap: 4,
+    minHeight: 96,
+  },
+  // "해설" 작은 문구
+  label: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: COLORS.textSub,
   },
 });

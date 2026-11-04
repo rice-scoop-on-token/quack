@@ -10,6 +10,8 @@ export const SCREEN_ACTIONS = {
   // 임시 구현, 팀 확인 필요: 에셋 제안에 없는 상태라 기본 대기 동작으로 정했다
   paused: 'idle',
   aiQuestion: 'idle',
+  // 설명을 입력하는 동안
+  explaining: 'idle',
   // 설명을 보내고 분석 결과를 기다리는 동안
   analyzing: 'think',
   followUpInsufficient: 'dejected',

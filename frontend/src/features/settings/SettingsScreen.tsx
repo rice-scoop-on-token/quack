@@ -1,7 +1,10 @@
 import { router } from 'expo-router';
 import { useState } from 'react';
-import { Button, Pressable, StyleSheet, Switch, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Switch, View } from 'react-native';
 
+import { COLORS, PAPER, SIZES } from '@/theme/assetTokens';
+import { Text } from '@/components/ui/Text';
+import { Button } from '@/components/ui/Button';
 import { useApiQuery, useQuackApi } from '@/api';
 import type { TempLockQuizSettings } from '@/api/tempContract';
 import { BottomActionLayout } from '@/components/ui/BottomActionLayout';
@@ -33,9 +36,10 @@ export function SettingsScreen() {
   return (
     <BottomActionLayout
       inTab
+      gutter={SIZES.gutter}
       actions={
         <>
-          <Button title="잠금화면 미리보기" onPress={() => router.push('/quizzes/lock-preview')} />
+          <Button variant="primary" title="잠금화면 미리보기" onPress={() => router.push('/quizzes/lock-preview')} />
           <Button title="앱에서 오늘의 퀴즈" onPress={() => router.push('/quizzes/today')} />
         </>
       }
@@ -73,30 +77,35 @@ function ToggleRow({ label, value, onChange }: { label: string; value: boolean; 
   return (
     <View style={styles.toggle}>
       <Text>{label}</Text>
-      <Switch value={value} onValueChange={onChange} accessibilityLabel={label} />
+      <Switch
+        value={value}
+        onValueChange={onChange}
+        accessibilityLabel={label}
+        trackColor={{ false: COLORS.disabledBg, true: COLORS.primary }}
+        thumbColor={COLORS.card}
+        ios_backgroundColor={COLORS.disabledBg}
+      />
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   toggle: {
+    ...PAPER.option,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    padding: 12,
-    borderWidth: 1,
   },
   row: {
     flexDirection: 'row',
     gap: 8,
   },
   option: {
+    ...PAPER.option,
     flex: 1,
     alignItems: 'center',
-    padding: 12,
-    borderWidth: 1,
   },
   selected: {
-    borderWidth: 3,
+    backgroundColor: COLORS.primary,
   },
 });
