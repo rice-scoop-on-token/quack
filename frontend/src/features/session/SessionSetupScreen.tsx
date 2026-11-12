@@ -2,6 +2,9 @@ import { router, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 
+import { LoadingView } from '@/components/ui/LoadingView';
+import { EmptyState } from '@/components/ui/EmptyState';
+import { ScreenTitle } from '@/components/ui/ScreenTitle';
 import { Text } from '@/components/ui/Text';
 import { PaperInput } from '@/components/ui/PaperInput';
 import { Button } from '@/components/ui/Button';
@@ -27,7 +30,7 @@ export function SessionSetupScreen() {
   const demo = useDemoVariant();
 
   if (folders === undefined) {
-    return null;
+    return <LoadingView />;
   }
   if (!selectedFolder) {
     return (
@@ -36,7 +39,7 @@ export function SessionSetupScreen() {
           <Button variant="primary" title="과목 만들기" onPress={() => router.replace('/subjects/new')} />
         }
       >
-        <Text>공부할 과목이 없어요. 과목을 먼저 만들어 주세요.</Text>
+        <EmptyState title="공부할 과목이 없어요." message="과목을 먼저 만들어 주세요." />
       </BottomActionLayout>
     );
   }
@@ -65,8 +68,7 @@ export function SessionSetupScreen() {
         <Button variant="primary" title="타이머 시작" disabled={starting} onPress={handleStart} />
       }
     >
-      <Text>오늘은 무엇을 알아볼까요?</Text>
-      <Text>작은 목표 하나면 충분해요.</Text>
+      <ScreenTitle title="오늘은 무엇을 알아볼까요?" subtitle="작은 목표 하나면 충분해요." />
 
       <Text>공부할 과목</Text>
       {/* 홈의 과목 선택과 같은 값을 쓴다 */}

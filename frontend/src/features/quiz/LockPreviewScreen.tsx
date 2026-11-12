@@ -2,6 +2,7 @@ import { router } from 'expo-router';
 import { useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 
+import { LoadingView } from '@/components/ui/LoadingView';
 import { Text } from '@/components/ui/Text';
 import { COLORS, PAPER, SIZES } from '@/theme/assetTokens';
 import { Button } from '@/components/ui/Button';
@@ -34,7 +35,7 @@ export function LockPreviewScreen() {
   const [submitting, setSubmitting] = useState(false);
 
   if (!settings || !quiz || folders === undefined) {
-    return null;
+    return <LoadingView />;
   }
   const folder = folders.find((f) => f.id === settings.folder_id) ?? selected;
   const stage = xp === undefined ? undefined : growthFromXp(xp).stage;

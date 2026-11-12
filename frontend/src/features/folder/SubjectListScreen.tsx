@@ -1,9 +1,10 @@
 import { router } from 'expo-router';
 import { useState } from 'react';
-import { StyleSheet, View } from 'react-native';
-
 import type { Folder } from '@quack/shared';
 
+import { LoadingView } from '@/components/ui/LoadingView';
+import { EmptyState } from '@/components/ui/EmptyState';
+import { ScreenTitle } from '@/components/ui/ScreenTitle';
 import { Text } from '@/components/ui/Text';
 import { SIZES } from '@/theme/assetTokens';
 import { Button } from '@/components/ui/Button';
@@ -19,7 +20,7 @@ export function SubjectListScreen() {
   const folders = useApiQuery((a) => a.listFolders(), []);
   const materials = useApiQuery((a) => a.listMaterials(), []);
   if (!folders || !materials) {
-    return null;
+    return <LoadingView />;
   }
 
   return (
@@ -33,16 +34,12 @@ export function SubjectListScreen() {
         />
       }
     >
-      <Text>나의 과목 서랍</Text>
-      <Text>배운 것들이 차곡차곡 쌓이는 곳.</Text>
+      <ScreenTitle title="나의 과목 서랍" subtitle="배운 것들이 차곡차곡 쌓이는 곳." />
 
       <Text>전체 {folders.length}개</Text>
 
       {folders.length === 0 ? (
-        <View style={styles.empty}>
-          <Text>아직 비어 있는 서랍이에요</Text>
-          <Text>첫 과목부터 함께 만들어 볼까요?</Text>
-        </View>
+        <EmptyState title="아직 비어 있는 서랍이에요" message="첫 과목부터 함께 만들어 볼까요?" />
       ) : (
         // 과목 카드 목록
         folders.map((f) => (
@@ -75,10 +72,3 @@ export function SubjectListScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  empty: {
-    alignItems: 'center',
-    gap: 8,
-    padding: 24,
-  },
-});

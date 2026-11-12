@@ -2,7 +2,10 @@ import { router, useFocusEffect } from 'expo-router';
 import { useCallback, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 
-import { COLORS, SIZES } from '@/theme/assetTokens';
+import { LoadingView } from '@/components/ui/LoadingView';
+import { COLORS, RADIUS, SIZES } from '@/theme/assetTokens';
+import { EmptyState } from '@/components/ui/EmptyState';
+import { ScreenTitle } from '@/components/ui/ScreenTitle';
 import { Text } from '@/components/ui/Text';
 import { Button } from '@/components/ui/Button';
 import { useApiQuery } from '@/api';
@@ -34,7 +37,7 @@ export function FriendsScreen() {
   );
 
   if (!friends) {
-    return null;
+    return <LoadingView />;
   }
 
   return (
@@ -52,8 +55,10 @@ export function FriendsScreen() {
         </>
       }
     >
+      <ScreenTitle title="친구" subtitle="함께 공부하는 친구들이에요." />
+
       {friends.length === 0 ? (
-        <Text>아직 친구가 없어요.</Text>
+        <EmptyState title="아직 친구가 없어요." message="친구가 생기면 여기에서 공부 중인지 볼 수 있어요." />
       ) : (
         // 친구가 많으면 아래로 스크롤된다
         <View style={styles.grid}>
@@ -93,7 +98,7 @@ const styles = StyleSheet.create({
     gap: 6,
     paddingVertical: 10,
     paddingHorizontal: 4,
-    borderRadius: 16,
+    borderRadius: RADIUS.large,
   },
   studying: {
     backgroundColor: COLORS.primary,

@@ -1,5 +1,6 @@
 import { router, useLocalSearchParams } from 'expo-router';
 
+import { LoadingView } from '@/components/ui/LoadingView';
 import { Text } from '@/components/ui/Text';
 import { Button } from '@/components/ui/Button';
 import { useApiQuery } from '@/api';
@@ -17,7 +18,7 @@ export function RewardScreen() {
   const folders = useApiQuery((api) => api.listFolders(), []);
 
   if (session === undefined || result === undefined || folders === undefined) {
-    return null;
+    return <LoadingView />;
   }
   const folder = folders?.find((f) => f.id === session?.folder_id);
   if (!folder || !result) {

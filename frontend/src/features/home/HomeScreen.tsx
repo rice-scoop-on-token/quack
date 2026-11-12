@@ -1,6 +1,7 @@
 import { router } from 'expo-router';
 import { StyleSheet, View } from 'react-native';
 
+import { LoadingView } from '@/components/ui/LoadingView';
 import { Button } from '@/components/ui/Button';
 import { SPECIES } from '@/api/mock/data/species';
 import { useApiQuery } from '@/api';
@@ -20,7 +21,7 @@ export function HomeScreen() {
   const { folders, selected, select } = useSelectedFolder();
 
   if (folders === undefined) {
-    return null;
+    return <LoadingView />;
   }
   if (!selected) {
     return (

@@ -2,6 +2,9 @@ import { router, Stack } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { StyleSheet } from 'react-native';
 
+import { LoadingView } from '@/components/ui/LoadingView';
+import { EmptyState } from '@/components/ui/EmptyState';
+import { ScreenTitle } from '@/components/ui/ScreenTitle';
 import { Text } from '@/components/ui/Text';
 import { Button } from '@/components/ui/Button';
 import { useQuackApi } from '@/api';
@@ -10,6 +13,7 @@ import { BottomActionLayout } from '@/components/ui/BottomActionLayout';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { useSelectedFolder } from '@/features/folder/SelectedFolder';
 import { SubjectSelect } from '@/features/folder/SubjectSelect';
+import { FONT } from '@/theme/assetTokens';
 
 // 초 → HH:MM:SS
 function hms(total: number): string {
@@ -40,12 +44,12 @@ export function QuietStudyScreen() {
   }, [runningSince]);
 
   if (folders === undefined) {
-    return null;
+    return <LoadingView />;
   }
   if (!selected) {
     return (
       <BottomActionLayout actions={<Button variant="primary" title="과목 만들기" onPress={() => router.replace('/subjects/new')} />}>
-        <Text>공부 시간을 기록할 과목이 없어요. 과목을 먼저 만들어 주세요.</Text>
+        <EmptyState title="공부 시간을 기록할 과목이 없어요." message="과목을 먼저 만들어 주세요." />
       </BottomActionLayout>
     );
   }
@@ -105,6 +109,8 @@ export function QuietStudyScreen() {
     >
       <Stack.Screen options={started && !finished ? { headerBackVisible: false, gestureEnabled: false } : {}} />
 
+      <ScreenTitle title="조용히 공부하기" subtitle="선생님 없이 공부 시간만 재요." />
+
       <Text>과목</Text>
       {started ? (
         <Text>{selected.name}</Text>
@@ -116,15 +122,17 @@ export function QuietStudyScreen() {
         {hms(seconds)}
       </Text>
       {/* 안내 자리는 늘 한 줄을 잡아 둔다 */}
-      <Text accessibilityRole={saveFailed ? 'alert' : undefined}>
-        {saveFailed
-          ? '기록을 저장하지 못했어요. 다시 눌러 주세요.'
-          : !started
+      {saveFailed ? (
+        <EmptyState error title="기록을 저장하지 못했어요." message="다시 눌러 주세요." />
+      ) : (
+        <Text>
+          {!started
             ? '시작하면 공부 시간만 재요.'
             : running
               ? '조용히 공부하는 중이에요.'
               : '잠시 쉬는 중이에요. 쉬는 시간은 기록하지 않아요.'}
-      </Text>
+        </Text>
+      )}
 
       <ConfirmDialog
         visible={finished}
@@ -143,9 +151,8 @@ export function QuietStudyScreen() {
 
 const styles = StyleSheet.create({
   time: {
+    ...FONT.display,
     textAlign: 'center',
-    fontSize: 48,
-    fontWeight: '700',
     paddingVertical: 24,
   },
 });

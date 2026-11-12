@@ -2,6 +2,8 @@ import { router } from 'expo-router';
 import { useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 
+import { LoadingView } from '@/components/ui/LoadingView';
+import { ScreenTitle } from '@/components/ui/ScreenTitle';
 import { Text } from '@/components/ui/Text';
 import { COLORS, FEEDBACK, PAPER, SIZES } from '@/theme/assetTokens';
 import { Button } from '@/components/ui/Button';
@@ -24,7 +26,7 @@ export function CalendarScreen() {
   const [selected, setSelected] = useState<string | null>(dayKey(now));
 
   if (!sessions || !folders) {
-    return null;
+    return <LoadingView />;
   }
   // ?demo=records: 실제 기록에 지난 4주 mock 세션을 더한다. 오늘 기록과 과목 상세에는 섞지 않는다.
   const all = demo === 'records' ? [...sessions, ...demoRecordSessions(folders.map((f) => f.id), now)] : sessions;
@@ -53,6 +55,8 @@ export function CalendarScreen() {
         />
       }
     >
+      <ScreenTitle title="기록" subtitle="날짜를 눌러 그날의 공부를 돌아봐요." />
+
       <View style={styles.monthRow}>
         <Pressable
           style={({ pressed }) => [styles.arrow, pressed && styles.arrowPressed]}

@@ -2,6 +2,7 @@ import { router, useLocalSearchParams, usePreventRemove } from 'expo-router';
 import { useState } from 'react';
 import { Platform, StyleSheet, View } from 'react-native';
 
+import { LoadingView } from '@/components/ui/LoadingView';
 import { Button } from '@/components/ui/Button';
 import { useApiQuery, useQuackApi } from '@/api';
 import { useDemoVariant } from '@/api/mock/useDemoVariant';
@@ -48,7 +49,7 @@ export function TimerScreen() {
   });
 
   if (session === undefined || folders === undefined) {
-    return null;
+    return <LoadingView />;
   }
   if (!folder || !goal) {
     return <NoRecord message="진행 중인 공부가 없어요. 홈에서 다시 시작해 주세요." onHome={() => router.dismissTo('/home')} />;
@@ -160,13 +161,12 @@ const styles = StyleSheet.create({
   half: {
     flex: 1,
   },
-  // 경과 시간을 크게 보여 준다
+  // 경과 시간만 가운데에 크게 보여 주고, 과목명과 보조 문구는 왼쪽에 둔다
   time: {
-    fontSize: 52,
-    fontWeight: FONT.title.fontWeight,
+    ...FONT.display,
+    textAlign: 'center',
   },
   top: {
-    alignItems: 'center',
     gap: 8,
   },
   sub: {

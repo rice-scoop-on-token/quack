@@ -1,6 +1,6 @@
 import { useState, type ReactNode } from 'react';
 
-import { Text } from '@/components/ui/Text';
+import { EmptyState } from '@/components/ui/EmptyState';
 import { Button } from '@/components/ui/Button';
 
 const PAGE = 5;
@@ -16,7 +16,7 @@ export function MoreList({ items, empty }: Props) {
   const [shown, setShown] = useState(PAGE);
 
   if (items.length === 0) {
-    return <Text>{empty}</Text>;
+    return <EmptyState title={empty} />;
   }
   return (
     <>

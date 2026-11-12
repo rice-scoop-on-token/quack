@@ -2,9 +2,10 @@ import { router, Stack, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
 import { StyleSheet } from 'react-native';
 
+import { LoadingView } from '@/components/ui/LoadingView';
 import { Button } from '@/components/ui/Button';
 import { BottomActionLayout } from '@/components/ui/BottomActionLayout';
-import { Text } from '@/components/ui/Text';
+import { EmptyState } from '@/components/ui/EmptyState';
 import { useSelectedFolder } from '@/features/folder/SelectedFolder';
 import {
   InfoPanel,
@@ -15,7 +16,7 @@ import {
 } from '@/features/folder/SubjectTabPanels';
 import { PANEL_MARGIN, SubjectTabBar } from '@/features/folder/SubjectTabBar';
 import { TAB_COLORS, type SubjectTabId } from '@/features/folder/subjectTabColors';
-import { COLORS, SIZES } from '@/theme/assetTokens';
+import { COLORS, RADIUS, SIZES } from '@/theme/assetTokens';
 
 // L-02 과목 상세. 세로 탭 라벨과 하단 버튼은 고정이고 내용(종이)만 스크롤된다.
 export function SubjectDetailScreen() {
@@ -24,7 +25,7 @@ export function SubjectDetailScreen() {
   const [tab, setTab] = useState<SubjectTabId>('info');
 
   if (!folders) {
-    return null;
+    return <LoadingView />;
   }
   const folder = folders.find((f) => f.id === id);
   if (!folder) {
@@ -35,7 +36,7 @@ export function SubjectDetailScreen() {
         }
       >
         {/* 주소로 바로 들어오거나 새로고침하면 과목이 없을 수 있다 */}
-        <Text>과목을 찾을 수 없어요.</Text>
+        <EmptyState error title="과목을 찾을 수 없어요." />
       </BottomActionLayout>
     );
   }
@@ -79,7 +80,7 @@ const styles = StyleSheet.create({
     marginBottom: 8,
     borderWidth: 2,
     borderColor: COLORS.outline,
-    borderTopLeftRadius: 16,
-    borderBottomLeftRadius: 16,
+    borderTopLeftRadius: RADIUS.large,
+    borderBottomLeftRadius: RADIUS.large,
   },
 });

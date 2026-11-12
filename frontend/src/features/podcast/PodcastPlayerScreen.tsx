@@ -2,6 +2,8 @@ import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 
+import { EmptyState } from '@/components/ui/EmptyState';
+import { LoadingView } from '@/components/ui/LoadingView';
 import { Text } from '@/components/ui/Text';
 import { COLORS, PAPER } from '@/theme/assetTokens';
 import { Button } from '@/components/ui/Button';
@@ -57,11 +59,11 @@ export function PodcastPlayerScreen() {
   useFocusEffect(useCallback(() => () => setPlaying(false), []));
 
   if (!podcast || !folders) {
-    return podcast === null ? <Text>팟캐스트를 찾을 수 없어요.</Text> : null;
+    return podcast === null ? <EmptyState error title="팟캐스트를 찾을 수 없어요." /> : <LoadingView />;
   }
   const folder = folders.find((f) => f.id === podcast.folder_id);
   if (!folder) {
-    return <Text>과목을 찾을 수 없어요.</Text>;
+    return <EmptyState error title="과목을 찾을 수 없어요." />;
   }
 
   const stage = xp === undefined ? undefined : growthFromXp(xp).stage;

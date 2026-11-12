@@ -3,6 +3,7 @@ import { router, useFocusEffect } from 'expo-router';
 import { useCallback, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 
+import { LoadingView } from '@/components/ui/LoadingView';
 import { Text } from '@/components/ui/Text';
 import { COLORS } from '@/theme/assetTokens';
 import { Button } from '@/components/ui/Button';
@@ -74,7 +75,7 @@ export function RoomScreen() {
   );
 
   if (!friends) {
-    return null;
+    return <LoadingView />;
   }
 
   return (

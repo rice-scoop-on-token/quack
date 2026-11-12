@@ -1,8 +1,10 @@
 import type { Folder } from '@quack/shared';
 import { router } from 'expo-router';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { Pressable, StyleSheet } from 'react-native';
 
 import { useApiQuery } from '@/api';
+import { Card } from '@/components/ui/Card';
+import { EmptyState } from '@/components/ui/EmptyState';
 import { Text } from '@/components/ui/Text';
 import { CharacterGrowth } from '@/features/character/CharacterGrowth';
 import { growthFromXp, STAGE_LABEL } from '@/features/character/growth';
@@ -10,7 +12,7 @@ import { SCREEN_ACTIONS } from '@/features/character/screenActions';
 import { useCharacterXp } from '@/features/character/useCharacterXp';
 import { TeacherSummary } from '@/features/character/TeacherSummary';
 import { understoodConcepts } from '@/features/review/report';
-import { COLORS, hardShadow, SIZES } from '@/theme/assetTokens';
+import { PAPER } from '@/theme/assetTokens';
 
 const STATUS_LABEL = {
   uploaded: '올리는 중',
@@ -47,13 +49,13 @@ export function MaterialsPanel({ folder }: Props) {
   }
   const mine = materials.filter((m) => m.folder_id === folder.id);
   return mine.length === 0 ? (
-    <Text>등록된 자료가 없어요. 자료 없이도 설명하며 공부할 수 있어요.</Text>
+    <EmptyState title="등록된 자료가 없어요." message="자료 없이도 설명하며 공부할 수 있어요." />
   ) : (
     mine.map((m) => (
-      <View key={m.id} style={styles.card}>
+      <Card key={m.id} style={styles.card}>
         <Text>{m.title}</Text>
         <Text>{STATUS_LABEL[m.status]}</Text>
-      </View>
+      </Card>
     ))
   );
 }
@@ -69,7 +71,7 @@ export function StudyPanel({ folder }: Props) {
     (s) => s.ended_at ?? '',
   );
   return mine.length === 0 ? (
-    <Text>아직 학습 기록이 없어요.</Text>
+    <EmptyState title="아직 학습 기록이 없어요." message="공부를 마치면 여기에 쌓여요." />
   ) : (
     // 누르면 설명 내용과 퀴즈 다시 풀기
     mine.map((s) => (
@@ -102,19 +104,19 @@ export function QuizPanel({ folder }: Props) {
     (q) => q.answered_at,
   );
   return mine.length === 0 ? (
-    <Text>아직 푼 퀴즈가 없어요. 홈의 오늘의 퀴즈를 풀어 보세요.</Text>
+    <EmptyState title="아직 푼 퀴즈가 없어요." message="홈의 오늘의 퀴즈를 풀어 보세요." />
   ) : (
     <>
       <Text>
         총 {mine.length}회 · 정답 {mine.filter((q) => q.correct).length}회
       </Text>
       {mine.map((q) => (
-        <View key={q.id} style={styles.card}>
+        <Card key={q.id} style={styles.card}>
           <Text>{q.correct ? '정답' : '오답'}</Text>
           <Text>
             {SOURCE_LABEL[q.source]} 퀴즈 · {new Date(q.answered_at).toLocaleString()}
           </Text>
-        </View>
+        </Card>
       ))}
     </>
   );
@@ -128,7 +130,7 @@ export function PodcastPanel({ folder }: Props) {
   }
   const mine = podcasts.filter((p) => p.folder_id === folder.id).reverse();
   return mine.length === 0 ? (
-    <Text>아직 만든 팟캐스트가 없어요. 홈의 AI 팟캐스트로 만들어 보세요.</Text>
+    <EmptyState title="아직 만든 팟캐스트가 없어요." message="홈의 AI 팟캐스트로 만들어 보세요." />
   ) : (
     mine.map((p) => (
       <Pressable
@@ -146,15 +148,7 @@ export function PodcastPanel({ folder }: Props) {
 
 const styles = StyleSheet.create({
   card: {
+    ...PAPER.card,
     gap: 4,
-    paddingVertical: SIZES.card.paddingVertical,
-    paddingHorizontal: SIZES.card.paddingHorizontal,
-    borderWidth: SIZES.card.border,
-    borderColor: COLORS.outline,
-    borderRadius: SIZES.card.radius,
-    backgroundColor: COLORS.card,
-    // 그림자 자리를 아래에 비워 둔다
-    marginBottom: SIZES.card.shadow,
-    ...hardShadow(SIZES.card.shadow),
   },
 });

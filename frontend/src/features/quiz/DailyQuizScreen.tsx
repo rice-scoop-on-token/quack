@@ -2,6 +2,7 @@ import { router } from 'expo-router';
 import { useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 
+import { LoadingView } from '@/components/ui/LoadingView';
 import { Text } from '@/components/ui/Text';
 import { COLORS, FEEDBACK, PAPER } from '@/theme/assetTokens';
 import { Button } from '@/components/ui/Button';
@@ -27,7 +28,7 @@ export function DailyQuizScreen() {
   const [submitting, setSubmitting] = useState(false);
 
   if (!quiz) {
-    return null;
+    return <LoadingView />;
   }
   const stage = xp === undefined ? undefined : growthFromXp(xp).stage;
   const action = !result

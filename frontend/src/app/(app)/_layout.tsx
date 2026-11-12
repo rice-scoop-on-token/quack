@@ -1,7 +1,7 @@
 import { Redirect, Stack } from 'expo-router';
 
 import { useAccessState } from '@/features/auth/useAccessState';
-import { COLORS } from '@/theme/assetTokens';
+import { COLORS, FONT } from '@/theme/assetTokens';
 
 const AFTER_SESSION = { headerBackVisible: false, gestureEnabled: false };
 
@@ -27,7 +27,9 @@ export default function AppLayout() {
         contentStyle: { backgroundColor: COLORS.screen },
         headerStyle: { backgroundColor: COLORS.screen },
         headerTintColor: COLORS.text,
-        headerTitleStyle: { color: COLORS.text },
+        // 한계: 글꼴 파일이 들어오기 전이라 fontFamily는 지정하지 못한다. 크기·굵기·색만 고정한다.
+        headerTitleStyle: { color: COLORS.text, ...FONT.heading },
+        headerTitleAlign: 'left',
         headerShadowVisible: false,
       }}
     >

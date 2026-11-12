@@ -1,6 +1,7 @@
 import { router, useLocalSearchParams } from 'expo-router';
 import { StyleSheet, View } from 'react-native';
 
+import { LoadingView } from '@/components/ui/LoadingView';
 import { Text } from '@/components/ui/Text';
 import { Button } from '@/components/ui/Button';
 import { useApiQuery } from '@/api';
@@ -21,7 +22,7 @@ export function GrowthScreen() {
   const goHome = () => leave(() => router.dismissTo('/home'));
 
   if (session === undefined || result === undefined || folders === undefined) {
-    return null;
+    return <LoadingView />;
   }
   const folder = folders?.find((f) => f.id === session?.folder_id);
   const change = result ? stageChange(result.rewards) : null;

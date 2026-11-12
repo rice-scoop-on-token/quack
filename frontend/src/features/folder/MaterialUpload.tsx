@@ -2,6 +2,8 @@ import type { Folder, Material } from '@quack/shared';
 import { router } from 'expo-router';
 import { ActivityIndicator, Pressable, StyleSheet, View } from 'react-native';
 
+import { EmptyState } from '@/components/ui/EmptyState';
+import { ScreenTitle } from '@/components/ui/ScreenTitle';
 import { Text } from '@/components/ui/Text';
 import { COLORS, PAPER } from '@/theme/assetTokens';
 import { FolderCard } from '@/components/ui/FolderCard';
@@ -51,8 +53,7 @@ type BodyProps = {
 export function MaterialUploadBody({ state, onSkip }: BodyProps) {
   return (
     <View style={styles.container}>
-      <Text>공부할 자료가 있나요?</Text>
-      <Text>자료를 더하면 배운 내용을 바탕으로 질문해요. 지금은 건너뛰어도 괜찮아요.</Text>
+      <ScreenTitle title="공부할 자료가 있나요?" subtitle="자료를 더하면 배운 내용을 바탕으로 질문해요. 지금은 건너뛰어도 괜찮아요." />
 
       <View style={styles.card}>
         <Text>{state.folder.name}</Text>
@@ -77,7 +78,7 @@ export function MaterialUploadBody({ state, onSkip }: BodyProps) {
 
       {state.failed ? (
         <FolderCard>
-          <Text accessibilityRole="alert">자료를 읽지 못했어요. 텍스트가 있는 파일로 다시 시도해 주세요.</Text>
+          <EmptyState error title="자료를 읽지 못했어요." message="텍스트가 있는 파일로 다시 시도해 주세요." />
         </FolderCard>
       ) : null}
 

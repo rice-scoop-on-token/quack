@@ -1,5 +1,6 @@
 import { router, useLocalSearchParams } from 'expo-router';
 
+import { LoadingView } from '@/components/ui/LoadingView';
 import { Text } from '@/components/ui/Text';
 import { Button } from '@/components/ui/Button';
 import { BottomActionLayout } from '@/components/ui/BottomActionLayout';
@@ -15,7 +16,7 @@ export function ReportScreen() {
   const result = useSessionReport(sessionId);
 
   if (result === undefined) {
-    return null;
+    return <LoadingView />;
   }
   if (!result) {
     return <NoRecord message="리포트를 만들 공부 기록이 없어요." onHome={() => leave(() => router.dismissTo('/home'))} />;
