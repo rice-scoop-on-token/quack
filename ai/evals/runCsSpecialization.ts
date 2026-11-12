@@ -7,7 +7,14 @@ const maxOutputTokens = 4096;
 const timeoutMs = 30_000;
 const repetitions = 3;
 const concurrency = 4;
-const maxCalls = 36;
+const architecture = Deno.args[0] === "--architecture";
+const [mode, outputPath, ...extraArgs] = architecture ? Deno.args.slice(1) : Deno.args;
+const live = mode === "--live";
+if (extraArgs.length || (live ? !outputPath : mode !== "--plan" || outputPath)) {
+  throw new Error("사용법: [--architecture] --plan 또는 [--architecture] --live <새 결과 JSONL 경로>");
+}
+const inputPath = architecture ? "ai/evals/inputs/csArchitectureCases.json" : "ai/evals/inputs/csSpecializationBatch.json";
+const maxCalls = architecture ? 18 : 36;
 const extraInstruction = "알고리즘의 종료 조건이나 경계 조건에서 오류가 드러나면, 학습자의 규칙을 적용했을 때 남은 상태를 짧게 보여주고, 그 상태에서 다음에 무엇을 확인할지 학습자가 자기 말로 설명할 수 있게 질문 하나를 한다.";
 const insertBefore = "\ncorrect: 개념·접근은 충분하고";
 const specializedPrompt = analyzeExplanationPrompt.replace(
@@ -22,7 +29,7 @@ type CaseSource = { id: string; inputFile: string } | {
   learning_goal: string;
   user_message: string;
 };
-const sources: CaseSource[] = JSON.parse(await Deno.readTextFile("ai/evals/inputs/csSpecializationBatch.json"));
+const sources: CaseSource[] = JSON.parse(await Deno.readTextFile(inputPath));
 const cases = await Promise.all(sources.map(async (source) => ({
   id: source.id,
   input: "inputFile" in source ? JSON.parse(await Deno.readTextFile(source.inputFile)) : {
@@ -45,11 +52,6 @@ if (jobs.length !== maxCalls || new Set(cases.map((item) => item.id)).size !== c
   throw new Error("사례 ID와 실행 횟수를 확인해 주세요.");
 }
 
-const [mode, outputPath, ...extraArgs] = Deno.args;
-const live = mode === "--live";
-if (extraArgs.length || (live ? !outputPath : mode !== "--plan" || outputPath)) {
-  throw new Error("사용법: --plan 또는 --live <새 결과 JSONL 경로>");
-}
 const apiKey = live ? Deno.env.get("OPENAI_API_KEY")?.trim() : "offline-plan-key";
 if (!apiKey) throw new Error("평가용 API 키가 설정되지 않았습니다.");
 if (live) Deno.openSync(outputPath, { write: true, createNew: true }).close();
