@@ -1,8 +1,8 @@
 import type { Folder } from '@quack/shared';
 import { router, useLocalSearchParams } from 'expo-router';
-import { Text } from 'react-native';
-
+import { LoadingView } from '@/components/ui/LoadingView';
 import { Button } from '@/components/ui/Button';
+import { EmptyState } from '@/components/ui/EmptyState';
 import { useApiQuery, useQuackApi } from '@/api';
 import { MaterialUploadActions, MaterialUploadBody, useMaterialUpload } from '@/features/folder/MaterialUpload';
 import { OnboardingStepLayout } from '@/features/onboarding/OnboardingStepLayout';
@@ -12,7 +12,7 @@ export function MaterialsStepScreen() {
   const { folderId } = useLocalSearchParams<{ folderId?: string }>();
   const folders = useApiQuery((api) => api.listFolders(), []);
   if (folders === undefined) {
-    return null;
+    return <LoadingView />;
   }
   const folder = folders?.find((f) => f.id === folderId);
 
@@ -25,7 +25,7 @@ export function MaterialsStepScreen() {
         }
       >
         {/* 주소로 바로 들어오거나 새로고침하면 과목이 없을 수 있다 */}
-        <Text>자료를 넣을 과목이 없어요. 과목을 먼저 만들어 주세요.</Text>
+        <EmptyState error title="자료를 넣을 과목이 없어요." message="과목을 먼저 만들어 주세요." />
       </OnboardingStepLayout>
     );
   }
