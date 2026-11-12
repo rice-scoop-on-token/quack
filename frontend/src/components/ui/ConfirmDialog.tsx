@@ -1,8 +1,9 @@
 import { Modal, StyleSheet, View } from 'react-native';
 
 import { Button } from '@/components/ui/Button';
+import { Card } from '@/components/ui/Card';
 import { Text } from '@/components/ui/Text';
-import { COLORS, SIZES } from '@/theme/assetTokens';
+import { FONT } from '@/theme/assetTokens';
 
 type Props = {
   visible: boolean;
@@ -19,15 +20,15 @@ export function ConfirmDialog({ visible, title, message, confirmLabel, onConfirm
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={onCancel ?? onConfirm}>
       <View style={styles.backdrop}>
-        <View style={styles.dialog} accessibilityRole="alert">
-          <Text>{title}</Text>
+        <Card style={styles.dialog} accessibilityRole="alert">
+          <Text style={styles.title}>{title}</Text>
           <Text>{message}</Text>
 
           <View style={styles.actions}>
             {onCancel ? <Button style={styles.half} title="취소" onPress={onCancel} /> : null}
             <Button variant="primary" style={styles.half} title={confirmLabel} onPress={onConfirm} />
           </View>
-        </View>
+        </Card>
       </View>
     </Modal>
   );
@@ -38,18 +39,19 @@ const styles = StyleSheet.create({
   half: {
     flex: 1,
   },
+  // 뒤 화면이 비쳐 글자가 겹쳐 보이지 않게 어둡게 덮는다(갈색 글자색 #3B2A1A에 투명도)
   backdrop: {
     flex: 1,
     justifyContent: 'center',
-    padding: 24,
+    padding: 16,
+    backgroundColor: 'rgba(59, 42, 26, 0.55)',
   },
   dialog: {
     gap: 12,
-    padding: 24,
-    borderWidth: SIZES.card.border,
-    borderColor: COLORS.outline,
-    borderRadius: SIZES.card.radius,
-    backgroundColor: COLORS.card,
+    padding: 20,
+  },
+  title: {
+    ...FONT.heading,
   },
   actions: {
     flexDirection: 'row',

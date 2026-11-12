@@ -14,19 +14,27 @@ export const COLORS = {
   disabledBg: '#E9DFC6',
 } as const;
 
+// 모서리 둥글기는 이 3단계만 쓴다. 작은 버튼·태그 10, 버튼·입력·고르는 칸 12, 카드·패널 14.
+// 예외(의도): 체크칸 6, 진행 막대 7(높이의 절반), FolderCard 본체 6(에셋의 계단식 모서리에 맞춤).
+export const RADIUS = { small: 10, medium: 12, large: 14 } as const;
+
 export const SIZES = {
-  button: { height: 52, radius: 12, border: 2, shadow: 3 },
-  buttonSmall: { height: 40, radius: 10, border: 2, shadow: 2 },
-  card: { radius: 14, border: 2, paddingVertical: 14, paddingHorizontal: 16, shadow: 3 },
-  row: { height: 56, radius: 12, border: 2, gap: 8 },
+  button: { height: 52, radius: RADIUS.medium, border: 2, shadow: 3 },
+  buttonSmall: { height: 40, radius: RADIUS.small, border: 2, shadow: 2 },
+  card: { radius: RADIUS.large, border: 2, paddingVertical: 14, paddingHorizontal: 16, shadow: 3 },
+  row: { height: 56, radius: RADIUS.medium, border: 2, gap: 8 },
   gutter: 16,
   sectionGap: 24,
   cardGap: 16,
   touchMin: 44,
 } as const;
 
+// 한계: 글꼴 파일(Galmuri11, Pretendard)이 아직 frontend/assets/fonts/ 에 없어서 fontFamily 토큰과 불러오기는 만들지 않았다.
+// 파일이 들어오면 루트 레이아웃에서 useFonts로 불러오고, ui/Text가 굵기별로 fontFamily를 붙이면 된다.
 export const FONT = {
+  display: { fontSize: 52, fontWeight: '700' },
   title: { fontSize: 20, fontWeight: '700' },
+  heading: { fontSize: 17, fontWeight: '700' },
   button: { fontSize: 16, fontWeight: '700' },
   body: { fontSize: 15, fontWeight: '400' },
   caption: { fontSize: 12, fontWeight: '500' },

@@ -2,6 +2,9 @@ import { useEffect, useState, type ReactNode } from 'react';
 import { Keyboard, Platform, ScrollView, StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { SIZES } from '@/theme/assetTokens';
+
+// 위아래 안쪽 여백. 좌우 여백은 gutter(기본 16)가 정한다.
 const CONTENT_PADDING = 24;
 
 type Props = {
@@ -12,7 +15,7 @@ type Props = {
   centered?: boolean;
   // 하단 탭 안의 화면이면 true. 탭 바가 홈 바 영역을 맡으므로 그만큼 띄우지 않는다.
   inTab?: boolean;
-  // 좌우 여백. 기본 24이고, 에셋을 적용한 화면(홈, 공부, 과목 상세, 탭 화면)은 16을 넘긴다.
+  // 좌우 여백. 모든 화면이 기본 16을 쓴다. 다르게 해야 하는 화면만 값을 넘긴다.
   gutter?: number;
   // 스크롤 내용 맨 위에 여백 없이 화면 폭 전체로 그릴 영역(장면 이미지 등)
   header?: ReactNode;
@@ -28,7 +31,7 @@ export function BottomActionLayout({
   actions,
   centered = false,
   inTab = false,
-  gutter = CONTENT_PADDING,
+  gutter = SIZES.gutter,
   header,
   side,
   scrollStyle,
