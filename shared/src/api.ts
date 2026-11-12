@@ -33,6 +33,23 @@ export const transcribeResponseSchema = z.object({
 });
 export type TranscribeResponse = z.infer<typeof transcribeResponseSchema>;
 
+// POST /sessions/start
+export const startSessionRequestSchema = z.strictObject({
+  folder_id: z.uuid(),
+  goal: z.string().trim().min(1).max(140),
+  request_id: z.uuid(),
+});
+export type StartSessionRequest = z.infer<typeof startSessionRequestSchema>;
+
+const studyGoalGuidance = z.string().trim().min(1);
+
+export const startSessionResponseSchema = z.discriminatedUnion('status', [
+  z.strictObject({ status: z.literal('in_scope'), session: sessionSchema }),
+  z.strictObject({ status: z.literal('out_of_scope'), message: studyGoalGuidance }),
+  z.strictObject({ status: z.literal('needs_clarification'), message: studyGoalGuidance }),
+]);
+export type StartSessionResponse = z.infer<typeof startSessionResponseSchema>;
+
 // POST /sessions/:id/turns
 
 export const createTurnRequestSchema = explanationTurnSchema.pick({
