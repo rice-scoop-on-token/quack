@@ -4,6 +4,7 @@ import { Pressable, StyleSheet, View } from 'react-native';
 
 import { LoadingView } from '@/components/ui/LoadingView';
 import { EmptyState } from '@/components/ui/EmptyState';
+import { Icon } from '@/components/ui/Icon';
 import { Text } from '@/components/ui/Text';
 import { COLORS, PAPER } from '@/theme/assetTokens';
 import { FolderCard } from '@/components/ui/FolderCard';
@@ -115,7 +116,7 @@ export function NewPodcastScreen() {
             <FolderCard>
               <View style={styles.materialRow}>
                 <View style={[styles.checkbox, materialIds.includes(m.id) && styles.checkboxOn]}>
-                  <Text style={styles.check}>{materialIds.includes(m.id) ? '✓' : ''}</Text>
+                  {materialIds.includes(m.id) ? <Icon name="check" /> : null}
                 </View>
                 <Text style={styles.materialTitle}>{m.title}</Text>
               </View>
@@ -171,7 +172,7 @@ const styles = StyleSheet.create({
     flex: 1,
     fontWeight: '700',
   },
-  // 체크 칸은 색만이 아니라 ✓ 표시로도 고른 것을 알린다
+  // 체크 칸은 색만이 아니라 체크 아이콘으로도 고른 것을 알린다
   checkbox: {
     width: 28,
     height: 28,
@@ -184,9 +185,5 @@ const styles = StyleSheet.create({
   },
   checkboxOn: {
     backgroundColor: COLORS.primary,
-  },
-  check: {
-    fontWeight: '700',
-    lineHeight: 20,
   },
 });

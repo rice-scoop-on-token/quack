@@ -1,21 +1,19 @@
-import { Image, Pressable, StyleSheet, View, type ImageSourcePropType } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
 
+import { Icon } from '@/components/ui/Icon';
+import type { IconName } from '@/features/navigation/icons';
 import { COLORS, hardShadow, SIZES } from '@/theme/assetTokens';
 
 type Props = {
-  // 투명 배경 도트 이미지. 색은 tint로 칠한다.
-  icon: ImageSourcePropType;
+  icon: IconName;
   // 아이콘만 있어서 글자가 없으므로 스크린 리더용 이름이 꼭 필요하다
   label: string;
   onPress: () => void;
   disabled?: boolean;
-  tint?: string;
 };
 
-const ICON_SIZE = 24;
-
 // 44×44 아이콘 버튼. 테두리·하드 그림자·눌림은 Button과 같다(그림자 자리를 아래에 늘 비워 둔다).
-export function IconButton({ icon, label, onPress, disabled = false, tint = COLORS.text }: Props) {
+export function IconButton({ icon, label, onPress, disabled = false }: Props) {
   const { shadow, border, radius } = SIZES.button;
 
   return (
@@ -35,7 +33,8 @@ export function IconButton({ icon, label, onPress, disabled = false, tint = COLO
             disabled ? styles.disabled : [{ backgroundColor: COLORS.card }, pressed ? { transform: [{ translateY: shadow }] } : hardShadow(shadow)],
           ]}
         >
-          <Image source={icon} style={{ width: ICON_SIZE, height: ICON_SIZE, tintColor: disabled ? COLORS.textSub : tint }} />
+          {/* 비활성은 불투명도 대신 아이콘 색을 바꿔 알린다 */}
+          <Icon name={icon} tint={disabled ? COLORS.textSub : COLORS.text} />
         </View>
       )}
     </Pressable>

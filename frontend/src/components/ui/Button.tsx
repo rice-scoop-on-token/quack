@@ -1,6 +1,8 @@
 import { Pressable, StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
 
+import { Icon } from '@/components/ui/Icon';
 import { Text } from '@/components/ui/Text';
+import type { IconName } from '@/features/navigation/icons';
 import { COLORS, FONT, hardShadow, SIZES } from '@/theme/assetTokens';
 
 type Props = {
@@ -9,13 +11,15 @@ type Props = {
   disabled?: boolean;
   // primary: 화면에서 흐름을 앞으로 보내는 주요 동작 하나에만 쓴다. small: 목록·카드 안의 작은 버튼.
   variant?: 'primary' | 'secondary' | 'small';
+  // 글자 앞에 놓는 아이콘(선택)
+  icon?: IconName;
   // 나란히 놓을 때 폭을 나누는 용도(flex 등)
   style?: StyleProp<ViewStyle>;
 };
 
 // 앱 공용 버튼. React Native 기본 Button 대신 쓴다.
 // 그림자 높이만큼 아래 자리를 늘 비워 두어서, 눌렸을 때나 비활성일 때도 주변이 밀리지 않는다.
-export function Button({ title, onPress, disabled = false, variant = 'secondary', style }: Props) {
+export function Button({ title, onPress, icon, disabled = false, variant = 'secondary', style }: Props) {
   const dims = variant === 'small' ? SIZES.buttonSmall : SIZES.button;
 
   return (
@@ -40,6 +44,7 @@ export function Button({ title, onPress, disabled = false, variant = 'secondary'
                 ],
           ]}
         >
+          {icon ? <Icon name={icon} tint={disabled ? COLORS.textSub : COLORS.text} /> : null}
           <Text style={[styles.label, variant === 'small' && styles.smallLabel, disabled && styles.disabledLabel]}>
             {title}
           </Text>
@@ -51,8 +56,10 @@ export function Button({ title, onPress, disabled = false, variant = 'secondary'
 
 const styles = StyleSheet.create({
   base: {
+    flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
+    gap: 8,
     paddingHorizontal: 12,
     borderColor: COLORS.outline,
   },

@@ -2,6 +2,7 @@ import type { Folder } from '@quack/shared';
 import { useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 
+import { Icon } from '@/components/ui/Icon';
 import { Text } from '@/components/ui/Text';
 import { COLORS, SIZES } from '@/theme/assetTokens';
 
@@ -31,7 +32,7 @@ export function SubjectSelect({ folders, value, onChange }: Props) {
         accessibilityState={{ expanded: open }}
       >
         <Text>{value.name}</Text>
-        <Text>{open ? '▲' : '▼'}</Text>
+        <Icon name={open ? 'chevron-up' : 'chevron-down'} />
       </Pressable>
 
       {open ? (

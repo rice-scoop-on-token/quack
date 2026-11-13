@@ -2,6 +2,7 @@ import { router, useLocalSearchParams } from 'expo-router';
 import { StyleSheet, View } from 'react-native';
 
 import { LoadingView } from '@/components/ui/LoadingView';
+import { Icon } from '@/components/ui/Icon';
 import { Text } from '@/components/ui/Text';
 import { Button } from '@/components/ui/Button';
 import { useApiQuery } from '@/api';
@@ -45,9 +46,16 @@ export function GrowthScreen() {
         <CharacterBox speciesId={folder.species_id} stage={change.to} size={180} action={SCREEN_ACTIONS.growth} />
       </View>
 
-      <Text style={styles.center}>
-        {STAGE_LABEL[change.from]} → {STAGE_LABEL[change.to]}
-      </Text>
+      {/* 성장 축하 화면은 가운데 정렬을 유지한다 */}
+      <View
+        style={styles.stage}
+        accessible
+        accessibilityLabel={`${STAGE_LABEL[change.from]}에서 ${STAGE_LABEL[change.to]}`}
+      >
+        <Text>{STAGE_LABEL[change.from]}</Text>
+        <Icon name="arrow-right" />
+        <Text>{STAGE_LABEL[change.to]}</Text>
+      </View>
       {change.to === 'adult' ? <Text style={styles.center}>다 자랐어요! 앞으로도 함께 공부해요.</Text> : null}
     </BottomActionLayout>
   );
@@ -59,5 +67,11 @@ const styles = StyleSheet.create({
   },
   center: {
     textAlign: 'center',
+  },
+  stage: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
   },
 });

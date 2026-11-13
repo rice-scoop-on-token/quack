@@ -1,12 +1,13 @@
 import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 
 import { EmptyState } from '@/components/ui/EmptyState';
 import { LoadingView } from '@/components/ui/LoadingView';
 import { Text } from '@/components/ui/Text';
-import { COLORS, PAPER } from '@/theme/assetTokens';
+import { COLORS, FONT, PAPER } from '@/theme/assetTokens';
 import { Button } from '@/components/ui/Button';
+import { IconButton } from '@/components/ui/IconButton';
 import { useApiQuery } from '@/api';
 import { BottomActionLayout } from '@/components/ui/BottomActionLayout';
 import { CharacterBox } from '@/components/ui/CharacterBox';
@@ -77,7 +78,12 @@ export function PodcastPlayerScreen() {
         finished ? (
           <Button variant="primary" title="홈으로" onPress={() => router.dismissTo('/home')} />
         ) : (
-          <Button variant="primary" title={playing ? '일시정지' : '재생'} onPress={() => setPlaying((p) => !p)} />
+          <Button
+            variant="primary"
+            icon={playing ? 'pause' : 'play'}
+            title={playing ? '일시정지' : '재생'}
+            onPress={() => setPlaying((p) => !p)}
+          />
         )
       }
     >
@@ -99,16 +105,20 @@ export function PodcastPlayerScreen() {
         <Text>{clock(total)}</Text>
       </View>
 
-      <View style={styles.row}>
-        <Pressable style={styles.control} onPress={() => seek(-SKIP_SECONDS)} accessibilityRole="button">
-          <Text>-15초</Text>
-        </Pressable>
-        <Pressable style={styles.control} onPress={nextSpeed} accessibilityRole="button">
-          <Text>{speed}×</Text>
-        </Pressable>
-        <Pressable style={styles.control} onPress={() => seek(SKIP_SECONDS)} accessibilityRole="button">
-          <Text>+15초</Text>
-        </Pressable>
+      <View style={styles.controls}>
+        <View style={styles.control}>
+          <IconButton icon="rewind-15" label="15초 뒤로" onPress={() => seek(-SKIP_SECONDS)} />
+          <Text style={styles.caption}>15초 뒤로</Text>
+        </View>
+        <View style={styles.control}>
+          {/* 속도는 숫자가 곧 뜻이라 아이콘 없이 글자로 둔다 */}
+          <Button variant="small" title={`${speed}×`} onPress={nextSpeed} style={styles.speed} />
+          <Text style={styles.caption}>속도</Text>
+        </View>
+        <View style={styles.control}>
+          <IconButton icon="forward-15" label="15초 앞으로" onPress={() => seek(SKIP_SECONDS)} />
+          <Text style={styles.caption}>15초 앞으로</Text>
+        </View>
       </View>
 
       {/* 대화 문구와 완료 결과는 같은 자리를 쓴다 */}
@@ -149,10 +159,24 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     gap: 8,
   },
+  controls: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    alignItems: 'flex-start',
+  },
   control: {
-    ...PAPER.option,
-    flex: 1,
     alignItems: 'center',
+    gap: 4,
+  },
+  // 속도 버튼 높이(40)를 아이콘 버튼 몸통(44)에 맞춘다
+  speed: {
+    alignSelf: 'center',
+    minWidth: 64,
+    marginTop: 2,
+  },
+  caption: {
+    ...FONT.caption,
+    color: COLORS.textSub,
   },
   // 문구·결과가 바뀌어도 아래가 밀리지 않도록 최소 높이를 잡는다
   panel: {

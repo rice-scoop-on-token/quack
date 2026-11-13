@@ -4,6 +4,7 @@ import { useCallback, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 
 import { LoadingView } from '@/components/ui/LoadingView';
+import { Icon } from '@/components/ui/Icon';
 import { Text } from '@/components/ui/Text';
 import { COLORS } from '@/theme/assetTokens';
 import { Button } from '@/components/ui/Button';
@@ -83,6 +84,7 @@ export function RoomScreen() {
       actions={
         <>
           <Button variant="primary"
+            icon={micOn ? 'mic-on' : 'mic-off'}
             title={listenOnly ? '듣기 모드 (마이크 권한 꺼짐)' : micOn ? '마이크 끄기' : '마이크 켜기'}
             disabled={listenOnly}
             onPress={() => setMicOn((on) => !on)}
@@ -108,7 +110,7 @@ export function RoomScreen() {
             </View>
             <View style={styles.nameRow}>
               <Text numberOfLines={1}>{p.name}</Text>
-              {p.micOn ? null : <Text style={styles.off}>🔇</Text>}
+              <Icon name={p.micOn ? 'mic-on' : 'mic-off'} tint={p.micOn ? COLORS.text : COLORS.textSub} />
             </View>
           </View>
         ))}
@@ -151,9 +153,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    height: 20,
-  },
-  off: {
-    fontSize: 12,
+    height: 24,
   },
 });

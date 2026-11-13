@@ -29,7 +29,8 @@ export function SubjectListScreen() {
       gutter={SIZES.gutter}
       actions={
         <Button variant="primary"
-          title={folders.length === 0 ? '첫 과목 만들기' : '+ 과목 추가'}
+          icon={folders.length === 0 ? undefined : 'plus'}
+          title={folders.length === 0 ? '첫 과목 만들기' : '과목 추가'}
           onPress={() => router.push('/subjects/new')}
         />
       }

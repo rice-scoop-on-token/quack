@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 
 import { LoadingView } from '@/components/ui/LoadingView';
+import { Icon } from '@/components/ui/Icon';
 import { Text } from '@/components/ui/Text';
 import { COLORS, PAPER, SIZES } from '@/theme/assetTokens';
 import { Button } from '@/components/ui/Button';
@@ -85,7 +86,10 @@ export function LockPreviewScreen() {
       ) : null}
 
       <View style={styles.phone}>
-        <Text>🔒 잠김 · 오전 9:41</Text>
+        <View style={styles.lockRow}>
+          <Icon name="lock" />
+          <Text>잠김 · 오전 9:41</Text>
+        </View>
         {folder ? (
           <View style={styles.character}>
             <CharacterBox
@@ -134,6 +138,11 @@ export function LockPreviewScreen() {
 }
 
 const styles = StyleSheet.create({
+  lockRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
   row: {
     flexDirection: 'row',
     gap: 8,

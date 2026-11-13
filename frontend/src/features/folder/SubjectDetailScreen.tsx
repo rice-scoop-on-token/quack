@@ -56,7 +56,8 @@ export function SubjectDetailScreen() {
         <>
           <Button variant="primary" title="이 과목 공부하기" onPress={startStudy} />
           <Button
-            title="+ 자료 추가"
+            icon="plus"
+            title="자료 추가"
             onPress={() => router.push({ pathname: '/subjects/[id]/materials', params: { id: folder.id } })}
           />
         </>

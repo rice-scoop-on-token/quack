@@ -9,7 +9,7 @@ type Props = {
   title: string;
   // 둘째 줄. 에러에는 다시 시도할 방법을 적는다
   message?: string;
-  // 캐릭터나 도트 그림처럼 위에 놓을 장식(선택)
+  // 캐릭터나 그림처럼 위에 놓을 장식(선택)
   icon?: ReactNode;
   // 에러 상태이면 스크린 리더에 바로 알린다
   error?: boolean;

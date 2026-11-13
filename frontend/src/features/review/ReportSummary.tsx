@@ -1,6 +1,7 @@
 import type { Report } from '@quack/shared';
 import { StyleSheet, View } from 'react-native';
 
+import { Icon } from '@/components/ui/Icon';
 import { Text } from '@/components/ui/Text';
 import { PAPER } from '@/theme/assetTokens';
 
@@ -26,7 +27,10 @@ export function ReportSummary({ report }: { report: Report }) {
           <Text>이번에는 충분히 설명한 개념이 없어요.</Text>
         ) : (
           report.covered_concepts.map((c) => (
-            <Text key={c}>✓ {c}</Text>
+            <View key={c} style={styles.concept}>
+              <Icon name="check" />
+              <Text style={styles.conceptText}>{c}</Text>
+            </View>
           ))
         )}
       </View>
@@ -50,6 +54,14 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     gap: 8,
+  },
+  concept: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  conceptText: {
+    flex: 1,
   },
   card: {
     ...PAPER.card,
