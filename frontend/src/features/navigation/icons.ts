@@ -22,3 +22,14 @@ export const ICONS = {
 } satisfies Record<string, { source: ImageSourcePropType; size: number }>;
 
 export type IconName = keyof typeof ICONS;
+
+// 색이 이미 들어 있는 그림이라 tintColor를 쓰지 않는다. 표시 크기도 파일 크기 ÷ 3이다.
+// 토글 156×84px → 52×28dp, 스피너 96×96px → 32×32dp(한 장짜리라 코드로 회전시킨다).
+export const TOGGLE_IMAGES = {
+  on: require('../../../assets/ui/icons/toggle-on.png'),
+  off: require('../../../assets/ui/icons/toggle-off.png'),
+} satisfies Record<string, ImageSourcePropType>;
+export const TOGGLE_SIZE = { width: 52, height: 28 } as const;
+
+export const SPINNER_IMAGE: ImageSourcePropType = require('../../../assets/ui/icons/spinner.png');
+export const SPINNER_SIZE = 32;

@@ -1,12 +1,13 @@
 import { router } from 'expo-router';
 import { useState } from 'react';
-import { Pressable, StyleSheet, Switch, View } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
 
 import { LoadingView } from '@/components/ui/LoadingView';
 import { COLORS, FONT, PAPER, SIZES } from '@/theme/assetTokens';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { ScreenTitle } from '@/components/ui/ScreenTitle';
 import { Text } from '@/components/ui/Text';
+import { Toggle } from '@/components/ui/Toggle';
 import { Button } from '@/components/ui/Button';
 import { useApiQuery, useQuackApi } from '@/api';
 import type { TempLockQuizSettings } from '@/api/tempContract';
@@ -82,14 +83,7 @@ function ToggleRow({ label, value, onChange }: { label: string; value: boolean; 
   return (
     <View style={styles.toggle}>
       <Text>{label}</Text>
-      <Switch
-        value={value}
-        onValueChange={onChange}
-        accessibilityLabel={label}
-        trackColor={{ false: COLORS.disabledBg, true: COLORS.primary }}
-        thumbColor={COLORS.card}
-        ios_backgroundColor={COLORS.disabledBg}
-      />
+      <Toggle value={value} onValueChange={onChange} accessibilityLabel={label} />
     </View>
   );
 }

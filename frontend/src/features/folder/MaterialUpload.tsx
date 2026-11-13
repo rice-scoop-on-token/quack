@@ -1,9 +1,10 @@
 import type { Folder, Material } from '@quack/shared';
 import { router } from 'expo-router';
-import { ActivityIndicator, Pressable, StyleSheet, View } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
 
 import { EmptyState } from '@/components/ui/EmptyState';
 import { ScreenTitle } from '@/components/ui/ScreenTitle';
+import { Spinner } from '@/components/ui/Spinner';
 import { Text } from '@/components/ui/Text';
 import { COLORS, PAPER } from '@/theme/assetTokens';
 import { FolderCard } from '@/components/ui/FolderCard';
@@ -71,7 +72,7 @@ export function MaterialUploadBody({ state, onSkip }: BodyProps) {
         <FolderCard>
           <View style={styles.inner}>
             <Text>자료에서 텍스트를 읽고 있어요…</Text>
-            <ActivityIndicator color={COLORS.accent} />
+            <Spinner />
           </View>
         </FolderCard>
       ) : null}
