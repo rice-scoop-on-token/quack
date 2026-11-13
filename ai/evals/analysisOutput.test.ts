@@ -235,3 +235,33 @@ Deno.test("자료 속 명령을 시스템 메시지에 넣지 않고 입력 보�
     throw new Error("직렬화 과정에서 입력 내용이 바뀌었습니다.");
   }
 });
+
+Deno.test("전사 오류 판정 보류 지침은 음성 입력에만 적용한다", () => {
+  const input: AnalyzeExplanationInput = {
+    learning_goal: "이분 탐색의 시간 복잡도 설명",
+    reference_materials: [],
+    user_message: "시간 복잡도는 비로그 n이야.",
+    conversation_history: [],
+    species_id: "rubber_duck",
+  };
+  const voiceInput = { ...input, input_mode: "voice" as const };
+  const voice = buildAnalyzeExplanationMessages(voiceInput);
+  const chat = buildAnalyzeExplanationMessages({
+    ...input,
+    input_mode: "chat",
+  });
+  const legacy = buildAnalyzeExplanationMessages(input);
+
+  if (!voice[0].content.includes("[음성 전사 처리]")) {
+    throw new Error("음성 설명에 전사 처리 지침이 없습니다.");
+  }
+  if (
+    chat[0].content.includes("[음성 전사 처리]") ||
+    chat[0].content !== legacy[0].content
+  ) {
+    throw new Error("텍스트 설명에 음성 전사 지침이 적용됐습니다.");
+  }
+  if (voice[1].content !== JSON.stringify(voiceInput)) {
+    throw new Error("전사문 원본이 달라졌습니다.");
+  }
+});

@@ -67,6 +67,7 @@ export async function createTurn(
       // 자료 본문을 꺼내는 기능이 아직 없어 자료 없이 분석한다(docs/Todo.md 텍스트 시연 생략 항목).
       reference_materials: [],
       user_message: request.text,
+      input_mode: request.input_mode,
       conversation_history: history,
       species_id: speciesId,
     },
