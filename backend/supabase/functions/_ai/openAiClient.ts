@@ -17,6 +17,7 @@ const inputSchema = z.strictObject({
     content: text,
   })),
   user_message: text,
+  input_mode: z.enum(["chat", "voice"]).optional(),
   conversation_history: z.array(z.strictObject({
     role: z.enum(["user", "assistant"]),
     content: text,
