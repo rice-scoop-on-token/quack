@@ -20,6 +20,8 @@ Chrome WebM과 Windows M4A 모두 파일 전사가 가능했다. 힌트 비교�
 - 전사 요청에 한국어 언어 힌트(`languages[]=ko`)를 사용한다. 호출자가 제공한 용어 힌트는 `keywords[]`로 보낸다. 앱 연동 시 주제에서 예상되는 용어만 제공하고, 실제 발화에 없는 용어가 전사문에 생기는지도 확인한다.
 - 분석에는 `input_mode: "voice"`를 전달한다. ‘비로그 n’처럼 의미를 확인할 수 없는 전사 구절은 오류나 누락으로 집계하지 않고, 그 구절에 의존하는 판정은 `unverified`로 둔다. 실제로 명확하게 설명된 부분은 기존 기준으로 분석한다. 이 처리는 모델에 주는 분석 지침이며, 전사 오인식을 확정적으로 검출하는 장치의 정확도를 검증한 결과는 아직 없다.
 - 수식·숫자·부정 표현이 포함된 새 녹음에서 전사문과 사람이 작성한 원문을 각각 분석해, 이해 판정이나 꼬리 질문이 얼마나 달라지는지 비교한다. 새 음성 평가 결과로 자동 재전사의 필요성을 판단한다.
-- BE는 `/speech/transcribe`에서 인증·업로드 제한·사용량 처리와 응답의 `duration_ms` 출처를 정한다. OpenAI가 보고하는 오디오 사용량 초는 녹음 길이와 다를 수 있다. 이번 WebM은 로컬에서 8.82초, API 사용량에서는 9초였다.
+- FE는 녹음이 실제로 시작된 시점부터 종료까지 걸린 시간을 밀리초 정수로 잰다. `multipart/form-data`의 `audio` 필드에는 녹음 파일을, `duration_ms` 필드에는 측정값을 담는다. 같은 녹음을 다시 보내면 같은 길이 값을 사용한다. 녹음은 60초에 자동 종료하며, 필수 필드와 60,000ms 상한은 [공통 계약 PR #28](https://github.com/rice-scoop-on-token/quack/pull/28)에서 검토 중이다.
+- BE는 인증 후 파일과 `duration_ms`를 확인한다. 녹음 길이 누락·잘못된 정수 형식·범위 초과는 사용량 차감과 전사 호출 전에 `400 VALIDATION_FAILED`로 응답한다. 정상 전사와 빈 전사 모두 검증한 값을 `duration_ms`로 반환한다. 이 값은 화면 표시용이다. OpenAI가 보고한 사용량은 별도로 관리한다. 기존 WebM의 녹음 길이는 8.82초, API가 보고한 사용량은 9초였다. [BE-B 길이 처리 답변](https://github.com/rice-scoop-on-token/quack/pull/26#issuecomment-6907222162)
+- 업로드 파일 크기 상한은 BE-B가 정한다. 크기를 초과한 요청은 `413 FILE_TOO_LARGE`로 응답하고 사용량 차감과 전사 호출 전에 처리한다. [BE-B 확인 사항](https://github.com/rice-scoop-on-token/quack/pull/26#issuecomment-6907222162)
 
 [OpenAI 파일 전사 가이드](https://developers.openai.com/api/docs/guides/speech-to-text)
