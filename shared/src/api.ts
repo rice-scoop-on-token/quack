@@ -41,12 +41,11 @@ export const startSessionRequestSchema = z.strictObject({
 });
 export type StartSessionRequest = z.infer<typeof startSessionRequestSchema>;
 
-const studyGoalGuidance = z.string().trim().min(1);
-
+// 범위 밖·구체화 필요 안내는 앱에서 status에 맞는 고정 문구를 표시한다.
 export const startSessionResponseSchema = z.discriminatedUnion('status', [
   z.strictObject({ status: z.literal('in_scope'), session: sessionSchema }),
-  z.strictObject({ status: z.literal('out_of_scope'), message: studyGoalGuidance }),
-  z.strictObject({ status: z.literal('needs_clarification'), message: studyGoalGuidance }),
+  z.strictObject({ status: z.literal('out_of_scope') }),
+  z.strictObject({ status: z.literal('needs_clarification') }),
 ]);
 export type StartSessionResponse = z.infer<typeof startSessionResponseSchema>;
 

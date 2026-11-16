@@ -1,4 +1,4 @@
-import { startSessionRequestSchema, startSessionResponseSchema } from '../src/index.ts';
+import { errorResponseSchema, startSessionRequestSchema, startSessionResponseSchema } from '../src/index.ts';
 import type { Session } from '../src/index.ts';
 
 function assert(condition: boolean, message: string): asserts condition {
@@ -47,18 +47,24 @@ Deno.test('범위 안 응답은 유효한 세션을 포함해야 한다', () => 
     '실제 형식의 세션이 필요하다.');
 });
 
-Deno.test('범위 밖과 구체화 필요는 안내 문구만 허용한다', () => {
+Deno.test('범위 밖과 구체화 필요는 status만 허용한다', () => {
   for (const status of ['out_of_scope', 'needs_clarification'] as const) {
-    const response = { status, message: '지원 과목에서 목표를 골라 주세요.' };
-    assert(startSessionResponseSchema.safeParse(response).success, '정상 안내를 허용해야 한다.');
-    assert(!startSessionResponseSchema.safeParse({ ...response, session }).success, '안내에 세션을 포함할 수 없다.');
-    assert(!startSessionResponseSchema.safeParse({ ...response, message: '  ' }).success, '안내 문구가 필요하다.');
+    assert(startSessionResponseSchema.safeParse({ status }).success, 'status만 있는 응답을 허용해야 한다.');
+    for (const extraFields of [
+      { message: '지원 과목에서 목표를 골라 주세요.' },
+      { session },
+      { supported_subjects: ['자료구조', '알고리즘', '컴퓨터구조'] },
+    ]) {
+      assert(!startSessionResponseSchema.safeParse({ status, ...extraFields }).success,
+        '안내 응답에 status 외 필드를 포함할 수 없다.');
+    }
   }
 });
 
 Deno.test('AI 실패는 공부 시작의 정상 응답에 포함되지 않는다', () => {
-  const result = startSessionResponseSchema.safeParse({
+  const errorResponse = {
     error: { code: 'AI_FAILED', message: '잠시 후 다시 시도해 주세요.' },
-  });
-  assert(!result.success, '기술 오류는 기존 오류 계약으로 처리해야 한다.');
+  };
+  assert(errorResponseSchema.safeParse(errorResponse).success, '기존 오류 계약은 안내 문구를 허용해야 한다.');
+  assert(!startSessionResponseSchema.safeParse(errorResponse).success, '기술 오류는 기존 오류 계약으로 처리해야 한다.');
 });
