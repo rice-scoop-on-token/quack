@@ -27,6 +27,7 @@ import { createMockQuiz, gradeMockQuiz } from '@/api/mock/scenarios/quiz';
 import { buildReport, rewardXp } from '@/api/mock/scenarios/report';
 import { DAILY_QUIZ, DAILY_QUIZ_ANSWER, DAILY_QUIZ_RESULT, DEFAULT_LOCK_QUIZ } from '@/api/mock/data/dailyQuiz';
 import { FRIENDS } from '@/api/mock/data/friends';
+import { buildRooms } from '@/api/mock/data/rooms';
 import { mockPodcastLines } from '@/api/mock/data/podcasts';
 import {
   MIN_QUIET_STUDY_SECONDS,
@@ -543,6 +544,12 @@ export function MockApiProvider({ children }: { children: ReactNode }) {
       },
       async listFriends() {
         return FRIENDS;
+      },
+      async listRooms() {
+        return buildRooms(FRIENDS);
+      },
+      async getRoom(id) {
+        return buildRooms(FRIENDS).find((r) => r.id === id) ?? null;
       },
       async createPodcast({ folder_id, material_ids, minutes }) {
         await wait(PODCAST_DELAY_MS);

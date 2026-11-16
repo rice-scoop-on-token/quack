@@ -99,10 +99,38 @@ export type TempFriend = {
   stage: GrowthStage;
   // 지금 공부 중인지
   studying: boolean;
-  // 공부 중인 과목 이름. 공부 중이 아니면 화면에 쓰지 않는다.
+  // 공부 중인 과목 이름. 공부 중이 아니면 화면에 쓰지 않는다. mock에서는 material_id의 카탈로그 과목 이름과 늘 같다.
   subject: string;
+  // 공부 중(또는 마지막으로 공부한) 카탈로그 자료. 같은 자료를 공부 중인 친구끼리 한 방이 된다.
+  material_id: string;
   // 오늘 공부한 시간(초)
   today_seconds: number;
+};
+
+// ── 카탈로그와 통화방 ──
+// 미정, BE와 합의 필요. 사용자 간에 같은 과목·같은 자료를 식별하는 공통 id가 shared에 없어서 FE 시연용으로 둔 임시 타입이다.
+// 지원 과목은 자료구조·알고리즘·컴퓨터구조 3개다(팀 합의).
+export type TempCatalogSubject = { id: string; name: string };
+export type TempCatalogMaterial = { id: string; subject_id: string; title: string };
+
+export type TempRoomParticipant = {
+  id: string;
+  name: string;
+  species_id: SpeciesId;
+  stage: GrowthStage;
+  mic_on: boolean;
+};
+
+// 통화방. (과목, 자료) 한 쌍이 방 하나다.
+// 한계: 자료당 방 1개이고 정원이 차도 방을 나누지 않는다.
+export type TempRoom = {
+  id: string;
+  subject_id: string;
+  subject_name: string;
+  material_id: string;
+  material_title: string;
+  // 지금 이 자료를 공부 중인 친구들. 나는 화면이 더한다.
+  participants: TempRoomParticipant[];
 };
 
 // 조용히 공부하기는 이 시간(초) 미만이면 공부 기록으로 남기지 않는다. 미정, 팀 확인 필요.

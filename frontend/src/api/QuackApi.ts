@@ -27,6 +27,7 @@ import type {
   TempPodcast,
   TempQuizAttempt,
   TempReportResponse,
+  TempRoom,
 } from '@/api/tempContract';
 
 // 화면과 훅은 이 인터페이스로만 데이터를 가져온다(CLAUDE.md Frontend). 메서드는 서버 계약(shared)에 맞춘다.
@@ -71,6 +72,10 @@ export interface QuackApi {
   saveQuietStudy(input: { folder_id: string; study_seconds: number }): Promise<void>;
   // 지금 공부 중인 친구
   listFriends(): Promise<TempFriend[]>;
+  // 같은 자료를 공부하는 친구들의 통화방. 지원 과목의 모든 자료가 방 하나씩이다(참가자가 없는 방도 있다).
+  listRooms(): Promise<TempRoom[]>;
+  // 없는 방이면 null
+  getRoom(id: string): Promise<TempRoom | null>;
 
   // AI 팟캐스트. 자료 고르기는 listMaterials를 쓴다.
   createPodcast(input: { folder_id: string; material_ids: string[]; minutes: TempPodcast['minutes'] }): Promise<TempPodcast>;
