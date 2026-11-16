@@ -33,6 +33,22 @@ export const transcribeResponseSchema = z.object({
 });
 export type TranscribeResponse = z.infer<typeof transcribeResponseSchema>;
 
+// POST /sessions/start
+export const startSessionRequestSchema = z.strictObject({
+  folder_id: z.uuid(),
+  goal: z.string().trim().min(1).max(140),
+  request_id: z.uuid(),
+});
+export type StartSessionRequest = z.infer<typeof startSessionRequestSchema>;
+
+// 범위 밖·구체화 필요 안내는 앱에서 status에 맞는 고정 문구를 표시한다.
+export const startSessionResponseSchema = z.discriminatedUnion('status', [
+  z.strictObject({ status: z.literal('in_scope'), session: sessionSchema }),
+  z.strictObject({ status: z.literal('out_of_scope') }),
+  z.strictObject({ status: z.literal('needs_clarification') }),
+]);
+export type StartSessionResponse = z.infer<typeof startSessionResponseSchema>;
+
 // POST /sessions/:id/turns
 
 export const createTurnRequestSchema = explanationTurnSchema.pick({
