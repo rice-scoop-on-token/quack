@@ -23,9 +23,16 @@ export const processMaterialResponseSchema = z.object({ material: materialSchema
 export type ProcessMaterialResponse = z.infer<typeof processMaterialResponseSchema>;
 
 // POST /speech/transcribe
-// 요청은 JSON이 아니라 multipart/form-data이고, 음성 파일을 아래 이름의 필드에 담는다.
+// multipart/form-data로 음성 파일과 앱에서 측정한 녹음 시간(밀리초)을 보낸다.
 
 export const SPEECH_AUDIO_FIELD = 'audio';
+export const SPEECH_DURATION_FIELD = 'duration_ms';
+export const SPEECH_MAX_DURATION_MS = 60_000;
+
+// 폼의 문자열 값을 숫자로 변환한다. 누락된 값이나 빈 문자열은 허용하지 않는다.
+export const speechDurationFieldSchema = z.string().regex(/^[0-9]+$/)
+  .transform(Number)
+  .pipe(z.int().min(0).max(SPEECH_MAX_DURATION_MS));
 
 export const transcribeResponseSchema = z.object({
   text: z.string(),
