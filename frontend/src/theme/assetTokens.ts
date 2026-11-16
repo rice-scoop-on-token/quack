@@ -50,6 +50,8 @@ export const FEEDBACK = {
   positive: '#CFE3B5',
   negative: '#F2C4B4',
   record: '#D64545',
+  // 통화방에서 말하는 사람의 링 색. 주황 강조색을 그대로 쓴다.
+  speaking: COLORS.accent,
 } as const;
 
 // 종이 UI 공용 표면 스타일. 카드(테두리 2, 모서리 14, 하드 그림자 3), 입력창, 고르는 칸이 같은 값을 쓴다.

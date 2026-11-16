@@ -3,6 +3,7 @@ import { router } from 'expo-router';
 import { Pressable, StyleSheet } from 'react-native';
 
 import { useApiQuery } from '@/api';
+import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { Text } from '@/components/ui/Text';
@@ -11,6 +12,7 @@ import { growthFromXp, STAGE_LABEL } from '@/features/character/growth';
 import { SCREEN_ACTIONS } from '@/features/character/screenActions';
 import { useCharacterXp } from '@/features/character/useCharacterXp';
 import { TeacherSummary } from '@/features/character/TeacherSummary';
+import { roomForMaterial } from '@/features/friends/matchMyRooms';
 import { understoodConcepts } from '@/features/review/report';
 import { PAPER } from '@/theme/assetTokens';
 
@@ -44,6 +46,7 @@ export function InfoPanel({ folder }: Props) {
 // 자료
 export function MaterialsPanel({ folder }: Props) {
   const materials = useApiQuery((a) => a.listMaterials(), []);
+  const rooms = useApiQuery((a) => a.listRooms(), []);
   if (!materials) {
     return null;
   }
@@ -51,12 +54,25 @@ export function MaterialsPanel({ folder }: Props) {
   return mine.length === 0 ? (
     <EmptyState title="등록된 자료가 없어요." message="자료 없이도 설명하며 공부할 수 있어요." />
   ) : (
-    mine.map((m) => (
-      <Card key={m.id} style={styles.card}>
-        <Text>{m.title}</Text>
-        <Text>{STATUS_LABEL[m.status]}</Text>
-      </Card>
-    ))
+    mine.map((m) => {
+      // 같은 자료를 공부하는 친구들의 방이 있으면 바로 들어갈 수 있다
+      const room = rooms ? roomForMaterial(rooms, folder, m) : undefined;
+      return (
+        <Card key={m.id} style={styles.card}>
+          <Text>{m.title}</Text>
+          <Text>{STATUS_LABEL[m.status]}</Text>
+          {room ? (
+            <Button
+              variant="small"
+              icon="mic-on"
+              title={`통화방 · ${room.participants.length}명`}
+              style={styles.roomButton}
+              onPress={() => router.push({ pathname: '/rooms', params: { roomId: room.id } })}
+            />
+          ) : null}
+        </Card>
+      );
+    })
   );
 }
 
@@ -150,5 +166,10 @@ const styles = StyleSheet.create({
   card: {
     ...PAPER.card,
     gap: 4,
+  },
+  // 버튼이 카드 폭 전체로 늘어나지 않게 한다
+  roomButton: {
+    alignSelf: 'flex-start',
+    marginTop: 8,
   },
 });

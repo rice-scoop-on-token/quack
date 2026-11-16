@@ -1,21 +1,24 @@
 import type { SpeciesId } from '@quack/shared';
-import { router, useFocusEffect } from 'expo-router';
+import { router, Stack, useFocusEffect } from 'expo-router';
 import { useCallback, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 
-import { LoadingView } from '@/components/ui/LoadingView';
-import { Icon } from '@/components/ui/Icon';
-import { Text } from '@/components/ui/Text';
-import { COLORS } from '@/theme/assetTokens';
-import { Button } from '@/components/ui/Button';
 import { useApiQuery } from '@/api';
 import { useDemoVariant } from '@/api/mock/useDemoVariant';
 import type { GrowthStage } from '@/api/tempContract';
 import { BottomActionLayout } from '@/components/ui/BottomActionLayout';
+import { Button } from '@/components/ui/Button';
 import { CharacterBox } from '@/components/ui/CharacterBox';
+import { EmptyState } from '@/components/ui/EmptyState';
+import { Icon } from '@/components/ui/Icon';
+import { LoadingView } from '@/components/ui/LoadingView';
+import { ScreenTitle } from '@/components/ui/ScreenTitle';
+import { Text } from '@/components/ui/Text';
 import { growthFromXp } from '@/features/character/growth';
 import { useCharacterXp } from '@/features/character/useCharacterXp';
 import { useSelectedFolder } from '@/features/folder/SelectedFolder';
+import { findMyFolder } from '@/features/friends/matchMyRooms';
+import { COLORS, FEEDBACK } from '@/theme/assetTokens';
 
 const AVATAR_SIZE = 80;
 // 말하는 링 자리. 링은 늘 이 두께로 잡아 두고 색만 바꿔서, 말하는 사람이 바뀌어도 크기와 이름 위치가 변하지 않는다.
@@ -24,14 +27,25 @@ const SPEAKER_CHANGE_MS = 2500;
 
 type Participant = { id: string; name: string; species_id: SpeciesId; stage: GrowthStage | undefined; micOn: boolean };
 
-// F-03 통화방. 친구들이 함께 있는 방 하나다.
-// 한계: 실제 통화와 마이크를 쓰지 않는다. 말하는 사람은 시연용으로 2~3초마다 바뀌고, 나갈 때 기록은 남기지 않는다.
-export function RoomScreen() {
+// 방 목록으로 돌아간다. 주소로 바로 들어와 돌아갈 화면이 없으면 친구 탭으로 간다.
+function leave() {
+  if (router.canGoBack()) {
+    router.back();
+  } else {
+    router.replace('/friends');
+  }
+}
+
+// F-03 통화방. 같은 자료를 공부하는 친구들이 함께 있는 방 하나다.
+// 한계: 실제 통화와 마이크를 쓰지 않는다. 말하는 사람은 시연용으로 2~3초마다 마이크가 켜진 사람 사이에서 바뀌고, 나갈 때 기록은 남기지 않는다.
+export function RoomScreen({ roomId }: { roomId: string }) {
   const demo = useDemoVariant();
-  const { selected } = useSelectedFolder();
-  const friends = useApiQuery((a) => a.listFriends(), []);
+  const { folders, selected } = useSelectedFolder();
+  const room = useApiQuery((a) => a.getRoom(roomId), [roomId]);
   const profile = useApiQuery((a) => a.getProfile(), []);
-  const xp = useCharacterXp(selected?.id ?? '');
+  // 내 캐릭터는 이 방 과목과 이름이 같은 내 폴더의 동물이다. 없으면 홈에서 고른 과목을 쓴다.
+  const myFolder = (room && folders ? findMyFolder(room, folders) : undefined) ?? selected;
+  const xp = useCharacterXp(myFolder?.id ?? '');
   // 입장할 때 마이크는 꺼져 있다. ?demo=permission이면 권한이 없어 듣기 모드로만 들어온다.
   const [micOn, setMicOn] = useState(false);
   const listenOnly = demo === 'permission';
@@ -41,22 +55,20 @@ export function RoomScreen() {
     {
       id: 'me',
       name: profile?.display_name ?? '나',
-      species_id: selected?.species_id ?? 'rubber_duck',
+      species_id: myFolder?.species_id ?? 'rubber_duck',
       stage: xp === undefined ? undefined : growthFromXp(xp).stage,
       micOn,
     },
-    // 친구는 짝수 번째만 마이크가 켜져 있는 것으로 둔다
-    ...(friends ?? []).map((f, i) => ({
-      id: f.id,
-      name: f.name,
-      species_id: f.species_id,
-      stage: f.stage,
-      micOn: i % 2 === 0,
+    ...(room?.participants ?? []).map((p) => ({
+      id: p.id,
+      name: p.name,
+      species_id: p.species_id,
+      stage: p.stage,
+      micOn: p.mic_on,
     })),
   ];
-  // 마이크가 켜진 사람만 말한다. 나는 내가 마이크를 켠 동안만 가끔 말한다.
-  const speakable = participants.filter((p) => p.micOn).map((p) => p.id);
-  const speakableKey = speakable.join(',');
+  // 마이크가 켜진 사람만 말한다. 켜진 사람이 없는 방에서는 말하는 사람이 없다.
+  const speakableKey = participants.filter((p) => p.micOn).map((p) => p.id).join(',');
 
   // 화면이 보이는 동안만 2~3초마다 말하는 사람을 바꾼다
   useFocusEffect(
@@ -75,7 +87,27 @@ export function RoomScreen() {
     }, [speakableKey]),
   );
 
-  if (!friends) {
+  if (demo === 'error' || room === null) {
+    const notFound = demo !== 'error';
+    return (
+      <BottomActionLayout
+        actions={
+          <Button
+            variant="primary"
+            title={notFound ? '목록으로' : '다시 시도'}
+            onPress={notFound ? leave : () => router.setParams({ demo: undefined })}
+          />
+        }
+      >
+        <EmptyState
+          error
+          title={notFound ? '통화방을 찾을 수 없어요.' : '통화방을 불러오지 못했어요.'}
+          message={notFound ? undefined : '잠시 뒤에 다시 시도해 주세요.'}
+        />
+      </BottomActionLayout>
+    );
+  }
+  if (demo === 'loading' || !room || folders === undefined) {
     return <LoadingView />;
   }
 
@@ -83,18 +115,24 @@ export function RoomScreen() {
     <BottomActionLayout
       actions={
         <>
-          <Button variant="primary"
+          <Button
+            variant="primary"
             icon={micOn ? 'mic-on' : 'mic-off'}
             title={listenOnly ? '듣기 모드 (마이크 권한 꺼짐)' : micOn ? '마이크 끄기' : '마이크 켜기'}
             disabled={listenOnly}
             onPress={() => setMicOn((on) => !on)}
           />
-          <Button title="나가기" onPress={() => router.dismissTo('/friends')} />
+          <Button title="나가기" onPress={leave} />
         </>
       }
     >
-      {/* 안내 자리는 늘 한 줄을 잡아 둔다 */}
-      <Text>{listenOnly ? '마이크 권한이 꺼져 있어 듣기 모드로 입장했어요.' : ' '}</Text>
+      <Stack.Screen options={{ title: room.material_title }} />
+      <ScreenTitle title={room.material_title} subtitle={`${room.subject_name} · ${participants.length}명이 함께해요`} />
+
+      {listenOnly ? <Text>마이크 권한이 꺼져 있어 듣기 모드로 입장했어요.</Text> : null}
+      {room.participants.length === 0 ? (
+        <EmptyState title="같은 자료를 공부하는 친구가 아직 없어요." message="친구가 들어오면 여기에 보여요." />
+      ) : null}
 
       <View style={styles.grid}>
         {participants.map((p) => (
@@ -138,9 +176,8 @@ const styles = StyleSheet.create({
     borderWidth: RING,
     borderColor: 'transparent',
   },
-  // 말하는 링 색은 임시다. 디자인 작업 때 바꾼다.
   speaking: {
-    borderColor: COLORS.accent,
+    borderColor: FEEDBACK.speaking,
   },
   avatar: {
     width: AVATAR_SIZE,
