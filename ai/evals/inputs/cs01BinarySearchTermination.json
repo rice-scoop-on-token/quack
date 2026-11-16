@@ -1,0 +1,7 @@
+{
+  "learning_goal": "오름차순 배열의 이분 탐색에서 탐색 범위를 좁히는 방법과 탐색 실패 조건을 설명한다.",
+  "reference_materials": [],
+  "user_message": "오름차순 배열에서 찾는 값이 가운데 값보다 크면 오른쪽을 남겨. 탐색 범위에 원소가 하나만 남으면, 못 찾았다고 끝내면 돼.",
+  "conversation_history": [],
+  "species_id": "rubber_duck"
+}
