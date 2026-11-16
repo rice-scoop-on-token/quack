@@ -1,11 +1,15 @@
-// 팟캐스트 대화 문구. 실제 내용은 서버(AI)가 자료로 만든다. 시연에서는 자료 제목만 넣는다.
-export function mockPodcastLines(title: string): string[] {
+import { contentFor } from '@/api/mock/data/subjectContent';
+
+// 팟캐스트 대화 문구. 실제 내용은 서버(AI)가 자료로 만든다. 시연에서는 자료 제목과 그 폴더 과목의 설명 두 줄만 넣는다.
+// 지원 과목 밖 폴더는 자료구조 설명이다(data/subjectContent.ts).
+export function mockPodcastLines(title: string, folderName: string | undefined): string[] {
+  const [overview, example] = contentFor(folderName).podcastLines;
   return [
     `안녕! 오늘은 '${title}' 이야기를 같이 들어 볼 거야.`,
-    '먼저 큰 그림부터 잡아 보자. 이 자료의 핵심은 한 문장으로 말할 수 있어.',
+    overview,
     '중요한 개념은 예시와 함께 기억하면 훨씬 오래 가.',
     '여기서 잠깐, 지금까지 들은 내용을 떠올려 볼까?',
-    '이제 헷갈리기 쉬운 부분을 짚어 볼게. 비슷해 보여도 차이가 있어.',
+    example,
     '마지막으로 오늘 들은 내용을 네 말로 다시 설명해 보면 좋아.',
   ];
 }

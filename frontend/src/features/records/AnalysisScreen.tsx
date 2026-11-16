@@ -41,7 +41,7 @@ export function AnalysisScreen() {
     return <LoadingView />;
   }
   const now = new Date();
-  const all = demo === 'records' ? [...sessions, ...demoRecordSessions(folders.map((f) => f.id), now)] : sessions;
+  const all = demo === 'records' ? [...sessions, ...demoRecordSessions(folders, now)] : sessions;
 
   const unit = TABS.find((t) => t.id === kind)!.unit;
   const current = inRange(all, periodRange(kind, now));

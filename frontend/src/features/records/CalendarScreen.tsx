@@ -30,7 +30,7 @@ export function CalendarScreen() {
     return <LoadingView />;
   }
   // ?demo=records: 실제 기록에 지난 4주 mock 세션을 더한다. 오늘 기록과 과목 상세에는 섞지 않는다.
-  const all = demo === 'records' ? [...sessions, ...demoRecordSessions(folders.map((f) => f.id), now)] : sessions;
+  const all = demo === 'records' ? [...sessions, ...demoRecordSessions(folders, now)] : sessions;
   const byDay = groupByDay(all);
   const summary = monthSummary(all, cursor.year, cursor.month);
   const cells = calendarCells(cursor.year, cursor.month);

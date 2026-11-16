@@ -21,7 +21,7 @@ export function NewSubjectScreen() {
   return (
     <BottomActionLayout
       actions={
-        <Button variant="primary" title="과목 만들기" onPress={handleSubmit} />
+        <Button variant="primary" title="과목 만들기" disabled={form.allAdded} onPress={handleSubmit} />
       }
     >
       <NewFolderFields form={form} />

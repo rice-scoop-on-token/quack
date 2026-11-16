@@ -7,6 +7,13 @@ export const CATALOG_SUBJECTS: TempCatalogSubject[] = [
   { id: 'subject-arch', name: '컴퓨터구조' },
 ];
 
+// 과목 선택 칸에 보여 주는 한 줄 설명
+export const SUBJECT_HINTS: Record<string, string> = {
+  자료구조: '스택, 큐, 연결 리스트, 트리, 해시',
+  알고리즘: '정렬, 탐색, 재귀, 시간 복잡도',
+  컴퓨터구조: '캐시, 메모리, 파이프라인, 명령어',
+};
+
 export const CATALOG_MATERIALS: TempCatalogMaterial[] = [
   { id: 'material-ds-1', subject_id: 'subject-ds', title: '스택과 큐 정리.pdf' },
   { id: 'material-ds-2', subject_id: 'subject-ds', title: '트리 순회 노트.pdf' },

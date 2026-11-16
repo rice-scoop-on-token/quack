@@ -25,7 +25,7 @@ import { appendSessionReward, folderXp, rewardGrantFor } from '@/api/mock/ledger
 import { MOCK_TRANSCRIPT, mockAnalysis, mockConcept, toCreateTurnResponse } from '@/api/mock/scenarios/analysis';
 import { createMockQuiz, gradeMockQuiz } from '@/api/mock/scenarios/quiz';
 import { buildReport, rewardXp } from '@/api/mock/scenarios/report';
-import { DAILY_QUIZ, DAILY_QUIZ_ANSWER, DAILY_QUIZ_RESULT, DEFAULT_LOCK_QUIZ } from '@/api/mock/data/dailyQuiz';
+import { DEFAULT_LOCK_QUIZ, gradeDailyQuiz, pickDailyQuiz } from '@/api/mock/data/dailyQuiz';
 import { FRIENDS } from '@/api/mock/data/friends';
 import { buildRooms } from '@/api/mock/data/rooms';
 import { mockPodcastLines } from '@/api/mock/data/podcasts';
@@ -112,9 +112,9 @@ function conceptPosition(turns: SessionTurn[], trigger: SessionTurn['trigger']) 
 
 // 한계: CreateTurnRequest에 "어느 개념을 다시 설명하는지" 칸이 없어서, 질문 문구가 같은 앞선 꼬리 질문으로 개념을 찾는다.
 // 꼬리 질문 없이 넘어간 개념은 기본 질문("'개념'을 다시…")의 따옴표 안에서 찾는다. 실제 서버가 받을 방법은 BE·AI와 정해야 한다.
-function reExplainConcept(turns: SessionTurn[], question: string | null): string {
+function reExplainConcept(turns: SessionTurn[], question: string | null, folderName: string | undefined): string {
   const asked = [...turns].reverse().find((t) => t.analysis.follow_up_question === question);
-  return asked?.analysis.concept ?? question?.match(/^'(.+?)'/)?.[1] ?? mockConcept(0);
+  return asked?.analysis.concept ?? question?.match(/^'(.+?)'/)?.[1] ?? mockConcept(0, folderName);
 }
 
 // ── 웹 저장 ──
@@ -249,6 +249,12 @@ export function MockApiProvider({ children }: { children: ReactNode }) {
       return session;
     }
 
+    // 세션의 과목(폴더 이름). 퀴즈 문항 같은 과목별 시연 내용을 고를 때 쓴다.
+    function folderNameOfSession(sessionId: string): string | undefined {
+      const folderId = db.current.sessions.find((s) => s.id === sessionId)?.folder_id;
+      return db.current.folders.find((f) => f.id === folderId)?.name;
+    }
+
     // explain이 sendTurn을 부르므로 이름을 붙여 둔다
     const methods: QuackApi = {
       async getProfile() {
@@ -350,10 +356,7 @@ export function MockApiProvider({ children }: { children: ReactNode }) {
       },
       async listSessions() {
         if (demo === 'today') {
-          return demoTodaySessions(
-            db.current.folders.map((f) => f.id),
-            new Date(),
-          );
+          return demoTodaySessions(db.current.folders, new Date());
         }
         return db.current.sessions;
       },
@@ -393,14 +396,16 @@ export function MockApiProvider({ children }: { children: ReactNode }) {
         const session = findSession(sessionId);
         const position =
           input.trigger === 're_explain' ? null : conceptPosition(session.turns, input.trigger);
+        // 개념은 이 세션 폴더의 과목에서 가져온다
+        const folderName = db.current.folders.find((f) => f.id === session.folder_id)?.name;
         const analysis = mockAnalysis({
           concept: position
-            ? mockConcept(position.index)
-            : reExplainConcept(session.turns, input.question_text),
+            ? mockConcept(position.index, folderName)
+            : reExplainConcept(session.turns, input.question_text, folderName),
           text: input.text,
           trigger: input.trigger,
           followUpCount: position?.followUpCount ?? 0,
-          nextConcept: position ? mockConcept(position.index + 1) : null,
+          nextConcept: position ? mockConcept(position.index + 1, folderName) : null,
           demo,
         });
         const turn: SessionTurn = { seq: session.turns.length + 1, ...input, analysis };
@@ -432,7 +437,7 @@ export function MockApiProvider({ children }: { children: ReactNode }) {
         };
       },
       async createQuiz(sessionId) {
-        const quiz = createMockQuiz(sessionId);
+        const quiz = createMockQuiz(sessionId, folderNameOfSession(sessionId));
         quizzes.current.set(quiz.id, quiz);
         return { quiz };
       },
@@ -446,6 +451,7 @@ export function MockApiProvider({ children }: { children: ReactNode }) {
         const graded = gradeMockQuiz(
           quiz,
           quiz.questions.map((q) => answers.find((a) => a.question_id === q.id)?.answer ?? -1),
+          folderNameOfSession(quiz.session_id),
         );
         const results = graded.filter((r) => answers.some((a) => a.question_id === r.question_id));
         const correct_count = results.filter((r) => r.correct).length;
@@ -564,7 +570,7 @@ export function MockApiProvider({ children }: { children: ReactNode }) {
           material_ids,
           minutes,
           title,
-          lines: mockPodcastLines(title),
+          lines: mockPodcastLines(title, db.current.folders.find((f) => f.id === folder_id)?.name),
         };
         write((d) => ({ podcasts: [...d.podcasts, podcast] }));
         return podcast;
@@ -576,10 +582,17 @@ export function MockApiProvider({ children }: { children: ReactNode }) {
         return db.current.podcasts;
       },
       async getDailyQuiz() {
-        return DAILY_QUIZ;
+        return pickDailyQuiz(
+          db.current.folders.map((f) => f.name),
+          new Date(),
+        ).quiz;
       },
-      async submitDailyQuiz(_id, answer, { folder_id, source }) {
-        const correct = answer === DAILY_QUIZ_ANSWER;
+      async submitDailyQuiz(id, answer, { folder_id, source }) {
+        const fallback = pickDailyQuiz(
+          db.current.folders.map((f) => f.name),
+          new Date(),
+        );
+        const { correct, ...result } = gradeDailyQuiz(id, answer, fallback);
         if (folder_id) {
           const attempt: TempQuizAttempt = {
             id: tempId(),
@@ -590,7 +603,7 @@ export function MockApiProvider({ children }: { children: ReactNode }) {
           };
           write((d) => ({ quizAttempts: [...d.quizAttempts, attempt] }));
         }
-        return { correct, ...DAILY_QUIZ_RESULT };
+        return { correct, ...result };
       },
       async listQuizAttempts() {
         return db.current.quizAttempts;

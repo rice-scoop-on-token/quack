@@ -11,6 +11,7 @@ import { Button } from '@/components/ui/Button';
 import { useApiQuery, useQuackApi } from '@/api';
 import { BottomActionLayout } from '@/components/ui/BottomActionLayout';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
+import { CATALOG_SUBJECTS } from '@/api/mock/data/catalog';
 import { SubjectCard } from '@/features/folder/SubjectCard';
 
 // L-01 과목 서랍
@@ -22,17 +23,21 @@ export function SubjectListScreen() {
   if (!folders || !materials) {
     return <LoadingView />;
   }
+  const allAdded = CATALOG_SUBJECTS.every((s) => folders.some((f) => f.name === s.name));
 
   return (
     <BottomActionLayout
       inTab
       gutter={SIZES.gutter}
       actions={
-        <Button variant="primary"
-          icon={folders.length === 0 ? undefined : 'plus'}
-          title={folders.length === 0 ? '첫 과목 만들기' : '과목 추가'}
-          onPress={() => router.push('/subjects/new')}
-        />
+        // 지원 과목 3개를 모두 추가했으면 더 만들 과목이 없다
+        allAdded ? null : (
+          <Button variant="primary"
+            icon={folders.length === 0 ? undefined : 'plus'}
+            title={folders.length === 0 ? '첫 과목 만들기' : '과목 추가'}
+            onPress={() => router.push('/subjects/new')}
+          />
+        )
       }
     >
       <ScreenTitle title="나의 과목 서랍" subtitle="배운 것들이 차곡차곡 쌓이는 곳." />
