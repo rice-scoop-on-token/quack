@@ -68,11 +68,22 @@ export function CalendarScreen() {
         <IconButton icon="arrow-right" label="다음 달" disabled={isCurrentMonth} onPress={() => moveMonth(1)} />
       </View>
 
-      <View style={styles.summary}>
-        <Text>이번 달 요약</Text>
-        <Text>
-          공부한 날 {summary.days}일 · 공부 시간 {Math.floor(summary.seconds / 60)}분 · 설명한 개념 {summary.concepts}개
-        </Text>
+      {/* 제목 글자는 화면에서 빼고, 스크린 리더에는 한 덩어리로 읽어 준다 */}
+      <View
+        style={styles.summary}
+        accessible
+        accessibilityLabel={`이번 달 요약, 공부한 날 ${summary.days}일, 공부 시간 ${Math.floor(summary.seconds / 60)}분, 설명한 개념 ${summary.concepts}개`}
+      >
+        {[
+          { label: '공부한 날', value: `${summary.days}일` },
+          { label: '공부 시간', value: `${Math.floor(summary.seconds / 60)}분` },
+          { label: '설명한 개념', value: `${summary.concepts}개` },
+        ].map((m) => (
+          <View key={m.label} style={styles.summaryCol}>
+            <Text style={styles.summaryLabel}>{m.label}</Text>
+            <Text style={styles.summaryValue}>{m.value}</Text>
+          </View>
+        ))}
       </View>
 
       <View style={styles.week}>
@@ -162,7 +173,24 @@ const styles = StyleSheet.create({
   },
   summary: {
     ...PAPER.card,
-    gap: 4,
+    flexDirection: 'row',
+  },
+  // 세 칸이 같은 폭을 나눈다. minWidth 0이 없으면 글자 폭이 긴 칸이 줄어들지 못해 폭이 달라진다.
+  summaryCol: {
+    flex: 1,
+    minWidth: 0,
+    alignItems: 'center',
+    gap: 2,
+  },
+  summaryLabel: {
+    fontSize: 12,
+    color: COLORS.mutedStrong,
+    textAlign: 'center',
+  },
+  summaryValue: {
+    fontSize: 18,
+    fontWeight: '700',
+    textAlign: 'center',
   },
   week: {
     flexDirection: 'row',
