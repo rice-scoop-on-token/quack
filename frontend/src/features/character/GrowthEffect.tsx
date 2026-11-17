@@ -1,10 +1,11 @@
 import type { SpeciesId } from '@quack/shared';
 import { useEffect, useMemo, useRef } from 'react';
-import { Animated, Easing, Image, type ImageStyle, Platform, Pressable, StyleSheet, View } from 'react-native';
+import { Animated, Easing, Image, Platform, Pressable, StyleSheet, View } from 'react-native';
 
 import type { GrowthStage } from '@/api/tempContract';
 import { Text } from '@/components/ui/Text';
 import { CHARACTER_IMAGES } from '@/features/character/characterAssets';
+import { pixelated } from '@/features/character/pixelated';
 import { useReduceMotion } from '@/features/character/useReduceMotion';
 import { josa } from '@/lib/josa';
 import { COLORS, FONT, GROWTH, hardShadow, RADIUS, SIZES } from '@/theme/assetTokens';
@@ -43,10 +44,6 @@ const CALM = { swapFrom: 0.4, swapTo: 0.8, cardFrom: 1.0, cardTo: 1.3 };
 type Keys = [number, number][];
 
 const native = Platform.OS !== 'web';
-
-// 한계: 웹의 imageRendering은 RN 타입에 없어서 형변환한다. 기기는 기본 처리라 확대하면 조금 부드럽게 보일 수 있다.
-const pixelated: ImageStyle | null =
-  Platform.OS === 'web' ? ({ imageRendering: 'pixelated' } as unknown as ImageStyle) : null;
 
 // 변신 뒤 안내 문구
 function cardTexts(after: GrowthStage, name?: string) {
