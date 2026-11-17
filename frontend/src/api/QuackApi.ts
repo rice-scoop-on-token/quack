@@ -10,6 +10,8 @@ import type {
   QuizResponse,
   Session,
   SpeciesId,
+  StartSessionRequest,
+  StartSessionResponse,
   SubmitQuizRequest,
   SubmitQuizResponse,
   TranscribeResponse,
@@ -47,6 +49,10 @@ export interface QuackApi {
   // Storage에 파일을 올리고 materials 행을 만든다
   createMaterial(input: { folder_id: string; kind: Material['kind']; title: string }): Promise<Material>;
   startSession(input: { folder_id: string; goal: string }): Promise<Session>;
+  // 공부 시작: 학습 목표가 지원 과목(자료구조·알고리즘·컴퓨터구조) 범위인지 확인하고, 범위 안이면 세션을 만든다(POST /sessions/start).
+  // 같은 request_id로 다시 보내면 같은 결과를 돌려준다. 오류는 ApiError(AI_FAILED, INVALID_STATE 등)로 던진다.
+  // 한계: 서버 라우트가 아직 없어서 mock만 있다. 안내 문구는 응답에 없고 앱의 고정 문구를 쓴다.
+  requestSessionStart(input: StartSessionRequest): Promise<StartSessionResponse>;
   // 설명 기록과 점검 퀴즈 결과가 함께 온다(StudySession은 임시 타입)
   listSessions(): Promise<StudySession[]>;
   getSession(id: string): Promise<StudySession | null>;

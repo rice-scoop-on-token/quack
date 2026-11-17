@@ -5,18 +5,22 @@ import {
   materialSchema,
   reportSchema,
   sessionSchema,
+  startSessionRequestSchema,
+  startSessionResponseSchema,
   type CharacterStats,
   type Folder,
   type Material,
   type QuizPublic,
   type Report,
   type Session,
+  type StartSessionResponse,
   type XpLedgerEntry,
 } from '@quack/shared';
 import { useGlobalSearchParams } from 'expo-router';
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { Platform } from 'react-native';
 
+import { ApiError } from '@/api/errors';
 import { ApiContext, type QuackApi } from '@/api/QuackApi';
 import { PERSONAS } from '@/api/mock/data/personas';
 import { demoTodaySessions } from '@/api/mock/data/demoToday';
@@ -24,6 +28,7 @@ import { TEMP_USER_ID, tempId } from '@/api/mock/ids';
 import { appendSessionReward, folderXp, rewardGrantFor } from '@/api/mock/ledger';
 import { MOCK_TRANSCRIPT, mockAnalysis, mockConcept, toCreateTurnResponse } from '@/api/mock/scenarios/analysis';
 import { createMockQuiz, gradeMockQuiz } from '@/api/mock/scenarios/quiz';
+import { judgeGoal } from '@/api/mock/scenarios/startSession';
 import { buildReport, rewardXp } from '@/api/mock/scenarios/report';
 import { DEFAULT_LOCK_QUIZ, gradeDailyQuiz, pickDailyQuiz } from '@/api/mock/data/dailyQuiz';
 import { FRIENDS } from '@/api/mock/data/friends';
@@ -78,6 +83,7 @@ function emptyDb(): Db {
 // 분석은 LLM 호출, 자료 읽기는 서버 처리 시간을 흉내 낸다
 const ANALYSIS_DELAY_MS = 1000;
 const MATERIAL_DELAY_MS = 800;
+const START_DELAY_MS = 700;
 const PODCAST_DELAY_MS = 1500;
 // 조용히 공부하기는 선생님 설명이 없어서 경험치를 조금만 준다
 const QUIET_SECONDS_PER_XP = 300;
@@ -204,6 +210,11 @@ export function MockApiProvider({ children }: { children: ReactNode }) {
   const [loaded, setLoaded] = useState(!PERSIST_ON);
   // ?demo=fail 은 세션마다 타이머 설명과 점검 다시 설명하기의 첫 분석 요청만 실패시킨다
   const failedOnce = useRef(new Set<string>());
+  // 공부 시작 요청. request_id마다 첫 응답을 기억해서 같은 요청을 다시 받으면 같은 결과를 돌려준다(세션이 둘 생기지 않게).
+  // 한계: 메모리에만 두어서 새로고침하면 사라진다. 서버는 request_id를 DB에 저장한다.
+  const startRequests = useRef(new Map<string, { input: string; response: StartSessionResponse }>());
+  // ?demo=start-fail, ?demo=conflict 는 request_id마다 첫 요청만 실패시킨다(같은 id 재시도, 새 id 재시도가 각각 성공하는지 보려는 것)
+  const startFailedOnce = useRef(new Set<string>());
   // 채점할 때 정답을 찾으려고 만든 퀴즈를 둔다(서버에서는 quiz_questions 테이블)
   const quizzes = useRef(new Map<string, QuizPublic>());
   // 서버 응답을 바꾸는 ?demo= 값은 mock이 읽는다. 앱이 계산하는 값(hour, idle 등)은 화면이 읽는다.
@@ -353,6 +364,44 @@ export function MockApiProvider({ children }: { children: ReactNode }) {
         };
         write((d) => ({ sessions: [...d.sessions, session] }));
         return toSession(session);
+      },
+      async requestSessionStart(input) {
+        await wait(START_DELAY_MS);
+        const parsed = startSessionRequestSchema.safeParse(input);
+        if (!parsed.success) {
+          throw new ApiError('VALIDATION_FAILED', '요청이 올바르지 않아요.');
+        }
+        const { folder_id, goal, request_id } = parsed.data;
+        if (!db.current.folders.some((f) => f.id === folder_id)) {
+          throw new ApiError('NOT_FOUND', '과목을 찾지 못했어요.');
+        }
+        // 같은 request_id: 같은 입력이면 첫 응답 그대로, 입력이 바뀌었으면 409
+        const key = `${folder_id}|${goal}`;
+        const earlier = startRequests.current.get(request_id);
+        if (earlier) {
+          if (earlier.input !== key) {
+            throw new ApiError('INVALID_STATE', '같은 요청인데 내용이 달라요.');
+          }
+          return earlier.response;
+        }
+        if (demo === 'conflict' && !startFailedOnce.current.has(request_id)) {
+          startFailedOnce.current.add(request_id);
+          throw new ApiError('INVALID_STATE', '같은 요청인데 내용이 달라요.');
+        }
+        if (demo === 'start-fail' && !startFailedOnce.current.has(request_id)) {
+          startFailedOnce.current.add(request_id);
+          throw new ApiError('AI_FAILED', '학습 목표를 확인하지 못했어요.');
+        }
+        // ?demo=range-out, ?demo=clarify 는 판정을 강제한다
+        const verdict = demo === 'range-out' ? 'out_of_scope' : demo === 'clarify' ? 'needs_clarification' : judgeGoal(goal);
+        // mock 응답이 계약과 다르면 바로 알 수 있게 shared 스키마로 검사한다
+        const response = startSessionResponseSchema.parse(
+          verdict === 'in_scope'
+            ? { status: verdict, session: await methods.startSession({ folder_id, goal }) }
+            : { status: verdict },
+        );
+        startRequests.current.set(request_id, { input: key, response });
+        return response;
       },
       async listSessions() {
         if (demo === 'today') {
