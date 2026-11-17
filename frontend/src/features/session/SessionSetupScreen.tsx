@@ -7,11 +7,10 @@ import { ApiError } from '@/api/errors';
 import { LoadingView } from '@/components/ui/LoadingView';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { ScreenTitle } from '@/components/ui/ScreenTitle';
-import { Spinner } from '@/components/ui/Spinner';
 import { Text } from '@/components/ui/Text';
 import { PaperInput } from '@/components/ui/PaperInput';
+import { Banner } from '@/components/ui/Banner';
 import { Button } from '@/components/ui/Button';
-import { Card } from '@/components/ui/Card';
 import { useQuackApi } from '@/api';
 import { tempId } from '@/api/mock/ids';
 import { useDemoVariant } from '@/api/mock/useDemoVariant';
@@ -26,13 +25,22 @@ const GOAL_MAX_LENGTH = 140;
 const START_TIMEOUT_MS = 15_000;
 
 // 범위 확인 결과 안내. 응답에는 문구가 없어서 앱의 고정 문구를 쓴다.
-const NOTICE_TEXT = {
-  out_of_scope: '지금은 자료구조, 알고리즘, 컴퓨터구조를 지원해요. 이 세 과목 중 하나로 학습 목표를 바꿔 주세요.',
-  needs_clarification: '세 과목 중 어떤 개념을 공부하고 싶나요? 목표를 조금 더 구체적으로 적어 주세요.',
+// 제목과 배너 종류는 화면에서 정하고, 본문은 응답이 아니라 앱의 고정 문구다.
+const NOTICE = {
+  out_of_scope: {
+    variant: 'notice',
+    title: '안내 · 범위 밖',
+    message: '지금은 자료구조, 알고리즘, 컴퓨터구조를 지원해요. 이 세 과목 중 하나로 학습 목표를 바꿔 주세요.',
+  },
+  needs_clarification: {
+    variant: 'hint',
+    title: '더 구체적으로',
+    message: '세 과목 중 어떤 개념을 공부하고 싶나요? 목표를 조금 더 구체적으로 적어 주세요.',
+  },
   // 판정 실패와 타임아웃. 위 두 안내와 달리 목표는 문제가 없고 다시 시도하면 된다.
-  failed: '확인하지 못했어요. 다시 시도해 주세요.',
+  failed: { variant: 'error', title: '판정 실패', message: '확인하지 못했어요. 다시 시도해 주세요.' },
 } as const;
-type Notice = keyof typeof NOTICE_TEXT;
+type Notice = keyof typeof NOTICE;
 
 function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
   return new Promise((resolve, reject) => {
@@ -164,8 +172,8 @@ export function SessionSetupScreen() {
       actions={
         <Button
           variant="primary"
-          title={checking ? '확인 중…' : notice === 'failed' ? '다시 시도' : '타이머 시작'}
-          disabled={checking}
+          title={checking ? '학습 목표 확인 중…' : notice === 'failed' ? '다시 시도' : '타이머 시작'}
+          loading={checking}
           onPress={() => handleStart()}
         />
       }
@@ -197,25 +205,15 @@ export function SessionSetupScreen() {
           maxLength={GOAL_MAX_LENGTH}
           multiline
           placeholder="예: 스택과 큐의 차이를 내 말로 설명하기"
+          error={error}
         />
-        {error ? <Text accessibilityRole="alert">{error}</Text> : null}
-        <Text>
+        <Text style={styles.counter}>
           {goal.length} / {GOAL_MAX_LENGTH}자
         </Text>
         <Text>‘이해하기’보다 ‘내 말로 설명하기’로 정해 보세요.</Text>
       </View>
 
-      {checking ? (
-        <View style={styles.checking} accessibilityLiveRegion="polite">
-          <Spinner />
-          <Text style={styles.checkingText}>학습 목표를 확인하고 있어요…</Text>
-        </View>
-      ) : null}
-      {notice ? (
-        <Card accessibilityRole="alert">
-          <Text>{NOTICE_TEXT[notice]}</Text>
-        </Card>
-      ) : null}
+      {notice ? <Banner {...NOTICE[notice]} /> : null}
     </BottomActionLayout>
   );
 }
@@ -224,12 +222,8 @@ const styles = StyleSheet.create({
   form: {
     gap: 8,
   },
-  checking: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  checkingText: {
-    color: COLORS.textSub,
+  counter: {
+    fontSize: 12,
+    color: COLORS.mutedStrong,
   },
 });

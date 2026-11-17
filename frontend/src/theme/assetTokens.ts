@@ -12,6 +12,15 @@ export const COLORS = {
   accent: '#E98A3A',
   cream: '#F2DDB6',
   disabledBg: '#E9DFC6',
+  // 글자용 주황. 주황 accent는 면·테두리에만 쓰고 글자에는 쓰지 않는다.
+  textAccent: '#A4540F',
+  danger: '#A3321F',
+  dangerBg: '#F8DDD3',
+  noticeBg: '#FFF1CC',
+  successBg: '#E3EFC9',
+  inputBg: '#FFFFFF',
+  // 12px 이하 작은 보조 글자와 비활성 글자용. textSub보다 진하다.
+  mutedStrong: '#6B5846',
 } as const;
 
 // 모서리 둥글기는 이 3단계만 쓴다. 작은 버튼·태그 10, 버튼·입력·고르는 칸 12, 카드·패널 14.
@@ -79,14 +88,17 @@ export const PAPER = {
     ...hardShadow(SIZES.card.shadow),
   },
   input: {
-    minHeight: SIZES.touchMin,
+    minHeight: 52,
     paddingHorizontal: 12,
     paddingVertical: 10,
     borderWidth: SIZES.row.border,
     borderColor: COLORS.outline,
     borderRadius: SIZES.row.radius,
-    backgroundColor: COLORS.card,
+    backgroundColor: COLORS.inputBg,
     color: COLORS.text,
+    // 위쪽 안쪽 그림자로 살짝 파인 느낌을 준다
+    // 한계: 안드로이드 9 미만에서는 box-shadow가 그려지지 않는다. 테두리와 색은 그대로라 쓰는 데는 문제없다.
+    boxShadow: 'inset 0px 2px 0px rgba(75,50,38,0.12)',
     ...FONT.body,
   },
   // 고르는 칸(보기, 탭, 길이 선택 등). 고른 칸은 주요색, 정답·오답은 FEEDBACK 색으로 칠한다.

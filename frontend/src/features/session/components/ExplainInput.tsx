@@ -45,8 +45,8 @@ export function ExplainInput({ draft }: { draft: ExplainDraft }) {
         multiline
         editable={!draft.recording}
         placeholder={draft.mode === 'voice' ? '녹음을 멈추면 전사문이 여기에 나와요.' : '배운 개념을 내 말로 설명해 보세요.'}
+        error={draft.error}
       />
-      {draft.error ? <Text accessibilityRole="alert">{draft.error}</Text> : null}
     </View>
   );
 }

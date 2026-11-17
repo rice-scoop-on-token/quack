@@ -153,6 +153,7 @@ export function ReviewScreen() {
                   multiline
                   editable={!analysis && !sending}
                   placeholder="내 말로 다시 설명해 보세요."
+                  error={analysis ? undefined : error}
                 />
                 {analysis ? (
                   <Text accessibilityLiveRegion="polite">
@@ -165,8 +166,6 @@ export function ReviewScreen() {
                             : ''
                         }`}
                   </Text>
-                ) : error ? (
-                  <Text accessibilityRole="alert">{error}</Text>
                 ) : null}
               </>
             ) : null}

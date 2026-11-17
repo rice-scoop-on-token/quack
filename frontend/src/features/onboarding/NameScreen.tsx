@@ -35,8 +35,7 @@ export function NameScreen() {
       actions={<Button variant="primary" title="다음" onPress={handleNext} />}
     >
       <Text>이름 (필수)</Text>
-      <PaperInput value={name} onChangeText={setEdited} placeholder="예: 꽥꽥이" />
-      {error ? <Text accessibilityRole="alert">{error}</Text> : null}
+      <PaperInput value={name} onChangeText={setEdited} placeholder="예: 꽥꽥이" error={error} />
 
       {/* 익명 로그인은 계정 없이 기기에만 묶여 있어서, 앱을 지우면 되찾을 방법이 없다는 것을 알린다 */}
       <Text style={{ color: COLORS.textSub }}>로그인 없이 바로 시작해요. 앱을 삭제하면 이름과 공부 기록이 모두 사라져요.</Text>
