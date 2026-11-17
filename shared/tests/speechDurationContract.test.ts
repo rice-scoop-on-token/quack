@@ -12,14 +12,17 @@ Deno.test('전사 요청에서 녹음 시간 필드를 밀리초 정수로 읽�
   }
 });
 
-Deno.test('전사 요청의 상한은 60초이며 상한과 같은 값은 허용한다', () => {
+Deno.test('전사 요청에서 1ms와 60초를 허용한다', () => {
+  if (speechDurationFieldSchema.parse('1') !== 1) {
+    throw new Error('1ms를 허용해야 한다.');
+  }
   if (SPEECH_MAX_DURATION_MS !== 60_000 || speechDurationFieldSchema.parse('60000') !== 60_000) {
     throw new Error('60,000ms를 허용해야 한다.');
   }
 });
 
-Deno.test('전사 요청에서 누락·잘못된 형식·상한 초과를 거절한다', () => {
-  for (const value of [null, '', ' ', '8820\n', '-1', '1.5', '6e4', '60001', 8820]) {
+Deno.test('전사 요청에서 0ms·누락·잘못된 형식·상한 초과를 거절한다', () => {
+  for (const value of [null, '', ' ', '0', '8820\n', '-1', '1.5', '6e4', '60001', 8820]) {
     if (speechDurationFieldSchema.safeParse(value).success) {
       throw new Error(`잘못된 duration_ms를 허용했다: ${JSON.stringify(value)}`);
     }

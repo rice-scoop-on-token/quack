@@ -29,10 +29,10 @@ export const SPEECH_AUDIO_FIELD = 'audio';
 export const SPEECH_DURATION_FIELD = 'duration_ms';
 export const SPEECH_MAX_DURATION_MS = 60_000;
 
-// 폼의 문자열 값을 숫자로 변환한다. 누락된 값이나 빈 문자열은 허용하지 않는다.
+// 폼의 필수 문자열을 1ms 이상인 정수로 읽는다.
 export const speechDurationFieldSchema = z.string().regex(/^[0-9]+$/)
   .transform(Number)
-  .pipe(z.int().min(0).max(SPEECH_MAX_DURATION_MS));
+  .pipe(z.int().min(1).max(SPEECH_MAX_DURATION_MS));
 
 export const transcribeResponseSchema = z.object({
   text: z.string(),
