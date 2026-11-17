@@ -20,7 +20,7 @@ export function FirstFolderScreen() {
     <OnboardingStepLayout
       step={3}
       title="첫 번째 공부를 담을 서랍을 만들어요."
-      subtitle="과목마다 다른 선생님과 공부할 수 있어요."
+      subtitle="자료구조, 알고리즘, 컴퓨터구조 중에서 골라요."
       actions={<Button variant="primary" title="첫 과목 만들기" onPress={handleSubmit} />}
     >
       <NewFolderFields form={form} />

@@ -32,6 +32,7 @@ export function IntroScreen() {
       actions={<Button variant="primary" title="나의 학습 친구 만나기" onPress={() => router.push('/name')} />}
     >
       <Text>혼자 배운 내용을 친구에게 들려주세요. 이해도 쌓이고, 작은 친구도 함께 자라요.</Text>
+      <Text>자료구조, 알고리즘, 컴퓨터구조처럼 컴퓨터공학 전공 공부를 함께해요.</Text>
 
       {/* 세 친구를 한 줄로 보여 주는 그림이라 가운데에 둔다 */}
       <View style={styles.row}>
