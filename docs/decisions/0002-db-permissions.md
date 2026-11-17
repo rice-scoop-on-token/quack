@@ -61,6 +61,7 @@
 | `xp_ledger`의 부분 unique 인덱스 (`session_id`, `reason = 'session_reward'`일 때) | 같은 세션의 보상을 두 번 지급하는 것. service role도 막힌다 |
 | `quiz_attempts.quiz_id` unique | 퀴즈를 두 번 제출하는 것. 다시 풀기는 새 퀴즈를 만든다 |
 | `reports.session_id` unique | 세션 하나에 리포트가 두 개 생기는 것 |
+| `sessions`의 unique `(user_id, request_id)` | 공부 시작 요청을 재시도하거나 동시에 두 번 보내 세션이 두 개 생기는 것. `request_id`는 서버만 쓰고, 값이 없는(null) 세션끼리는 걸리지 않는다 |
 | `turn_analyses`의 check: `action`이 `ask`·`explain`일 때만 `question`이 있다 | 질문 없는 꼬리 질문 저장. 다음 턴의 이전 대화가 어긋나는 것 |
 
 **삭제할 때**

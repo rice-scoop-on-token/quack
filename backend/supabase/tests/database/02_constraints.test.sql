@@ -151,6 +151,29 @@ select throws_ok(
   '23505', null, '세션 하나에 리포트는 하나다'
 );
 
+-- 공부 시작 재시도 키 (서버가 service role로 쓰는 칸이라 postgres 권한으로 시험한다)
+
+select lives_ok(
+  $$ insert into public.sessions (user_id, folder_id, goal, request_id)
+     values ('aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa', 'aaaaaaaa-0000-4000-8000-0000000000f1', '목표', 'dddddddd-0000-4000-8000-000000000001') $$,
+  '재시도 키가 있는 세션을 만들 수 있다'
+);
+select throws_ok(
+  $$ insert into public.sessions (user_id, folder_id, goal, request_id)
+     values ('aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa', 'aaaaaaaa-0000-4000-8000-0000000000f1', '목표', 'dddddddd-0000-4000-8000-000000000001') $$,
+  '23505', null, '같은 사용자의 같은 재시도 키로 세션을 두 번 만들 수 없다'
+);
+select lives_ok(
+  $$ insert into public.sessions (user_id, folder_id, goal, request_id)
+     values ('bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb', 'bbbbbbbb-0000-4000-8000-0000000000f1', '목표', 'dddddddd-0000-4000-8000-000000000001') $$,
+  '다른 사용자는 같은 재시도 키를 쓸 수 있다'
+);
+select lives_ok(
+  $$ insert into public.sessions (user_id, folder_id, goal)
+     values ('aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa', 'aaaaaaaa-0000-4000-8000-0000000000f1', '목표') $$,
+  '재시도 키가 없는 세션은 여러 개 만들 수 있다 (기존 세션, 앱이 직접 만든 세션)'
+);
+
 -- 폴더 삭제 (사용자 A로)
 
 set local role authenticated;
