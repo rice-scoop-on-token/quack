@@ -23,6 +23,7 @@ import { Platform } from 'react-native';
 import { ApiError } from '@/api/errors';
 import { ApiContext, type QuackApi } from '@/api/QuackApi';
 import { PERSONAS } from '@/api/mock/data/personas';
+import { demoStreakSessions } from '@/api/mock/data/demoStreak';
 import { demoTodaySessions } from '@/api/mock/data/demoToday';
 import { TEMP_USER_ID, tempId } from '@/api/mock/ids';
 import { appendSessionReward, folderXp, rewardGrantFor } from '@/api/mock/ledger';
@@ -406,6 +407,12 @@ export function MockApiProvider({ children }: { children: ReactNode }) {
       async listSessions() {
         if (demo === 'today') {
           return demoTodaySessions(db.current.folders, new Date());
+        }
+        if (demo === 'streak') {
+          return demoStreakSessions(db.current.folders, new Date(), [0, 1, 2]);
+        }
+        if (demo === 'streak-broken') {
+          return demoStreakSessions(db.current.folders, new Date(), [2, 3]);
         }
         return db.current.sessions;
       },
