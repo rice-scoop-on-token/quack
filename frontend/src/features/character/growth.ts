@@ -4,7 +4,7 @@ import { STAGE_XP, type GrowthStage } from '@/api/tempContract';
 export const STAGE_LABEL: Record<GrowthStage, string> = {
   baby: '아기',
   child: '어린이',
-  adult: '성체',
+  adult: '어른',
 };
 
 export type Growth = {

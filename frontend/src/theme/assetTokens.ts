@@ -54,6 +54,17 @@ export const FEEDBACK = {
   speaking: COLORS.accent,
 } as const;
 
+// 성장 연출(GrowthEffect) 색. 어두운 막 위에 노란 빛을 겹쳐 그린다.
+export const GROWTH = {
+  dim: 'rgba(26,16,10,0.72)',
+  // 빛 테두리 3겹(바깥 → 안쪽). 안쪽일수록 진하다.
+  glow: ['rgba(246,201,79,0.16)', 'rgba(246,201,79,0.26)', 'rgba(246,201,79,0.40)'],
+  flash: '#FFF6D6',
+  spark: ['#F6C94F', '#FFFBF0'],
+  burst: '#F6C94F',
+  text: '#FFFBF0',
+} as const;
+
 // 종이 UI 공용 표면 스타일. 카드(테두리 2, 모서리 14, 하드 그림자 3), 입력창, 고르는 칸이 같은 값을 쓴다.
 export const PAPER = {
   card: {

@@ -1,6 +1,9 @@
 import { router, useLocalSearchParams } from 'expo-router';
+import { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 
+import { SPECIES } from '@/api/mock/data/species';
+import { GrowthEffect } from '@/features/character/GrowthEffect';
 import { LoadingView } from '@/components/ui/LoadingView';
 import { Icon } from '@/components/ui/Icon';
 import { Text } from '@/components/ui/Text';
@@ -21,6 +24,8 @@ export function GrowthScreen() {
   const result = useSessionReport(sessionId);
   const folders = useApiQuery((api) => api.listFolders(), []);
   const goHome = () => leave(() => router.dismissTo('/home'));
+  // 한계: 임시 연결이다. 연출이 끝나면 아래 기존 화면으로 이어진다. 성장 직전·결과 화면 흐름으로 바꿀 예정이다.
+  const [played, setPlayed] = useState(false);
 
   if (session === undefined || result === undefined || folders === undefined) {
     return <LoadingView />;
@@ -29,6 +34,17 @@ export function GrowthScreen() {
   const change = result ? stageChange(result.rewards) : null;
   if (!folder || !change) {
     return <NoRecord message="보여 줄 성장 기록이 없어요." onHome={goHome} />;
+  }
+  if (!played) {
+    return (
+      <GrowthEffect
+        speciesId={folder.species_id}
+        before={change.from}
+        after={change.to}
+        name={SPECIES.find((s) => s.id === folder.species_id)?.name}
+        onDone={() => setPlayed(true)}
+      />
+    );
   }
 
   return (
