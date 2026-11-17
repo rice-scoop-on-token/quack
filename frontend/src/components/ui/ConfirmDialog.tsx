@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import { Modal, StyleSheet, View } from 'react-native';
 
 import { Button } from '@/components/ui/Button';
@@ -9,6 +10,8 @@ type Props = {
   visible: boolean;
   title: string;
   message: string;
+  // 메시지 아래에 놓을 안내(Banner 등). 없으면 그리지 않는다.
+  notice?: ReactNode;
   confirmLabel: string;
   onConfirm: () => void;
   // 없으면 취소 버튼 없이 확인만 보여 준다
@@ -16,13 +19,14 @@ type Props = {
 };
 
 // 확인 창. RN의 Alert는 웹에서 동작하지 않아서 Modal로 만든다.
-export function ConfirmDialog({ visible, title, message, confirmLabel, onConfirm, onCancel }: Props) {
+export function ConfirmDialog({ visible, title, message, notice, confirmLabel, onConfirm, onCancel }: Props) {
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={onCancel ?? onConfirm}>
       <View style={styles.backdrop}>
         <Card style={styles.dialog} accessibilityRole="alert">
           <Text style={styles.title}>{title}</Text>
           <Text>{message}</Text>
+          {notice}
 
           <View style={styles.actions}>
             {onCancel ? <Button style={styles.half} title="취소" onPress={onCancel} /> : null}

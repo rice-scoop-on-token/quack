@@ -10,19 +10,21 @@ type Props = {
   variant: Variant;
   title: string;
   message: string;
+  // 기본은 error·notice가 alert로 읽힌다. 이미 alert 안이나 liveRegion 안에 놓일 때는 false로 줘서 두 번 읽히지 않게 한다.
+  alert?: boolean;
 };
 
 const BADGE = 28;
 
 // 안내 배너. 색만으로 구분하지 않도록 배지 모양이 다르다: notice 원, hint 둥근 사각형, error 마름모, success 원(체크).
 // error와 notice는 바로 알려야 해서 alert로 읽히고, 나머지는 role 없이 읽힌다.
-export function Banner({ variant, title, message }: Props) {
+export function Banner({ variant, title, message, alert = variant === 'error' || variant === 'notice' }: Props) {
   const tone = TONE[variant];
 
   return (
     <View
       style={[styles.box, { backgroundColor: tone.bg, borderColor: tone.border }]}
-      accessibilityRole={variant === 'error' || variant === 'notice' ? 'alert' : undefined}
+      accessibilityRole={alert ? 'alert' : undefined}
     >
       <Badge variant={variant} />
       <View style={styles.texts}>
