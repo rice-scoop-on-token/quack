@@ -1,94 +1,76 @@
-import { Animated, StyleSheet } from 'react-native';
+import type { RefObject } from 'react';
+import { Animated, StyleSheet, View, type HostInstance } from 'react-native';
 
-import { Text } from '@/components/ui/Text';
-import { ip, SPLASH_COLORS, SPLASH_SIZE, SPLASH_TIME } from '@/features/splash/splashSpec';
+import { OutlinedText } from '@/features/splash/OutlinedText';
+import { SPLASH_COLORS, SPLASH_FONT, SPLASH_SIZE } from '@/features/splash/splashSpec';
+import type { buildTimeline } from '@/features/splash/splashChannels';
 
-const LETTERS = ['Q', 'u', 'a', 'c', 'k'];
-// 글자 외곽선처럼 보이게 갈색 사본을 상하좌우로 겹치고, 아래에 그림자 사본을 한 장 더 둔다
-const OUTLINE = [
-  [-3, 0],
-  [3, 0],
-  [0, -3],
-  [0, 3],
-] as const;
-const SHADOW_DROP = 6;
-const LINE_HEIGHT = SPLASH_SIZE.logo * 1.2;
+const LETTERS = ['u', 'a', 'c', 'k'];
+const S = SPLASH_SIZE.title;
 
 type Props = {
-  // 시간표 t. 동작 줄이기에서는 null이라 글자가 처음부터 보이고 움직이지 않는다.
-  t: Animated.Value | null;
+  // 시안 t로 움직이는 값. 동작 줄이기에서는 null이라 글자가 처음부터 보이고 움직이지 않는다.
+  letters: ReturnType<typeof buildTimeline>['letters'] | null;
+  // 글꼴을 쓸 수 있으면 true
+  fontReady: boolean;
+  // 화면에서 위치를 재려고 부모가 붙잡는 칸들
+  titleRef: RefObject<HostInstance | null>;
+  slotRef: RefObject<HostInstance | null>;
 };
 
-// 로고 "Quack". 글자는 오리가 지나가는 시점에 하나씩 튀어 오르고, 끝에서 로고 전체가 한 번 눌린다.
-// 한계: RN 글자에는 외곽선이 없어서 글자마다 사본을 겹쳐 그린다(Text 6개). 웹에서 깨지면 그림자 한 방향만 두는 쪽으로 줄인다.
-export function SplashLogo({ t }: Props) {
-  const T = SPLASH_TIME;
-  const press = t
-    ? {
-        scaleX: ip(t, [[T.burstFrom, 1], [T.burstFrom + 0.15, 1.12], [T.burstTo, 1]]),
-        scaleY: ip(t, [[T.burstFrom, 1], [T.burstFrom + 0.15, 0.92], [T.burstTo, 1]]),
-      }
-    : { scaleX: 1, scaleY: 1 };
-
+// 로고 줄: 왼쪽 Q 자리(96×112, 돋보기가 날아와 앉는다)와 오른쪽 "uack" 글자 4개.
+// 글자는 오리가 지나가는 시점에 하나씩 튀어 오르고, 끝에서 로고 전체가 출렁인다(출렁임은 값에 들어 있다).
+export function SplashLogo({ letters, fontReady, titleRef, slotRef }: Props) {
   return (
-    <Animated.View
-      style={[styles.row, { transform: [{ scaleX: press.scaleX }, { scaleY: press.scaleY }] }]}
-      accessible
-      accessibilityRole="header"
-      accessibilityLabel="Quack"
-    >
-      {LETTERS.map((ch, i) => (
-        <Letter key={ch} ch={ch} t={t} start={T.letters[i]} />
-      ))}
-    </Animated.View>
-  );
-}
-
-function Letter({ ch, t, start }: { ch: string; t: Animated.Value | null; start: number }) {
-  const style = t
-    ? {
-        opacity: ip(t, [[0, 0], [start - 0.001, 0], [start, 1]]),
-        transform: [
-          { translateY: ip(t, [[start, 30], [start + 0.2, -30], [start + 0.36, 0], [start + 0.45, 0]]) },
-          { scaleX: ip(t, [[start, 1], [start + 0.2, 1], [start + 0.36, 1.16], [start + 0.45, 1]]) },
-          { scaleY: ip(t, [[start, 1], [start + 0.2, 1], [start + 0.36, 0.8], [start + 0.45, 1]]) },
-        ],
-      }
-    : null;
-
-  return (
-    <Animated.View style={[styles.letter, style]} importantForAccessibility="no-hide-descendants">
-      <Text style={[styles.text, styles.outline, { left: 0, top: SHADOW_DROP }]}>{ch}</Text>
-      {OUTLINE.map(([dx, dy]) => (
-        <Text key={`${dx}${dy}`} style={[styles.text, styles.outline, { left: dx, top: dy }]}>
-          {ch}
-        </Text>
-      ))}
-      <Text style={[styles.text, styles.fill]}>{ch}</Text>
-    </Animated.View>
+    <View ref={titleRef} style={styles.title} accessible accessibilityRole="header" accessibilityLabel="Quack">
+      <View ref={slotRef} style={styles.slot} />
+      <View style={styles.word}>
+        {LETTERS.map((ch, i) => {
+          const a = letters?.[i];
+          return (
+            <Animated.View
+              key={ch}
+              style={[
+                styles.letter,
+                a && {
+                  opacity: a.o,
+                  transform: [{ translateY: a.ty }, { scaleX: a.sx }, { scaleY: a.sy }],
+                },
+              ]}
+            >
+              <OutlinedText
+                text={ch}
+                size={S.letterSize}
+                fill={SPLASH_COLORS.yellow}
+                family={fontReady ? SPLASH_FONT : undefined}
+                letterSpacing={S.letterSpacing}
+                drop
+              />
+            </Animated.View>
+          );
+        })}
+      </View>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  row: {
+  title: {
+    height: S.height,
     flexDirection: 'row',
     alignItems: 'flex-end',
   },
-  // 가장자리 사본이 잘리지 않게 여백을 둔다
+  slot: {
+    width: SPLASH_SIZE.slot.width,
+    height: SPLASH_SIZE.slot.height,
+  },
+  word: {
+    flexDirection: 'row',
+    marginLeft: S.wordGap,
+    paddingBottom: S.wordPadBottom,
+  },
+  // 글자는 아래 가운데를 기준으로 눌리고 늘어난다
   letter: {
-    paddingHorizontal: 3,
-    paddingBottom: SHADOW_DROP,
-  },
-  text: {
-    fontSize: SPLASH_SIZE.logo,
-    lineHeight: LINE_HEIGHT,
-    fontWeight: '700',
-  },
-  outline: {
-    position: 'absolute',
-    color: SPLASH_COLORS.outline,
-  },
-  fill: {
-    color: SPLASH_COLORS.yellow,
+    transformOrigin: '50% 100%',
   },
 });

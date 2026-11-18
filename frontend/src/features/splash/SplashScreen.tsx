@@ -1,70 +1,96 @@
-import { useEffect, useRef, useState } from 'react';
-import { Animated, Easing, Image, Platform, Pressable, StyleSheet, useWindowDimensions, View } from 'react-native';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import {
+  Animated,
+  Easing,
+  Image,
+  Platform,
+  Pressable,
+  StyleSheet,
+  useWindowDimensions,
+  View,
+  type HostInstance,
+} from 'react-native';
 
 import { Card } from '@/components/ui/Card';
 import { Text } from '@/components/ui/Text';
-import { CHARACTER_IMAGES } from '@/features/character/characterAssets';
 import { pixelated } from '@/features/character/pixelated';
 import { useReduceMotion } from '@/features/character/useReduceMotion';
+import { LoadingStrip } from '@/features/splash/LoadingStrip';
 import { SplashBackground } from '@/features/splash/SplashBackground';
 import { SplashLogo } from '@/features/splash/SplashLogo';
+import { buildDots, buildHold, buildStars, buildTimeline, pctAt } from '@/features/splash/splashChannels';
 import {
-  ip,
+  SPLASH_BURSTS,
   SPLASH_COLORS,
   SPLASH_DELAY,
-  SPLASH_LOADING,
   SPLASH_SIZE,
   SPLASH_SKIP_LABEL,
+  SPLASH_STAR_PERIOD,
   SPLASH_TAGLINE,
   SPLASH_TIME,
 } from '@/features/splash/splashSpec';
-import { SIZES, hardShadow, RADIUS } from '@/theme/assetTokens';
+import type { Geo } from '@/features/splash/splashTrack';
+import { useSplashFont, type SplashFontState } from '@/features/splash/useSplashFont';
+import { SIZES, hardShadow } from '@/theme/assetTokens';
 
 type Props = {
-  // 앱이 첫 화면을 정할 준비가 됐는지. 연출은 항상 끝까지 재생하고, 준비가 늦으면 점프 직전에서 기다린다.
+  // 앱이 첫 화면을 정할 준비가 됐는지. 장면은 준비와 상관없이 재생하다가, 준비가 늦으면 막대가 차는 도중에 기다린다.
   ready: boolean;
   // 연출이 끝나거나 건너뛰면 한 번만 부른다
   onDone: () => void;
 };
 
+// 앞 구간(intro) → 막대 채우기(load) → [준비가 늦으면 멈춰서 기다림(hold)] → 끝 구간(end). 동작 줄이기는 calm 한 단계다.
+type Stage = 'wait' | 'intro' | 'load' | 'hold' | 'end' | 'calm' | 'calmDone';
+
 const native = Platform.OS !== 'web';
 const T = SPLASH_TIME;
 const S = SPLASH_SIZE;
-const duckImage = CHARACTER_IMAGES.rubber_duck.adult.base;
+// 한계: 13-1에서는 돋보기 Q를 완성 그림 한 장(splash-full)으로 둔다. 돋보기의 두리번·오리 머리·눈 깜빡임은 다음 커밋에서 레이어로 바꾼다.
+const iconImage = require('../../../assets/splash/splash-full.png');
 
 export function SplashScreen(props: Props) {
   const reduce = useReduceMotion();
+  const font = useSplashFont();
   // 동작 줄이기 값을 받기 전에는 바탕만 그리고 시작하지 않는다
   if (reduce === undefined) {
     return (
       <View style={styles.root}>
-        <SplashBackground loop={null} />
+        <SplashBackground stars={null} />
       </View>
     );
   }
-  return <Playback {...props} reduce={reduce} />;
+  return <Playback {...props} reduce={reduce} font={font} />;
 }
 
-function Playback({ ready, onDone, reduce }: Props & { reduce: boolean }) {
-  const { height } = useWindowDimensions();
+function Playback({ ready, onDone, reduce, font }: Props & { reduce: boolean; font: SplashFontState }) {
+  const { width, height } = useWindowDimensions();
   const t = useRef(new Animated.Value(0)).current;
-  // 오리 폴짝 한 번(0→1). 0.35초 주기로 정해진 횟수만 돈다.
-  const hop = useRef(new Animated.Value(0)).current;
-  // 점과 반짝점이 쓰는 1.2초 반복 값
-  const loop = useRef(new Animated.Value(0)).current;
+  // 준비를 기다리며 제자리에서 폴짝일 때 쓰는 값(한 번 폴짝 = 0→1)
+  const holdHop = useRef(new Animated.Value(0)).current;
+  // 점(약 0.9초)과 배경 별(2.2초)이 쓰는 한 바퀴 값
+  const dotsLoop = useRef(new Animated.Value(0)).current;
+  const starsLoop = useRef(new Animated.Value(0)).current;
   // 동작 줄이기에서 막대를 채우는 값
   const calm = useRef(new Animated.Value(0)).current;
 
-  // 앞 구간(0→4.9초)이 끝났는지. 끝나면 준비를 기다렸다가 끝 구간(4.9→6.5초)을 돈다.
-  const [front, setFront] = useState(false);
+  const rootRef = useRef<HostInstance>(null);
+  const titleRef = useRef<HostInstance>(null);
+  const slotRef = useRef<HostInstance>(null);
+  // 화면에서 잰 자리. 글꼴에 따라 글자 폭이 달라져 Q 자리가 움직이므로 어떤 글꼴 상태에서 쟀는지 함께 둔다.
+  const [measured, setMeasured] = useState<{ font: SplashFontState; geo: Geo } | null>(null);
+  const [stage, setStage] = useState<Stage>('wait');
   const [skipped, setSkipped] = useState(false);
   const [delayed, setDelayed] = useState(false);
-  // 타이머 안에서 최신 값을 읽으려고 ref에 옮겨 둔다
-  const readyRef = useRef(ready);
+  const [pct, setPct] = useState(0);
+
+  // 준비 = 앱이 준비됨 + 글꼴이 정해짐(불러왔거나 포기함). 타이머 안에서 최신 값을 읽으려고 ref에 옮겨 둔다.
+  const go = ready && font !== 'wait';
+  const goRef = useRef(go);
   const doneRef = useRef(onDone);
   const done = useRef(false);
   useEffect(() => {
-    readyRef.current = ready;
+    goRef.current = go;
     doneRef.current = onDone;
   });
 
@@ -75,177 +101,278 @@ function Playback({ ready, onDone, reduce }: Props & { reduce: boolean }) {
     }
   };
 
-  // 앞 구간
+  function measure() {
+    const root = rootRef.current;
+    const slot = slotRef.current;
+    const title = titleRef.current;
+    if (!root || !slot || !title) {
+      return;
+    }
+    // 루트가 화면 전체라서 창 기준 좌표에서 루트 위치를 빼면 루트 기준이 된다
+    root.measureInWindow((rx, ry) => {
+      slot.measureInWindow((sx, sy, sw, sh) => {
+        title.measureInWindow((tx, ty, tw, th) => {
+          if (sw === 0 || sh === 0) {
+            return;
+          }
+          setMeasured({
+            font,
+            geo: {
+              width,
+              height,
+              slot: { x: sx - rx, y: sy - ry, w: sw, h: sh },
+              title: { cx: tx - rx + tw / 2, cy: ty - ry + th * 0.55 },
+            },
+          });
+        });
+      });
+    });
+  }
+  // 글꼴이 바뀌면 글자 폭이 달라지므로 한 프레임 뒤에 다시 잰다
+  useEffect(() => {
+    const id = requestAnimationFrame(measure);
+    return () => cancelAnimationFrame(id);
+  }, [font, width, height]);
+
+  const geo = measured && measured.font === font ? measured.geo : null;
+  const tl = useMemo(() => (geo ? buildTimeline(t, geo) : null), [geo]);
+  const hold = useMemo(() => buildHold(holdHop), []);
+  const dots = useMemo(() => buildDots(dotsLoop), []);
+  const stars = useMemo(() => buildStars(starsLoop), []);
+  const bursts = useMemo(
+    () =>
+      tl
+        ? SPLASH_BURSTS.map(([dx, dy, color]) => ({
+            color,
+            x: Animated.multiply(tl.burst.e, dx),
+            y: Animated.multiply(tl.burst.e, dy),
+          }))
+        : null,
+    [tl],
+  );
+
+  // 글꼴이 정해지고 자리를 쟀으면 시작한다
+  useEffect(() => {
+    if (stage === 'wait' && geo && font !== 'wait') {
+      setStage(reduce ? 'calm' : 'intro');
+    }
+  }, [stage, geo, font, reduce]);
+
+  const play = (to: number, seconds: number) =>
+    Animated.timing(t, { toValue: to, duration: seconds * 1000, easing: Easing.linear, useNativeDriver: native });
+
+  // 반복 값(점, 별)은 처음부터 돈다
   useEffect(() => {
     if (reduce) {
-      const fill = Animated.timing(calm, {
+      return;
+    }
+    const dotsRun = Animated.loop(
+      Animated.timing(dotsLoop, { toValue: 1, duration: 909, easing: Easing.linear, useNativeDriver: native }),
+    );
+    const starsRun = Animated.loop(
+      Animated.timing(starsLoop, { toValue: 1, duration: SPLASH_STAR_PERIOD * 1000, easing: Easing.linear, useNativeDriver: native }),
+    );
+    dotsRun.start();
+    starsRun.start();
+    return () => {
+      dotsRun.stop();
+      starsRun.stop();
+    };
+  }, [reduce]);
+
+  // 진행률 숫자: 정수가 바뀔 때만 다시 그린다
+  useEffect(() => {
+    const id = t.addListener(({ value }) => setPct(pctAt(value)));
+    return () => t.removeListener(id);
+  }, []);
+
+  // 앞 구간: 두리번 구간만 빠르게(1.5배속) 흘려보낸다
+  useEffect(() => {
+    if (stage !== 'intro') {
+      return;
+    }
+    let from = 0;
+    const steps = T.intro.map(([to, speed]) => {
+      const step = play(to, (to - from) / speed);
+      from = to;
+      return step;
+    });
+    const run = Animated.sequence(steps);
+    run.start(({ finished }) => finished && setStage('load'));
+    return () => run.stop();
+  }, [stage]);
+
+  // 막대 채우기: 준비가 이미 됐으면 2배속. 8.2초 지점에서 준비가 아직이면 멈춰서 기다린다.
+  useEffect(() => {
+    if (stage !== 'load') {
+      return;
+    }
+    const speed = goRef.current ? T.loadFastSpeed : 1;
+    const run = play(T.holdAt, (T.holdAt - T.loadFrom) / speed);
+    run.start(({ finished }) => finished && setStage(goRef.current ? 'end' : 'hold'));
+    return () => run.stop();
+  }, [stage]);
+
+  // 기다리는 동안: 오리가 제자리에서 폴짝인다. 한 번 폴짝이 끝날 때마다 준비됐는지 보고, 됐으면 이어서 재생한다
+  // (폴짝의 끝 자세가 멈춘 자리의 자세와 같아서 이어 붙는 곳이 튀지 않는다).
+  useEffect(() => {
+    if (stage !== 'hold') {
+      return;
+    }
+    let alive = true;
+    let run: Animated.CompositeAnimation | null = null;
+    const hop = () => {
+      holdHop.setValue(0);
+      run = Animated.timing(holdHop, {
         toValue: 1,
-        duration: T.calmFill * 1000,
+        duration: ((T.loadEnd - T.loadFrom) / T.hops) * 1000,
         easing: Easing.linear,
         useNativeDriver: native,
       });
-      fill.start(({ finished }) => finished && setFront(true));
-      return () => fill.stop();
-    }
-    const main = Animated.timing(t, {
-      toValue: T.duckEnd,
-      duration: T.duckEnd * 1000,
-      easing: Easing.linear,
-      useNativeDriver: native,
-    });
-    main.start(({ finished }) => finished && setFront(true));
-    // 오리 폴짝: 내려앉은 뒤부터 막대 끝까지 정해진 횟수
-    const hops = Math.round((T.duckEnd - T.duckLand) / T.hopPeriod);
-    const hopRun = Animated.sequence([
-      Animated.delay(T.duckLand * 1000),
-      Animated.loop(
-        Animated.timing(hop, { toValue: 1, duration: T.hopPeriod * 1000, easing: Easing.linear, useNativeDriver: native }),
-        { iterations: hops },
-      ),
-      // 마지막 폴짝의 착지 모양(납작함)이 남지 않게 되돌린다
-      Animated.timing(hop, { toValue: 0, duration: 1, useNativeDriver: native }),
-    ]);
-    hopRun.start();
-    const dots = Animated.loop(
-      Animated.timing(loop, { toValue: 1, duration: 1200, easing: Easing.linear, useNativeDriver: native }),
-    );
-    dots.start();
-    return () => {
-      main.stop();
-      hopRun.stop();
-      dots.stop();
+      run.start(({ finished }) => {
+        if (!alive || !finished) {
+          return;
+        }
+        if (goRef.current) {
+          setStage('end');
+        } else {
+          hop();
+        }
+      });
     };
-  }, []);
+    hop();
+    return () => {
+      alive = false;
+      run?.stop();
+    };
+  }, [stage]);
 
-  // 끝 구간: 앞 구간이 끝나고 준비도 됐을 때만 시작한다. 동작 줄이기는 바로 끝낸다.
+  // 끝 구간: 남은 막대 채우기(8.2→9.2, 2배속) → 도착 점프·반짝임 → 막이 덮임. 끝나면 알린다.
   useEffect(() => {
-    if (!front || !ready) {
+    if (stage !== 'end') {
       return;
     }
-    if (reduce) {
+    const steps = [play(T.loadEnd, (T.loadEnd - T.holdAt) / T.loadFastSpeed)];
+    let from: number = T.loadEnd;
+    for (const [to, speed] of T.finish) {
+      steps.push(play(to, (to - from) / speed));
+      from = to;
+    }
+    const run = Animated.sequence(steps);
+    run.start(({ finished }) => finished && finish());
+    return () => run.stop();
+  }, [stage]);
+
+  // 동작 줄이기: 마지막 장면을 그대로 두고 막대만 채운다
+  useEffect(() => {
+    if (stage !== 'calm') {
+      return;
+    }
+    t.setValue(T.reduceFrame);
+    const run = Animated.timing(calm, { toValue: 1, duration: T.calmFill * 1000, easing: Easing.linear, useNativeDriver: native });
+    run.start(({ finished }) => finished && setStage('calmDone'));
+    return () => run.stop();
+  }, [stage]);
+  useEffect(() => {
+    if (stage === 'calmDone' && go) {
       finish();
-      return;
     }
-    const end = Animated.timing(t, {
-      toValue: T.end,
-      duration: (T.end - T.duckEnd) * 1000,
-      easing: Easing.linear,
-      useNativeDriver: native,
-    });
-    end.start(({ finished }) => finished && finish());
-    return () => end.stop();
-  }, [front, ready]);
+  }, [stage, go]);
 
   // 건너뛰기: 준비가 됐으면 바로 끝낸다. 준비 전이면 준비될 때까지 기다린다(빈 화면이 보이지 않게).
   useEffect(() => {
-    if (skipped && ready) {
+    if (skipped && go) {
       finish();
     }
-  }, [skipped, ready]);
+  }, [skipped, go]);
 
-  // 준비가 오래 걸리면 안내만 띄운다. 준비되면 안내를 치우고 끝 구간으로 이어진다.
+  // 준비가 오래 걸리면 안내만 띄운다. 준비되면 안내를 치우고 이어서 재생한다.
   useEffect(() => {
     const id = setTimeout(() => {
-      if (!readyRef.current) {
+      if (!goRef.current) {
         setDelayed(true);
       }
     }, T.delayAfter * 1000);
     return () => clearTimeout(id);
   }, []);
 
-  const showDelay = delayed && !ready;
-
-  // 시작 막은 위로 걷히고, 끝 막은 아래에서 덮는다
-  const topCurtain = reduce ? null : ip(t, [[0, 0], [T.curtainUp, -(height + 8)]]);
-  const bottomCurtain = reduce ? null : ip(t, [[T.curtainDownFrom, height + 8], [T.end, 0]]);
-
-  const cardStyle = reduce
-    ? null
-    : {
-        opacity: ip(t, [[T.cardFrom, 0], [T.cardTo, 1]]),
-        transform: [{ translateY: ip(t, [[T.cardFrom, -40], [T.cardTo, 0]]) }],
-      };
-  const barStyle = reduce
-    ? null
-    : { transform: [{ scaleX: ip(t, [[T.barFrom, 0], [T.barTo, 1]]) }], transformOrigin: 'left' as const };
-  const fillScale = reduce ? calm : ip(t, [[T.duckLand, 0], [T.duckEnd, 1]]);
-
-  // 오리: 떨어져 한 번 튕기고, 막대 위를 폴짝폴짝 건너고, 끝에서 크게 점프한다
-  const duckStyle = reduce
-    ? null
-    : {
-        opacity: ip(t, [[0, 0], [T.duckFall - 0.001, 0], [T.duckFall, 1]]),
-        transform: [
-          { translateX: ip(t, [[T.duckLand, S.duckFrom], [T.duckEnd, S.duckTo]]) },
-          {
-            translateY: Animated.add(
-              Animated.add(
-                ip(t, [[T.duckFall, -320], [0.75, 0], [0.9, -14], [T.duckLand, 0]]),
-                hop.interpolate({ inputRange: [0, 0.25, 0.5, 0.75, 1], outputRange: [0, -22.5, -S.hop, -22.5, 0] }),
-              ),
-              ip(t, [[T.burstFrom, 0], [T.burstMid, -S.bigJump], [T.burstTo, 0]]),
-            ),
-          },
-          { rotate: ip(t, [[T.burstFrom, 0], [T.burstMid, -14], [T.burstTo, 0]]).interpolate({ inputRange: [-14, 0], outputRange: ['-14deg', '0deg'] }) },
-          { scaleX: hop.interpolate({ inputRange: [0, 0.5, 0.9, 1], outputRange: [1, 0.94, 1, 1.1] }) },
-          { scaleY: hop.interpolate({ inputRange: [0, 0.5, 0.9, 1], outputRange: [1, 1.1, 1, 0.88] }) },
-        ],
-      };
+  const showDelay = delayed && !go;
+  const fontReady = font === 'loaded';
+  const moving = !reduce && tl !== null;
 
   return (
     <Pressable
+      ref={rootRef}
       style={styles.root}
+      onLayout={measure}
       onPress={() => setSkipped(true)}
       accessibilityRole="button"
       accessibilityLabel={SPLASH_SKIP_LABEL}
     >
-      <SplashBackground loop={reduce ? null : loop} />
+      <SplashBackground stars={reduce ? null : stars} />
 
-      <View style={styles.center} pointerEvents="none">
-        <Animated.View style={[styles.tagline, cardStyle]}>
+      {/* 자리를 재기 전에는 보이지 않게 둔다(완성된 장면이 잠깐 비치지 않도록) */}
+      <View style={[styles.center, !tl && !reduce && styles.hidden]} pointerEvents="none">
+        <Animated.View style={[styles.tagline, moving && { opacity: tl.tag.o, transform: [{ translateY: tl.tag.ty }] }]}>
           <Text style={styles.taglineText}>{SPLASH_TAGLINE}</Text>
         </Animated.View>
 
-        <SplashLogo t={reduce ? null : t} />
+        <View style={styles.tagGap} />
+        <SplashLogo letters={moving ? tl.letters : null} fontReady={fontReady} titleRef={titleRef} slotRef={slotRef} />
 
-        <View style={styles.gap} />
-
-        <View style={styles.barRow}>
-          {reduce ? null : (
-            <Animated.View style={[styles.duck, duckStyle]}>
-              <Image source={duckImage} style={[styles.duckImage, pixelated]} resizeMode="contain" />
-            </Animated.View>
-          )}
-          <Animated.View style={[styles.bar, barStyle]}>
-            <View style={styles.track}>
-              <Animated.View style={[styles.fill, { transform: [{ scaleX: fillScale }], transformOrigin: 'left' }]} />
-              {Array.from({ length: Math.floor(S.bar.fill / S.bar.tick) }, (_, i) => (
-                <View key={i} style={[styles.tick, { left: (i + 1) * S.bar.tick - 1 }]} />
-              ))}
-            </View>
-          </Animated.View>
-        </View>
-
-        <View style={styles.loading}>
-          <Text style={styles.loadingText}>{SPLASH_LOADING}</Text>
-          {[0, 1, 2].map((k) => (
-            <Animated.Text
-              key={k}
-              style={[
-                styles.loadingText,
-                {
-                  opacity:
-                    reduce || k === 0 ? 1 : ip(loop, [[0, 0], [k / 3, 0], [k / 3 + 0.001, 1]]),
-                },
-              ]}
-            >
-              .
-            </Animated.Text>
-          ))}
-        </View>
+        <LoadingStrip
+          tl={moving ? tl : null}
+          hold={hold}
+          holding={stage === 'hold'}
+          fill={reduce || !tl ? calm : tl.fill}
+          pct={reduce ? 100 : pct}
+          dots={reduce ? null : dots}
+          fontReady={fontReady}
+        />
       </View>
 
-      {reduce ? null : <Sparks t={t} />}
+      {geo && bursts && !reduce ? (
+        <View pointerEvents="none" style={StyleSheet.absoluteFill}>
+          {bursts.map((b, i) => (
+            <Animated.View
+              key={i}
+              style={[
+                styles.burst,
+                {
+                  left: geo.title.cx,
+                  top: geo.title.cy,
+                  backgroundColor: b.color,
+                  boxShadow: `6px 0 0 ${b.color}, -6px 0 0 ${b.color}, 0 6px 0 ${b.color}, 0 -6px 0 ${b.color}`,
+                  opacity: tl!.burst.o,
+                  transform: [{ translateX: b.x }, { translateY: b.y }],
+                },
+              ]}
+            />
+          ))}
+        </View>
+      ) : null}
+
+      {/* 돋보기 Q. 시안 시각 t로 등장 → 두리번 → Q 자리로 날아가 앉는다 */}
+      {tl ? (
+        <Animated.View
+          pointerEvents="none"
+          style={[
+            styles.icon,
+            {
+              opacity: tl.icon.show,
+              transform: [
+                { translateX: tl.icon.x },
+                { translateY: tl.icon.y },
+                { rotate: tl.icon.rot },
+                { scaleX: tl.icon.sx },
+                { scaleY: tl.icon.sy },
+              ],
+            },
+          ]}
+        >
+          <Image source={iconImage} style={[styles.iconImage, pixelated]} resizeMode="stretch" />
+        </Animated.View>
+      ) : null}
 
       {showDelay ? (
         <View style={styles.delay}>
@@ -256,42 +383,14 @@ function Playback({ ready, onDone, reduce }: Props & { reduce: boolean }) {
         </View>
       ) : null}
 
-      {topCurtain && bottomCurtain ? (
+      {/* 시작 막은 위로 걷히고, 끝 막은 아래에서 올라와 덮는다 */}
+      {moving ? (
         <>
-          <Animated.View pointerEvents="none" style={[styles.curtain, { transform: [{ translateY: topCurtain }] }]} />
-          <Animated.View pointerEvents="none" style={[styles.curtain, { transform: [{ translateY: bottomCurtain }] }]} />
+          <Animated.View pointerEvents="none" style={[styles.curtain, { transform: [{ translateY: tl.curtainTop }] }]} />
+          <Animated.View pointerEvents="none" style={[styles.curtain, { transform: [{ translateY: tl.curtainBottom }] }]} />
         </>
       ) : null}
     </Pressable>
-  );
-}
-
-const SPARK_COUNT = 8;
-
-// 끝에서 로고 위로 사방에 퍼졌다 사라지는 반짝임 8개
-function Sparks({ t }: { t: Animated.Value }) {
-  return (
-    <View pointerEvents="none" style={styles.sparks}>
-      {Array.from({ length: SPARK_COUNT }, (_, i) => {
-        const angle = (Math.PI * 2 * i) / SPARK_COUNT;
-        return (
-          <Animated.View
-            key={i}
-            style={{
-              position: 'absolute',
-              width: 6,
-              height: 6,
-              backgroundColor: i % 2 === 0 ? SPLASH_COLORS.orange : SPLASH_COLORS.yellow,
-              opacity: ip(t, [[T.burstFrom, 0], [T.burstFrom + 0.15, 1], [T.burstFade, 0]]),
-              transform: [
-                { translateX: ip(t, [[T.burstFrom, 0], [T.burstFade, Math.cos(angle) * 90]]) },
-                { translateY: ip(t, [[T.burstFrom, 0], [T.burstFade, Math.sin(angle) * 90]]) },
-              ],
-            }}
-          />
-        );
-      })}
-    </View>
   );
 }
 
@@ -312,81 +411,41 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+  hidden: {
+    opacity: 0,
+  },
   tagline: {
-    marginBottom: 24,
     paddingVertical: 8,
     paddingHorizontal: 16,
     borderWidth: 2,
-    borderColor: SPLASH_COLORS.outline,
-    borderRadius: RADIUS.small,
+    borderColor: SPLASH_COLORS.brown,
+    borderRadius: 14,
     backgroundColor: SPLASH_COLORS.card,
-    ...hardShadow(2),
+    ...hardShadow(3),
   },
   taglineText: {
     fontSize: 14,
     fontWeight: '700',
   },
-  gap: {
-    height: S.logoGap,
+  tagGap: {
+    height: S.tagGap,
   },
-  barRow: {
-    width: S.bar.width,
-    height: S.bar.height + SIZES.card.shadow,
-  },
-  // 막대 위에 서 있는 오리. 막대 위쪽 가장자리에 발이 닿는다.
-  duck: {
-    position: 'absolute',
-    left: 0,
-    bottom: S.bar.height + SIZES.card.shadow - 4,
-    width: S.duck,
-    height: S.duck,
-    zIndex: 2,
-  },
-  duckImage: {
-    width: S.duck,
-    height: S.duck,
-  },
-  bar: {
-    width: S.bar.width,
-    height: S.bar.height,
-    borderWidth: 2,
-    borderColor: SPLASH_COLORS.outline,
-    borderRadius: RADIUS.small,
-    backgroundColor: SPLASH_COLORS.card,
-    overflow: 'hidden',
-    ...hardShadow(SIZES.card.shadow),
-  },
-  track: {
-    flex: 1,
-  },
-  fill: {
+  // 돋보기 아이콘 박스. 이동·기울기·크기는 값으로 준다(가운데 기준).
+  icon: {
     position: 'absolute',
     left: 0,
     top: 0,
-    bottom: 0,
-    width: S.bar.fill,
-    backgroundColor: SPLASH_COLORS.yellow,
+    width: S.icon.width,
+    height: S.icon.height,
   },
-  tick: {
+  iconImage: {
+    width: '100%',
+    height: '100%',
+  },
+  burst: {
     position: 'absolute',
-    top: 0,
-    bottom: 0,
-    width: 1,
-    backgroundColor: SPLASH_COLORS.outline,
-    opacity: 0.25,
-  },
-  loading: {
-    flexDirection: 'row',
-    marginTop: 20,
-  },
-  loadingText: {
-    fontSize: 14,
-    color: SPLASH_COLORS.sub,
-  },
-  sparks: {
-    ...StyleSheet.absoluteFill,
-    alignItems: 'center',
-    justifyContent: 'center',
+    width: S.star,
+    height: S.star,
   },
   delay: {
     position: 'absolute',
@@ -403,6 +462,6 @@ const styles = StyleSheet.create({
     backgroundColor: SPLASH_COLORS.yellow,
     borderTopWidth: S.curtainBorder,
     borderBottomWidth: S.curtainBorder,
-    borderColor: SPLASH_COLORS.outline,
+    borderColor: SPLASH_COLORS.brown,
   },
 });
