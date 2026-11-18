@@ -34,7 +34,9 @@ export function readSttApiKey(): string {
 // 아래 두 값은 팀 결정 전 임시값이다(docs/Todo.md A4, 미정 사항).
 
 // 사용자 한 명이 하루(서울 시간)에 AI 분석을 요청할 수 있는 횟수. server.consume_ai_quota에 넘긴다.
-export const AI_DAILY_LIMIT = 30;
+// 120은 발표(11/20)용 값이다. 시연폰의 익명 사용자 하나로 하루 종일 시연하기 위해 올렸다.
+// 익명 사용자를 포함한 모든 사용자에 적용되므로 발표 후 다시 정한다(#32).
+export const AI_DAILY_LIMIT = 120;
 
 // AI 응답 한 번의 최대 출력 토큰 수. AI 담당이 첫 실제 실행(ai/evals)에서 쓴 값이며, AI 담당 확인 전 임시값이다.
 export const LLM_MAX_OUTPUT_TOKENS = 4096;
