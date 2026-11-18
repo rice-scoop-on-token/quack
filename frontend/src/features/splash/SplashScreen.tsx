@@ -2,7 +2,6 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   Animated,
   Easing,
-  Image,
   Platform,
   Pressable,
   StyleSheet,
@@ -13,17 +12,16 @@ import {
 
 import { Card } from '@/components/ui/Card';
 import { Text } from '@/components/ui/Text';
-import { pixelated } from '@/features/character/pixelated';
 import { useReduceMotion } from '@/features/character/useReduceMotion';
 import { LoadingStrip } from '@/features/splash/LoadingStrip';
+import { MagnifierQ } from '@/features/splash/MagnifierQ';
 import { SplashBackground } from '@/features/splash/SplashBackground';
 import { SplashLogo } from '@/features/splash/SplashLogo';
-import { buildDots, buildHold, buildStars, buildTimeline, pctAt } from '@/features/splash/splashChannels';
+import { buildDots, buildHold, buildMagnifier, buildStars, buildTimeline, pctAt } from '@/features/splash/splashChannels';
 import {
   SPLASH_BURSTS,
   SPLASH_COLORS,
   SPLASH_DELAY,
-  SPLASH_ICON,
   SPLASH_SIZE,
   SPLASH_SKIP_LABEL,
   SPLASH_STAR_PERIOD,
@@ -40,6 +38,8 @@ type Props = {
   ready: boolean;
   // 연출이 끝나거나 건너뛰면 한 번만 부른다
   onDone: () => void;
+  // 돋보기 정렬 비교용(mock 전용). layers: 레이어만, full: 완성 그림만.
+  variant?: 'layers' | 'full';
 };
 
 // 앞 구간(intro) → 막대 채우기(load) → [준비가 늦으면 멈춰서 기다림(hold)] → 끝 구간(end). 동작 줄이기는 calm 한 단계다.
@@ -48,8 +48,6 @@ type Stage = 'wait' | 'intro' | 'load' | 'hold' | 'end' | 'calm' | 'calmDone';
 const native = Platform.OS !== 'web';
 const T = SPLASH_TIME;
 const S = SPLASH_SIZE;
-// 한계: 이 커밋에서는 돋보기 Q를 완성 그림 한 장(splash-full)으로 둔다. 머리만 움직이는 레이어 모션은 다음 커밋에서 바꾼다.
-const iconImage = require('../../../assets/splash/splash-full.png');
 
 export function SplashScreen(props: Props) {
   const reduce = useReduceMotion();
@@ -65,7 +63,7 @@ export function SplashScreen(props: Props) {
   return <Playback {...props} reduce={reduce} font={font} />;
 }
 
-function Playback({ ready, onDone, reduce, font }: Props & { reduce: boolean; font: SplashFontState }) {
+function Playback({ ready, onDone, variant, reduce, font }: Props & { reduce: boolean; font: SplashFontState }) {
   const { width, height } = useWindowDimensions();
   const t = useRef(new Animated.Value(0)).current;
   // 준비를 기다리며 제자리에서 폴짝일 때 쓰는 값(한 번 폴짝 = 0→1)
@@ -138,6 +136,7 @@ function Playback({ ready, onDone, reduce, font }: Props & { reduce: boolean; fo
 
   const geo = measured && measured.font === font ? measured.geo : null;
   const tl = useMemo(() => (geo ? buildTimeline(t, geo) : null), [geo]);
+  const mq = useMemo(() => (geo ? buildMagnifier(t) : null), [geo]);
   const hold = useMemo(() => buildHold(holdHop), []);
   const dots = useMemo(() => buildDots(dotsLoop), []);
   const stars = useMemo(() => buildStars(starsLoop), []);
@@ -372,7 +371,7 @@ function Playback({ ready, onDone, reduce, font }: Props & { reduce: boolean; fo
             },
           ]}
         >
-          <Image source={iconImage} style={[styles.iconImage, pixelated]} />
+          {mq ? <MagnifierQ mq={mq} variant={variant} fontReady={fontReady} /> : null}
         </Animated.View>
       ) : null}
 
@@ -440,14 +439,6 @@ const styles = StyleSheet.create({
     top: 0,
     width: S.icon.width,
     height: S.icon.height,
-  },
-  // 정사각형 그림 한 장. Q 외곽이 박스에 맞도록 여백만큼 밀어 그린다(납작하게 늘이지 않는다).
-  iconImage: {
-    position: 'absolute',
-    left: -SPLASH_ICON.offsetX,
-    top: -SPLASH_ICON.offsetY,
-    width: SPLASH_ICON.canvas,
-    height: SPLASH_ICON.canvas,
   },
   burst: {
     position: 'absolute',

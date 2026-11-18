@@ -1,6 +1,6 @@
-import { Animated } from 'react-native';
+import { Animated, Platform } from 'react-native';
 
-import { SPLASH_SIZE, SPLASH_STARS, SPLASH_TIME } from '@/features/splash/splashSpec';
+import { SPLASH_HEAD_DP, SPLASH_SIZE, SPLASH_STARS, SPLASH_TIME } from '@/features/splash/splashSpec';
 import * as K from '@/features/splash/splashTrack';
 
 // splashTrack.ts의 수식을 60Hz로 샘플링해 Animated 값(interpolate)으로 "굽는다".
@@ -9,6 +9,7 @@ import * as K from '@/features/splash/splashTrack';
 // 한계: 샘플 사이는 직선으로 이어진다. 60Hz 간격(약 0.017초)이라 눈에 띄지 않는다.
 const HZ = 60;
 const SMALL = 0.001;
+const snap = (v: number) => (Platform.OS === 'web' ? Math.round(v) : v);
 
 function sample(fn: (x: number) => number, from: number, to: number, hz: number) {
   const n = Math.max(2, Math.ceil((to - from) * hz));
@@ -44,8 +45,10 @@ export function buildTimeline(t: Animated.Value, g: K.Geo) {
     curtainTop: at((x) => K.curtainTop(x, g.height)),
     curtainBottom: at((x) => K.curtainBottom(x, g.height)),
     icon: {
-      x: icon((p) => p.tx),
-      y: icon((p) => p.ty),
+      // 웹에서만 돋보기 전체의 이동을 정수 dp로 반올림한다(그림 칸이 소수 위치에서 어긋나 흐려 보이지 않게).
+      // 머리 이동에는 적용하지 않는다(미세한 움직임이 끊겨 보인다).
+      x: icon((p) => snap(p.tx)),
+      y: icon((p) => snap(p.ty)),
       rot: bakeDeg(t, (x) => K.iconPose(x, g).r, E),
       // 크기 0에서 행렬이 무너지지 않게 아주 작은 값으로 둔다
       sx: icon((p) => Math.max(SMALL, p.sx)),
@@ -79,6 +82,25 @@ export function buildTimeline(t: Animated.Value, g: K.Geo) {
     },
     fill: at((x) => K.fillRatio(x, barW)),
     burst: { e: at(K.burstProgress), o: at(K.burstOpacity) },
+  };
+}
+
+// 돋보기 레이어(머리·원판·빛·눈꺼풀·말풍선)를 시안 시각 t로 움직이는 값
+export function buildMagnifier(t: Animated.Value) {
+  const E = K.T_END;
+  const at = (fn: (x: number) => number) => bake(t, fn, E);
+  // 머리 이동은 머리 크기에 대한 %를 dp로 바꿔서 준다
+  const toDp = (pct: number) => (pct / 100) * SPLASH_HEAD_DP;
+  return {
+    head: {
+      x: at((x) => toDp(K.headPose(x).x)),
+      y: at((x) => toDp(K.headPose(x).y)),
+      rot: bakeDeg(t, (x) => K.headPose(x).r, E),
+      s: at((x) => K.headPose(x).s),
+    },
+    shine: { o: at((x) => K.shinePose(x).o), p: at((x) => K.shinePose(x).p) },
+    blink: at(K.blinkAll),
+    qmark: { o: at((x) => K.qmarkPose(x).o), y: at((x) => K.qmarkPose(x).y), rot: bakeDeg(t, (x) => K.qmarkPose(x).r, E) },
   };
 }
 

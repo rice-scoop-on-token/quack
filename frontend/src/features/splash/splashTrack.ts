@@ -1,4 +1,4 @@
-import { SPLASH_DUCK_TRAVEL_EXTRA, SPLASH_SIZE, SPLASH_STAR_PERIOD } from '@/features/splash/splashSpec';
+import { SPLASH_DUCK_TRAVEL_EXTRA, SPLASH_HEAD_MOTION, SPLASH_SIZE, SPLASH_STAR_PERIOD } from '@/features/splash/splashSpec';
 
 // 시안(quack_splash.html)의 render(t) 수식을 시각 t 하나의 순수 함수로 옮겼다. 값은 시안과 같게 유지한다.
 // 이 파일은 RN을 불러오지 않는다(Node 일회용 스크립트로 시안 값과 비교할 수 있게 하기 위해서다).
@@ -47,13 +47,8 @@ export type Geo = {
 export const curtainTop = (t: number, H: number) => -1.04 * H * eInOut(seg(t, 0, 0.45));
 export const curtainBottom = (t: number, H: number) => (t < 10.0 ? 1.04 * H : 1.04 * H * (1 - eInOut(seg(t, 10.0, 10.55))));
 
-// ---- 돋보기 아이콘(위치·기울기·크기) ----
-const MX: [number, number][] = [[1.1, 0], [1.3, -12], [1.55, 10], [1.75, 0], [2.35, 0], [2.75, -12], [2.95, -12], [3.35, 12], [3.5, 12], [3.9, 0], [4.5, 0]];
-const MY: [number, number][] = [[1.1, 0], [1.3, -6], [1.55, -4], [1.75, 0], [3.5, 0], [3.9, -10], [4.15, -8], [4.5, 0]];
-const MR: [number, number][] = [[1.1, 0], [1.3, -7], [1.55, 6], [1.75, 0], [2.35, 0], [2.75, -5], [2.95, -5], [3.35, 5], [3.5, 5], [3.9, 0], [4.1, -3], [4.5, 0]];
-const MS: [number, number][] = [[3.5, 1], [3.9, 1.14], [4.15, 1.14], [4.5, 1]];
-
-// 아이콘 박스(230×268)의 왼쪽 위 이동량 tx, ty와 회전 r(도), 가로·세로 배율을 돌려준다. 가운데를 기준으로 돈다.
+// ---- 돋보기 아이콘(위치·기울기·크기). 등장 → 제자리 → Q 자리로 날아감 ----
+// 아이콘 박스(240×275)의 왼쪽 위 이동량 tx, ty와 회전 r(도), 가로·세로 배율을 돌려준다. 가운데를 기준으로 돈다.
 export function iconPose(t: number, g: Geo) {
   const start = { x: g.width / 2, y: g.height * 0.45 };
   const finalS = g.slot.w / ICON_W;
@@ -67,14 +62,9 @@ export function iconPose(t: number, g: Geo) {
     s = pIn <= 0 ? 0 : eOutBack(pIn, 2.2);
     r = lerp(-28, 0, eOutCubic(pIn));
     y += lerp(70, 0, eOutCubic(pIn));
-  } else {
-    // 두리번 뒤 멈추며 살짝 출렁인다
-    const settle = t > 4.1 && t < 4.75 ? Math.sin(seg(t, 4.5, 4.75) * Math.PI) * -0.04 : 0;
-    x += track(t, MX);
-    y += track(t, MY);
-    r = track(t, MR);
-    s = track(t, MS) + settle;
   }
+  // 1.1초 이후 날아가기 전까지는 돋보기 전체가 움직이지 않는다. 두리번거림은 머리(headPose)만 한다.
+  // (시안은 돋보기 전체도 흔들지만, 프레임과 유리는 고정하기로 했다.)
   let sx = 1;
   let sy = 1;
   let by = 0;
@@ -219,3 +209,56 @@ export const starOpacity = (u: number, delay: number) => {
   const phase = (((u - delay / SPLASH_STAR_PERIOD) % 1) + 1) % 1;
   return phase < 0.5 ? 1 : 0.25;
 };
+
+// ---- 돋보기 레이어(13-3) ----
+// 머리 안에서 움직이는 값. x, y는 머리 폭·높이에 대한 %, r은 도, s는 배율이다(변환 기준점은 머리의 50% 59.7%).
+const HX: [number, number][] = [[2.35, 0], [2.75, -10], [2.95, -10], [3.35, 10], [3.5, 10], [3.9, 0], [4.5, 0]];
+const HY: [number, number][] = [[2.35, 0], [3.5, 0], [3.9, -4], [4.15, -3], [4.5, 0]];
+const HR: [number, number][] = [[2.35, 0], [2.75, -11], [2.95, -11], [3.35, 11], [3.5, 11], [3.9, 0], [4.1, -8], [4.5, 0]];
+const HS: [number, number][] = [[3.5, 1], [3.9, 1.16], [4.15, 1.16], [4.5, 1]];
+
+export function headPose(t: number) {
+  const M = SPLASH_HEAD_MOTION;
+  let hx = 0;
+  let hy: number = M.entranceFrom;
+  let hr = 0;
+  let hs = 1;
+  const pr = seg(t, 1.75, 2.35);
+  if (t < 2.35) {
+    // 렌즈 아래에서 쏙 올라온다(위로 넘치는 정도만 줄이고, 시작 위치는 커진 머리가 구멍 밖에 있도록 정했다)
+    hy = lerp(M.entranceFrom, 0, pr <= 0 ? 0 : eOutBack(pr, M.overshoot));
+    hr = Math.sin(pr * Math.PI) * -6;
+  } else {
+    // 두리번: 이동은 렌즈 폭의 3%, 회전은 6° 이내로 줄이고, 어떤 경우에도 그 안에 머문다
+    hx = clamp(track(t, HX) * M.moveX, -M.limitX, M.limitX);
+    hy = clamp(track(t, HY) * M.moveY, -M.limitY, M.limitY);
+    hr = track(t, HR) * M.rotate;
+    hs = track(t, HS);
+  }
+  return { x: hx, y: hy, r: hr, s: hs };
+}
+
+// 유리 위를 지나가는 빛. p는 이동(0~1), o는 보이는지.
+export function shinePose(t: number) {
+  const sh = seg(t, 1.15, 1.75);
+  const sh2 = seg(t, 4.45, 4.95);
+  const sp = sh > 0 && sh < 1 ? sh : sh2 > 0 && sh2 < 1 ? sh2 : -1;
+  return { o: sp < 0 ? 0 : 1, p: eInOut(Math.max(sp, 0)) };
+}
+
+// 완성 그림(full)으로 바꾸지 않는다. 완성 그림 속 머리는 배율 1이라 렌즈를 못 채워서, 바꾸면 머리 크기와 외곽선이 튄다.
+// 그래서 끝까지 레이어(머리·유리·프레임)를 그대로 쓴다.
+
+// 눈 깜빡임(0~1 = 눈꺼풀이 내려온 정도)
+const blink = (t: number, at: number, d = 0.16) => {
+  const p = seg(t, at, at + d);
+  return p <= 0 || p >= 1 ? 0 : Math.sin(Math.PI * p);
+};
+// 시안은 두리번 중(3.42)에 머리 눈꺼풀이, 멈춘 뒤(4.62, 7.4, 9.3)에 완성 그림 위 덮개가 깜빡인다. 여기서는 머리 눈꺼풀 하나가 모두 맡는다.
+export const blinkAll = (t: number) => Math.max(blink(t, 3.42), blink(t, 4.62), blink(t, 7.4), blink(t, 9.3, 0.2));
+
+// 말풍선 "?": 들여다보는 동안 잠깐 떠올랐다 사라진다
+export function qmarkPose(t: number) {
+  const qm = seg(t, 3.55, 4.15);
+  return { o: qm > 0 && qm < 1 ? Math.min(1, Math.sin(qm * Math.PI) * 1.4) : 0, y: -20 * eOutCubic(qm), r: 12 * Math.sin(qm * 6) };
+}

@@ -17,10 +17,13 @@ export function SplashGate({ children }: { children: ReactNode }) {
   const { splash, demo } = useGlobalSearchParams<{ splash?: string; demo?: string }>();
   // 주소로 바꾸는 값은 실제 서버를 쓸 때 사용자가 건드리지 못하도록 mock 모드에서만 읽는다
   const mock = process.env.EXPO_PUBLIC_USE_MOCK === 'true';
-  // ?splash가 ?demo보다 우선한다. ?splash=slow는 항상 재생하고, ?splash=off는 항상 건너뛴다.
+  // ?splash가 ?demo보다 우선한다. ?splash=slow·layers·full은 항상 재생하고, ?splash=off는 항상 건너뛴다.
   // ?demo=reset(발표 시작 장면)은 재생하고, 그 밖의 ?demo= 값은 확인을 빠르게 하려고 건너뛴다.
+  // layers·full은 돋보기 정렬을 비교하는 용도다(layers: 레이어만, full: 완성 그림만).
+  const variant = mock && (splash === 'layers' || splash === 'full') ? splash : undefined;
+  const forcedPlay = splash === 'slow' || variant !== undefined;
   const skipByUrl =
-    mock && (splash === 'off' || (splash !== 'slow' && typeof demo === 'string' && demo !== '' && demo !== 'reset'));
+    mock && (splash === 'off' || (!forcedPlay && typeof demo === 'string' && demo !== '' && demo !== 'reset'));
   // ?splash=slow: 준비되지 않은 것처럼 보이게 해서 지연 안내를 확인한다.
   // 한계: 데모 확인용 자동 해제. 버튼이 없어서, 지연 안내가 뜬 뒤 slowRelease초가 지나면 저절로 풀린다.
   const [forcedSlow, setForcedSlow] = useState(mock && splash === 'slow');
@@ -47,6 +50,7 @@ export function SplashGate({ children }: { children: ReactNode }) {
       {children}
       {showing ? (
         <SplashScreen
+          variant={variant}
           ready={access !== 'loading' && !forcedSlow}
           onDone={() => {
             splashSeen = true;

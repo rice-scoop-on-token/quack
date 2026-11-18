@@ -32,18 +32,18 @@ export const SPLASH_COLORS = {
 // 시안의 단단한 그림자(box-shadow: 0 Npx 0 var(--brown)). 앱의 hardShadow는 외곽선색이 달라서 쓰지 않는다.
 export const splashShadow = (offset: number) => ({ boxShadow: `0px ${offset}px 0px ${SPLASH_COLORS.brown}` }) as const;
 
-// 돋보기 그림(splash-full, 720×720 정사각형)은 Q 둘레에 여백이 있다. 시안의 아이콘 박스(높이 268)에 Q 외곽을 맞추려고
-// 외곽(알파 기준) x 80~671, y 24~703의 높이를 268dp로 놓는 배율 k를 구한다. 그림 한 장은 한 변 canvas(약 283.7dp)다.
-const ICON_BBOX = { x: 80, y: 24, w: 592, h: 680 };
-const ICON_K = 268 / ICON_BBOX.h;
+// 돋보기 그림(splash-frame/glass/full)은 512×512이고 Q 둘레에 여백이 있다. Q 외곽(알파 기준 x 64~448, y 32~472 = 384×440)의 높이를
+// 275dp로 놓는다(시안은 268). 그림 1픽셀이 정확히 0.625dp(8px 칸 = 5dp)가 되어 칸이 일정한 크기로 보이고, 안착할 때 배율 0.4에서 Q 너비가 정확히 96dp가 된다.
+const ICON_BBOX = { x: 64, y: 32, w: 384, h: 440 };
+const ICON_K = 275 / ICON_BBOX.h;
 export const SPLASH_ICON = {
-  canvas: 720 * ICON_K,
+  canvas: 512 * ICON_K,
   // 그림 왼쪽 위에서 Q 외곽 왼쪽 위까지
   offsetX: ICON_BBOX.x * ICON_K,
   offsetY: ICON_BBOX.y * ICON_K,
-  // Q 외곽 크기(시안의 230×268에 해당)
+  // Q 외곽 크기(시안의 230×268에 해당하는 박스, 240×275)
   width: ICON_BBOX.w * ICON_K,
-  height: 268,
+  height: 275,
 } as const;
 
 // 앱 성체 오리 그림(512×512)에서 오리 몸이 차지하는 영역(알파 기준 x 112~399, y 46~503 = 288×458).
@@ -57,9 +57,52 @@ export const SPLASH_DUCK_ART = {
   bottom: -(DUCK_BODY.canvas - (DUCK_BODY.y + DUCK_BODY.h)) * DUCK_K,
 } as const;
 
+// ---- 돋보기 레이어(splash-frame/glass/full은 512×512, splash-head는 머리 344×400. 아래 좌표는 모두 512 캔버스 기준 px) ----
+// 돋보기(프레임 + 베이지 유리색 렌즈 채움)는 고정이고, 머리만 렌즈 클립 원 안에서 움직인다. 유리 하이라이트는 머리 위에 덮는다.
+// 레이어 순서(아래 → 위): 그림자 복사본 → frame → 머리(렌즈 클립 원으로 자름) → glass(하이라이트). 머리를 (88,96)에 두고 반지름 140 원으로 자르면
+// frame + 머리 + glass가 splash-full과 거의 같다(차이 489픽셀).
+export const SPLASH_LAYERS = {
+  canvas: 512,
+  // 렌즈 클립 원. 중심 (256,264), 반지름 140(렌즈 채움은 반지름 136, 그 바깥 8px이 프레임 안쪽 외곽선이다).
+  lens: { x: 116, y: 124, size: 280 },
+  lensCenter: { x: 256, y: 264 },
+  // 머리 정지 위치. 얼굴은 시안 원본 크기(배율 1.0)이고, 몸통을 렌즈 밖까지 연장한 344×400 그림이다(이전 248×344 그림에서 좌 48px, 상 56px 연장).
+  // 얼굴 위치는 이전과 같다(이전 (136,152) 그림의 얼굴이 (88,96) 그림 안 (48,56)에 있다).
+  duck: { x: 88, y: 96, w: 344, h: 400 },
+  // 확대·회전의 기준점. 이전 머리의 시안 기준점 (50%, 59.7%)이 있던 캔버스 위치 (260, 357.4)에 그대로 둔다(새 머리 기준 (50%, 65.34%)).
+  duckPivot: { x: (260 - 88) / 344, y: (152 + 0.597 * 344 - 96) / 400 },
+  // 눈 깜빡임은 눈 감은 머리 그림(splash-head-blink-half/blink, 머리와 같은 344×400)을 머리 위에 겹쳐 바꾼다. 눈 좌표 상수는 두지 않는다.
+  // 시안의 drop-shadow(0 12px 0 rgba(72,29,11,.95))
+  shadowOffset: 12,
+  shadowOpacity: 0.95,
+  // 말풍선 "?"(시안 .qmark): 돋보기 Q 외곽 기준 왼쪽 46%, 위쪽 -8%
+  qmark: { left: 0.46, top: -0.08, size: 34 },
+} as const;
+// 머리 그림의 너비(dp). 머리 이동은 이 너비에 대한 %로 다룬다.
+export const SPLASH_HEAD_DP = (SPLASH_ICON.canvas * SPLASH_LAYERS.duck.w) / SPLASH_LAYERS.canvas;
+
+// 머리 모션의 한계. 이동은 가로 렌즈 지름(280)의 6%(16.8px), 세로 5%(14px), 갸웃은 ±6° 이내로 줄인다.
+// 머리 몸통이 렌즈 밖까지 이어져서(344×400) 기본 배율 1.0으로도 렌즈 클립 원 안에 투명한 픽셀이 생기지 않는 것을 이미지로 확인했다.
+// 시안 폭 가로 8.8%(24.6px)는 오른쪽으로 갈 때 갸웃과 겹치면 왼쪽 가장자리에 틈이 생겨서(0개가 되는 최대 18px) 6%로 두었다.
+// 시안 값은 가로 ±10%(머리 폭 기준), 세로 -4%, 회전 ±11°라서 아래 계수를 곱한다.
+const LIMIT_X_PCT = ((0.06 * SPLASH_LAYERS.lens.size) / SPLASH_LAYERS.duck.w) * 100;
+const LIMIT_Y_PCT = ((0.05 * SPLASH_LAYERS.lens.size) / SPLASH_LAYERS.duck.w) * 100;
+// 머리가 렌즈 아래에서 올라오기 시작할 때, 머리(이미지 위쪽)가 렌즈 클립 원 아래쪽 밖에 있도록 하는 시작 위치(머리 너비의 %)
+const LENS_BOTTOM = SPLASH_LAYERS.lensCenter.y + SPLASH_LAYERS.lens.size / 2;
+export const SPLASH_HEAD_MOTION = {
+  limitX: LIMIT_X_PCT,
+  limitY: LIMIT_Y_PCT,
+  moveX: LIMIT_X_PCT / 10,
+  moveY: LIMIT_Y_PCT / 4,
+  rotate: 6 / 11,
+  entranceFrom: ((LENS_BOTTOM + 24 - SPLASH_LAYERS.duck.y) / SPLASH_LAYERS.duck.w) * 100,
+  // 올라올 때 위로 넘치는 정도. 시안 1.4는 너무 커서, 올라오는 거리에 맞춰 렌즈 지름의 3% 이내가 되는 값으로 줄였다.
+  overshoot: 0.82,
+} as const;
+
 export const SPLASH_SIZE = {
   grid: 26,
-  // 돋보기 아이콘 박스(시안 230×268에 해당). 이 크기의 비율로 날아가는 위치를 계산한다.
+  // 돋보기 아이콘 박스(시안 230×268에 해당, 240×275). 이 크기의 비율로 날아가는 위치를 계산한다.
   icon: { width: SPLASH_ICON.width, height: SPLASH_ICON.height },
   // 아이콘이 최종적으로 앉는 Q 자리
   slot: { width: 96, height: 112 },
