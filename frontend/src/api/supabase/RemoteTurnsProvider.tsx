@@ -1,10 +1,11 @@
 import { useContext, useMemo, type ReactNode } from 'react';
 
 import { ApiContext, type QuackApi } from '@/api/QuackApi';
-import { sendRemoteTurn, TurnRequestError } from '@/api/supabase/turns';
+import { startRemoteSession } from '@/api/supabase/sessionStart';
+import { sendRemoteTurn } from '@/api/supabase/turns';
 
-// 시연 영상용 임시 연결(이슈 #22). mock 구현 위에서 타이머 설명(explain)만 실제 서버로 보낸다.
-// 나머지 메서드는 mock을 그대로 쓴다. mock과 supabase를 섞는 방식은 제출 뒤 팀이 다시 정한다.
+// 발표용 임시 연결. mock 구현 위에서 공부 시작(requestSessionStart)과 타이머 설명(explain)만 실제 서버로 보낸다.
+// 나머지 메서드는 mock을 그대로 쓴다. mock과 supabase를 섞는 방식은 발표 뒤 팀이 다시 정한다.
 export function RemoteTurnsProvider({ children }: { children: ReactNode }) {
   const parent = useContext(ApiContext);
   if (!parent) {
@@ -15,18 +16,10 @@ export function RemoteTurnsProvider({ children }: { children: ReactNode }) {
     const mock = parent.api;
     const api: QuackApi = {
       ...mock,
-      async explain(sessionId, input) {
-        // 원격 그림자 세션을 만들 재료(목표, 폴더 이름, 동물)는 mock 세션과 폴더에서 읽는다
-        const session = await mock.getSession(sessionId);
-        const folder = session ? (await mock.listFolders()).find((f) => f.id === session.folder_id) : undefined;
-        if (!session || !folder) {
-          throw new TurnRequestError('NOT_FOUND', '공부 세션을 찾지 못했어요. 처음부터 다시 시작해 주세요.');
-        }
-        return sendRemoteTurn(
-          { mockSessionId: sessionId, goal: session.goal, folderName: folder.name, speciesId: folder.species_id },
-          input,
-        );
-      },
+      // 원격 판정과 세션 생성 뒤, 화면이 읽을 mock 세션도 만든다
+      requestSessionStart: (input) => startRemoteSession(mock, input),
+      // 공부 시작 때 이어 둔 원격 세션으로 보낸다
+      explain: (sessionId, input) => sendRemoteTurn(sessionId, input),
     };
     return { api, version: parent.version };
   }, [parent]);

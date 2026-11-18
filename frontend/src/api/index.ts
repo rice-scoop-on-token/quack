@@ -6,7 +6,7 @@ import { RemoteTurnsProvider } from '@/api/supabase/RemoteTurnsProvider';
 
 // QuackApi 구현을 고르는 자리.
 // EXPO_PUBLIC_USE_MOCK === 'true'면 전부 mock이다.
-// 아니면 시연 영상용 임시 구성으로, mock 위에서 타이머 설명(explain)만 실제 서버로 보낸다(이슈 #22).
+// 아니면 발표용 임시 구성으로, mock 위에서 공부 시작(requestSessionStart)과 타이머 설명(explain)만 실제 서버로 보낸다(이슈 #22, #31).
 // 이때는 frontend/.env에 EXPO_PUBLIC_SUPABASE_URL, EXPO_PUBLIC_SUPABASE_ANON_KEY(publishable key)가 있어야 한다.
 const USE_MOCK = process.env.EXPO_PUBLIC_USE_MOCK === 'true';
 
