@@ -21,8 +21,11 @@ import { SubjectSelect } from '@/features/folder/SubjectSelect';
 import { COLORS } from '@/theme/assetTokens';
 
 const GOAL_MAX_LENGTH = 140;
-// 한계: 값은 임시다. 판정은 AI 호출이라 오래 걸릴 수 있어서 이 시간이 지나면 실패로 보고 같은 request_id로 다시 시도하게 한다.
-const START_TIMEOUT_MS = 15_000;
+// 서버의 AI 판정 대기(30초)보다 길게 45초로 둔다. 앱이 먼저 포기하면 서버는 계속 처리 중인데 같은 request_id로 다시 보내
+// 사용량이 두 번 차감될 수 있다(PR #32 리뷰). /turns의 TURN_TIMEOUT_MS(45_000)와 같은 값이다.
+// 한계: TURN_TIMEOUT_MS는 api/supabase/turns.ts 안의 내보내지 않는 상수이고, 화면은 QuackApi 밖(supabase 구현)을 가져다 쓰지 않는 규칙이라 숫자를 따로 둔다. 두 값은 같이 바꾼다.
+// 한계: 서버가 45초 안에 응답하지 않아도 사용자는 45초를 기다려야 한다(그동안 "확인 중" 버튼 외에 안내·취소 수단이 없다).
+const START_TIMEOUT_MS = 45_000;
 
 // 범위 확인 결과 안내. 응답에는 문구가 없어서 앱의 고정 문구를 쓴다.
 // 제목과 배너 종류는 화면에서 정하고, 본문은 응답이 아니라 앱의 고정 문구다.
