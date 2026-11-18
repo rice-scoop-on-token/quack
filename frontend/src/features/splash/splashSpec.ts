@@ -1,5 +1,3 @@
-import { COLORS } from '@/theme/assetTokens';
-
 // 스플래시("돋보기 Q" 시안)의 문구·색·치수·시간표를 한 곳에 모은다. 값은 여기서만 고친다.
 // 시안: quack_splash.html. 시안의 시간표(t=0~10.6초)를 그대로 쓰고, 재생 속도만 아래 SPLASH_TIME에서 조절한다.
 // 이 파일은 순수 값만 둔다(Node 일회용 스크립트로 시안과 비교할 수 있게 하기 위해서다).
@@ -18,21 +16,51 @@ export const SPLASH_FONT = 'QuackPixel';
 // 한계: 글꼴 불러오기를 이 시간(초)만 기다린다. 넘으면 시스템 글꼴로 그린다. 값은 임시다.
 export const SPLASH_FONT_WAIT = 1.5;
 
+// 시안 CSS 변수(--paper, --grid, --yel, --org, --brown, --ink, --cream)와 같은 값이다.
+// 앱 공용 토큰(theme)을 쓰지 않고 여기에 직접 둔다. 앱 토큰이 바뀌어도 스플래시 색이 달라지지 않게 하기 위해서다.
 export const SPLASH_COLORS = {
-  background: COLORS.screen,
+  background: '#F7EFD8',
   grid: '#EFE2BF',
   yellow: '#FBBE1C',
-  orange: COLORS.accent,
-  // 시안의 갈색. 앱 외곽선(#4B3226)보다 약간 진해서 스플래시에서만 쓴다.
+  orange: '#E98A3A',
   brown: '#481D0B',
-  card: COLORS.card,
-  sub: COLORS.textSub,
+  ink: '#3B2A1A',
+  card: '#FFFBF0',
+  sub: '#7A6350',
+} as const;
+
+// 시안의 단단한 그림자(box-shadow: 0 Npx 0 var(--brown)). 앱의 hardShadow는 외곽선색이 달라서 쓰지 않는다.
+export const splashShadow = (offset: number) => ({ boxShadow: `0px ${offset}px 0px ${SPLASH_COLORS.brown}` }) as const;
+
+// 돋보기 그림(splash-full, 720×720 정사각형)은 Q 둘레에 여백이 있다. 시안의 아이콘 박스(높이 268)에 Q 외곽을 맞추려고
+// 외곽(알파 기준) x 80~671, y 24~703의 높이를 268dp로 놓는 배율 k를 구한다. 그림 한 장은 한 변 canvas(약 283.7dp)다.
+const ICON_BBOX = { x: 80, y: 24, w: 592, h: 680 };
+const ICON_K = 268 / ICON_BBOX.h;
+export const SPLASH_ICON = {
+  canvas: 720 * ICON_K,
+  // 그림 왼쪽 위에서 Q 외곽 왼쪽 위까지
+  offsetX: ICON_BBOX.x * ICON_K,
+  offsetY: ICON_BBOX.y * ICON_K,
+  // Q 외곽 크기(시안의 230×268에 해당)
+  width: ICON_BBOX.w * ICON_K,
+  height: 268,
+} as const;
+
+// 앱 성체 오리 그림(512×512)에서 오리 몸이 차지하는 영역(알파 기준 x 112~399, y 46~503 = 288×458).
+// 시안의 병아리(288×458)와 크기가 같아서, 몸이 44×70 칸을 채우도록 그림을 그린다.
+const DUCK_BODY = { canvas: 512, x: 112, y: 46, h: 458 };
+const DUCK_K = 70 / DUCK_BODY.h;
+export const SPLASH_DUCK_ART = {
+  size: DUCK_BODY.canvas * DUCK_K,
+  left: -DUCK_BODY.x * DUCK_K,
+  // 발(몸 아래 끝)이 칸 바닥에 닿게 한다
+  bottom: -(DUCK_BODY.canvas - (DUCK_BODY.y + DUCK_BODY.h)) * DUCK_K,
 } as const;
 
 export const SPLASH_SIZE = {
   grid: 26,
-  // 돋보기 아이콘 박스(시안 px). 이 크기의 비율로 레이어를 놓는다.
-  icon: { width: 230, height: 268 },
+  // 돋보기 아이콘 박스(시안 230×268에 해당). 이 크기의 비율로 날아가는 위치를 계산한다.
+  icon: { width: SPLASH_ICON.width, height: SPLASH_ICON.height },
   // 아이콘이 최종적으로 앉는 Q 자리
   slot: { width: 96, height: 112 },
   title: { height: 112, letterSize: 92, letterSpacing: 1, wordGap: 4, wordPadBottom: 4 },

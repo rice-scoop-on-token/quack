@@ -4,8 +4,7 @@ import { Text } from '@/components/ui/Text';
 import { CHARACTER_IMAGES } from '@/features/character/characterAssets';
 import { pixelated } from '@/features/character/pixelated';
 import type { buildHold, buildTimeline } from '@/features/splash/splashChannels';
-import { SPLASH_COLORS, SPLASH_FONT, SPLASH_LOADING, SPLASH_SIZE } from '@/features/splash/splashSpec';
-import { hardShadow } from '@/theme/assetTokens';
+import { SPLASH_COLORS, SPLASH_DUCK_ART, SPLASH_FONT, SPLASH_LOADING, SPLASH_SIZE, splashShadow } from '@/features/splash/splashSpec';
 
 const R = SPLASH_SIZE.row;
 const D = SPLASH_SIZE.duck;
@@ -122,7 +121,7 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     backgroundColor: SPLASH_COLORS.card,
     overflow: 'hidden',
-    ...hardShadow(3),
+    ...splashShadow(3),
     transformOrigin: '0% 50%',
   },
   fill: {
@@ -156,10 +155,11 @@ const styles = StyleSheet.create({
     bottom: D.shadowBottom,
     width: D.shadowWidth,
     height: D.shadowHeight,
-    borderRadius: D.shadowHeight / 2,
+    // 시안처럼 타원(반지름이 가로·세로의 절반)
+    borderRadius: '50%',
     backgroundColor: 'rgba(72,29,11,0.18)',
   },
-  // 오리 칸은 아래 가운데를 기준으로 눌린다. 그림은 칸 아래에 붙여 막대 위에 서 있게 한다.
+  // 오리 칸(44×70)은 아래 가운데를 기준으로 눌린다. 그림은 오리 몸이 칸을 채우도록 크게 그리고 발을 칸 바닥에 맞춘다.
   duck: {
     position: 'absolute',
     left: 0,
@@ -170,14 +170,16 @@ const styles = StyleSheet.create({
   },
   duckImage: {
     position: 'absolute',
-    left: 0,
-    bottom: 0,
-    width: D.width,
-    height: D.width,
+    left: SPLASH_DUCK_ART.left,
+    bottom: SPLASH_DUCK_ART.bottom,
+    width: SPLASH_DUCK_ART.size,
+    height: SPLASH_DUCK_ART.size,
   },
+  // 시안의 .load는 항목 사이가 1px이다
   load: {
     flexDirection: 'row',
     alignItems: 'center',
+    gap: 1,
     marginTop: SPLASH_SIZE.loadMarginTop,
   },
   loadText: {

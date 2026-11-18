@@ -1,4 +1,4 @@
-import { StyleSheet, View } from 'react-native';
+import { Platform, StyleSheet, View } from 'react-native';
 
 import { Text } from '@/components/ui/Text';
 import { SPLASH_COLORS } from '@/features/splash/splashSpec';
@@ -40,8 +40,11 @@ export function OutlinedText({ text, size, fill, family, letterSpacing = 0, drop
     lineHeight: size,
     letterSpacing,
     fontFamily: family,
-    // 한 장짜리 픽셀 글꼴에 굵기를 주면 안드로이드가 억지로 굵게 만든다
+    // 글꼴 파일이 이미 굵은 글꼴(Pixelify Sans Bold) 한 가지라서 굵기는 normal로 고정한다.
+    // 더 굵게 요청하면 안드로이드·브라우저가 가짜 볼드를 겹쳐 글자가 두꺼워진다. 폴백(시스템 글꼴)일 때만 굵게 그린다.
     fontWeight: family ? ('normal' as const) : ('700' as const),
+    // 웹: 브라우저가 가짜 볼드·기울임을 만들지 못하게 한다
+    ...(Platform.OS === 'web' ? ({ fontSynthesis: 'none' } as object) : null),
   };
   const copies = drop ? [...OUTLINE, ...DROP] : OUTLINE;
 

@@ -23,15 +23,17 @@ import {
   SPLASH_BURSTS,
   SPLASH_COLORS,
   SPLASH_DELAY,
+  SPLASH_ICON,
   SPLASH_SIZE,
   SPLASH_SKIP_LABEL,
   SPLASH_STAR_PERIOD,
   SPLASH_TAGLINE,
   SPLASH_TIME,
+  splashShadow,
 } from '@/features/splash/splashSpec';
 import type { Geo } from '@/features/splash/splashTrack';
 import { useSplashFont, type SplashFontState } from '@/features/splash/useSplashFont';
-import { SIZES, hardShadow } from '@/theme/assetTokens';
+import { SIZES } from '@/theme/assetTokens';
 
 type Props = {
   // 앱이 첫 화면을 정할 준비가 됐는지. 장면은 준비와 상관없이 재생하다가, 준비가 늦으면 막대가 차는 도중에 기다린다.
@@ -46,7 +48,7 @@ type Stage = 'wait' | 'intro' | 'load' | 'hold' | 'end' | 'calm' | 'calmDone';
 const native = Platform.OS !== 'web';
 const T = SPLASH_TIME;
 const S = SPLASH_SIZE;
-// 한계: 13-1에서는 돋보기 Q를 완성 그림 한 장(splash-full)으로 둔다. 돋보기의 두리번·오리 머리·눈 깜빡임은 다음 커밋에서 레이어로 바꾼다.
+// 한계: 이 커밋에서는 돋보기 Q를 완성 그림 한 장(splash-full)으로 둔다. 머리만 움직이는 레이어 모션은 다음 커밋에서 바꾼다.
 const iconImage = require('../../../assets/splash/splash-full.png');
 
 export function SplashScreen(props: Props) {
@@ -370,7 +372,7 @@ function Playback({ ready, onDone, reduce, font }: Props & { reduce: boolean; fo
             },
           ]}
         >
-          <Image source={iconImage} style={[styles.iconImage, pixelated]} resizeMode="stretch" />
+          <Image source={iconImage} style={[styles.iconImage, pixelated]} />
         </Animated.View>
       ) : null}
 
@@ -421,16 +423,17 @@ const styles = StyleSheet.create({
     borderColor: SPLASH_COLORS.brown,
     borderRadius: 14,
     backgroundColor: SPLASH_COLORS.card,
-    ...hardShadow(3),
+    ...splashShadow(3),
   },
   taglineText: {
     fontSize: 14,
     fontWeight: '700',
+    color: SPLASH_COLORS.ink,
   },
   tagGap: {
     height: S.tagGap,
   },
-  // 돋보기 아이콘 박스. 이동·기울기·크기는 값으로 준다(가운데 기준).
+  // 돋보기 아이콘 박스(Q 외곽 크기). 이동·기울기·크기는 값으로 주고, 가운데(Q 외곽의 가운데)를 기준으로 돈다.
   icon: {
     position: 'absolute',
     left: 0,
@@ -438,9 +441,13 @@ const styles = StyleSheet.create({
     width: S.icon.width,
     height: S.icon.height,
   },
+  // 정사각형 그림 한 장. Q 외곽이 박스에 맞도록 여백만큼 밀어 그린다(납작하게 늘이지 않는다).
   iconImage: {
-    width: '100%',
-    height: '100%',
+    position: 'absolute',
+    left: -SPLASH_ICON.offsetX,
+    top: -SPLASH_ICON.offsetY,
+    width: SPLASH_ICON.canvas,
+    height: SPLASH_ICON.canvas,
   },
   burst: {
     position: 'absolute',
