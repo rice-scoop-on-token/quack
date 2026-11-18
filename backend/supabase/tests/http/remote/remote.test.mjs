@@ -5,7 +5,7 @@
 import assert from 'node:assert/strict';
 import { after, before, test } from 'node:test';
 
-import { createRemoteClient, decodeJwtPart, encodeJwtPart } from '../lib.mjs';
+import { assertAppError, createRemoteClient, decodeJwtPart, encodeJwtPart } from '../lib.mjs';
 
 const remote = createRemoteClient();
 const NIL = '00000000-0000-4000-8000-000000000000';
@@ -95,4 +95,26 @@ test('api 함수: health 200, /me는 토큰이 있을 때만 자기 프로필', 
     headers: { apikey: remote.env.publishableKey, Authorization: `Bearer ${header}.${forged}.${signature}` },
   });
   assert.equal(res.status, 401);
+});
+
+// #31 2번(db push) 확인: 공부 시작 재시도 키 칸이 원격 DB에 반영됐는지 본다.
+// 칸이 없으면 PostgREST가 400(42703)을 준다. authenticated는 sessions에 테이블 단위 SELECT가 있어 조회할 수 있다(#29).
+test('sessions.request_id 칸이 원격에 있다', async () => {
+  const res = await remote.rest(user, 'GET', 'sessions?select=request_id&limit=1');
+  assert.equal(res.status, 200, JSON.stringify(res.body));
+  assert.ok(Array.isArray(res.body), JSON.stringify(res.body));
+});
+
+// #31 4번(api 함수 배포) 확인: 배포 전에는 라우트가 없어 404 NOT_FOUND가 오므로, 400으로 배포 여부를 구분한다.
+// request_id를 빼서 요청 검사에서 막히게 한다. 그래서 DB 조회·AI 호출·사용량 차감이 일어나지 않는다.
+test('api 함수: POST /sessions/start가 배포돼 있다', async () => {
+  const res = await remote.api(user, '/sessions/start', { method: 'POST', body: { folder_id: NIL, goal: '스택' } });
+  assertAppError(res, 400, 'VALIDATION_FAILED');
+});
+
+// #31 4번(api 함수 배포) 확인: 배포 전에는 404 NOT_FOUND다. multipart 필드가 없는 JSON 본문은 요청 검사에서 400이 된다.
+// STT 키는 검사를 통과한 뒤에 읽으므로 이 시험으로 확인할 수 없다. 키와 실제 전사는 #31 6번에서 직접 확인한다.
+test('api 함수: POST /speech/transcribe가 배포돼 있다', async () => {
+  const res = await remote.api(user, '/speech/transcribe', { method: 'POST', body: {} });
+  assertAppError(res, 400, 'VALIDATION_FAILED');
 });
