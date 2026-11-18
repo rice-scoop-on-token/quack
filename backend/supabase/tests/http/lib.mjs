@@ -10,11 +10,13 @@ import { fileURLToPath } from 'node:url';
 const BACKEND_DIR = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../..');
 
 // 응답 본문은 JSON이면 객체로, 아니면 문자열 그대로 돌려준다.
+// body가 FormData(multipart)면 그대로 보낸다. Content-Type의 경계 문자열은 fetch가 정해야 해서 직접 넣지 않는다.
 async function send(url, { method = 'GET', headers = {}, body } = {}) {
+  const isForm = body instanceof FormData;
   const res = await fetch(url, {
     method,
-    headers: body === undefined ? headers : { 'Content-Type': 'application/json', ...headers },
-    body: body === undefined ? undefined : typeof body === 'string' ? body : JSON.stringify(body),
+    headers: body === undefined || isForm ? headers : { 'Content-Type': 'application/json', ...headers },
+    body: body === undefined || isForm || typeof body === 'string' ? body : JSON.stringify(body),
   });
   const text = await res.text();
   let json = text;
