@@ -2,6 +2,9 @@ import { router, useFocusEffect } from 'expo-router';
 import { useCallback, useRef, useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 
+import { LoadingView } from '@/components/ui/LoadingView';
+import { EmptyState } from '@/components/ui/EmptyState';
+import { Icon } from '@/components/ui/Icon';
 import { Text } from '@/components/ui/Text';
 import { COLORS, PAPER } from '@/theme/assetTokens';
 import { FolderCard } from '@/components/ui/FolderCard';
@@ -39,12 +42,12 @@ export function NewPodcastScreen() {
   );
 
   if (folders === undefined || !materials) {
-    return null;
+    return <LoadingView />;
   }
   if (!selected) {
     return (
       <BottomActionLayout actions={<Button variant="primary" title="과목 만들기" onPress={() => router.replace('/subjects/new')} />}>
-        <Text>팟캐스트를 만들 과목이 없어요. 과목을 먼저 만들어 주세요.</Text>
+        <EmptyState title="팟캐스트를 만들 과목이 없어요." message="과목을 먼저 만들어 주세요." />
       </BottomActionLayout>
     );
   }
@@ -101,7 +104,7 @@ export function NewPodcastScreen() {
 
       <Text>처리 완료된 자료 (여러 개 고를 수 있어요)</Text>
       {ready.length === 0 ? (
-        <Text>처리가 끝난 자료가 없어요. 과목에 자료를 먼저 추가해 주세요.</Text>
+        <EmptyState title="처리가 끝난 자료가 없어요." message="과목에 자료를 먼저 추가해 주세요." />
       ) : (
         ready.map((m) => (
           <Pressable
@@ -113,7 +116,7 @@ export function NewPodcastScreen() {
             <FolderCard>
               <View style={styles.materialRow}>
                 <View style={[styles.checkbox, materialIds.includes(m.id) && styles.checkboxOn]}>
-                  <Text style={styles.check}>{materialIds.includes(m.id) ? '✓' : ''}</Text>
+                  {materialIds.includes(m.id) ? <Icon name="check" /> : null}
                 </View>
                 <Text style={styles.materialTitle}>{m.title}</Text>
               </View>
@@ -137,10 +140,9 @@ export function NewPodcastScreen() {
         ))}
       </View>
 
-      {/* 상태 문구 자리는 늘 한 줄을 잡아 둔다 */}
-      <Text accessibilityLiveRegion="polite">
-        {state === 'failed' ? '팟캐스트를 만들지 못했어요. 고른 자료는 그대로예요. 다시 생성해 주세요.' : ' '}
-      </Text>
+      {state === 'failed' ? (
+        <EmptyState error title="팟캐스트를 만들지 못했어요." message="고른 자료는 그대로예요. 다시 생성해 주세요." />
+      ) : null}
     </BottomActionLayout>
   );
 }
@@ -170,7 +172,7 @@ const styles = StyleSheet.create({
     flex: 1,
     fontWeight: '700',
   },
-  // 체크 칸은 색만이 아니라 ✓ 표시로도 고른 것을 알린다
+  // 체크 칸은 색만이 아니라 체크 아이콘으로도 고른 것을 알린다
   checkbox: {
     width: 28,
     height: 28,
@@ -183,9 +185,5 @@ const styles = StyleSheet.create({
   },
   checkboxOn: {
     backgroundColor: COLORS.primary,
-  },
-  check: {
-    fontWeight: '700',
-    lineHeight: 20,
   },
 });

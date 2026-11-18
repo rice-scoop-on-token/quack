@@ -1,6 +1,7 @@
 import { router } from 'expo-router';
 import { StyleSheet, View } from 'react-native';
 
+import { LoadingView } from '@/components/ui/LoadingView';
 import { Button } from '@/components/ui/Button';
 import { SPECIES } from '@/api/mock/data/species';
 import { useApiQuery } from '@/api';
@@ -10,6 +11,7 @@ import { CharacterGrowth } from '@/features/character/CharacterGrowth';
 import { useSelectedFolder } from '@/features/folder/SelectedFolder';
 import { SubjectSelect } from '@/features/folder/SubjectSelect';
 import { HomeScene } from '@/features/home/HomeScene';
+import { StreakCard } from '@/features/home/StreakCard';
 import { TodayStats } from '@/features/home/TodayStats';
 import { josa } from '@/lib/josa';
 import { COLORS, FONT, SIZES } from '@/theme/assetTokens';
@@ -20,7 +22,7 @@ export function HomeScreen() {
   const { folders, selected, select } = useSelectedFolder();
 
   if (folders === undefined) {
-    return null;
+    return <LoadingView />;
   }
   if (!selected) {
     return (
@@ -62,6 +64,7 @@ export function HomeScreen() {
       <Text style={styles.caption}>오늘 함께할 과목</Text>
       <SubjectSelect folders={folders} value={selected} onChange={(f) => select(f.id)} />
 
+      <StreakCard />
       <TodayStats />
     </BottomActionLayout>
   );

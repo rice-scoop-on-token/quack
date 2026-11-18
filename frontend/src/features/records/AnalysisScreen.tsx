@@ -2,6 +2,7 @@ import { router } from 'expo-router';
 import { useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 
+import { LoadingView } from '@/components/ui/LoadingView';
 import { Text } from '@/components/ui/Text';
 import { COLORS, PAPER } from '@/theme/assetTokens';
 import { Button } from '@/components/ui/Button';
@@ -37,10 +38,10 @@ export function AnalysisScreen() {
   const [kind, setKind] = useState<PeriodKind>('week');
 
   if (!sessions || !folders) {
-    return null;
+    return <LoadingView />;
   }
   const now = new Date();
-  const all = demo === 'records' ? [...sessions, ...demoRecordSessions(folders.map((f) => f.id), now)] : sessions;
+  const all = demo === 'records' ? [...sessions, ...demoRecordSessions(folders, now)] : sessions;
 
   const unit = TABS.find((t) => t.id === kind)!.unit;
   const current = inRange(all, periodRange(kind, now));

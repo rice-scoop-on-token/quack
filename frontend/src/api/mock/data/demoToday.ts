@@ -1,3 +1,6 @@
+import type { Folder } from '@quack/shared';
+
+import { contentFor } from '@/api/mock/data/subjectContent';
 import { TEMP_USER_ID } from '@/api/mock/ids';
 import type { SessionTurn, StudySession } from '@/api/tempContract';
 
@@ -10,7 +13,7 @@ function demoTurn(seq: number, concept: string): SessionTurn {
     trigger: 'self',
     input_mode: 'chat',
     question_text: null,
-    text: '데모 설명',
+    text: `${concept}에 대해 내 말로 설명한 내용이에요.`,
     analysis: {
       verdict: 'sufficient',
       concept,
@@ -22,11 +25,18 @@ function demoTurn(seq: number, concept: string): SessionTurn {
   };
 }
 
-export function demoTodaySessions(folderIds: string[], now: Date): StudySession[] {
+// 폴더의 과목에 맞는 개념과 목표를 쓴다(폴더 이름이 지원 과목 밖이면 자료구조 것).
+export function demoTodaySessions(folders: Pick<Folder, 'id' | 'name'>[], now: Date): StudySession[] {
+  if (folders.length === 0) {
+    return [];
+  }
+  const first = folders[0];
+  const second = folders[1] ?? first;
+  const firstConcepts = contentFor(first.name).concepts;
+  const secondConcepts = contentFor(second.name).concepts;
   const ended = now.toISOString();
   const base = {
     user_id: TEMP_USER_ID,
-    goal: '데모',
     status: 'reported',
     started_at: ended,
     ended_at: ended,
@@ -36,14 +46,16 @@ export function demoTodaySessions(folderIds: string[], now: Date): StudySession[
     {
       ...base,
       id: '00000000-0000-4000-8000-0000000000d1',
-      folder_id: folderIds[0],
+      folder_id: first.id,
+      goal: `'${firstConcepts[0]}' 개념을 내 말로 설명하기`,
       study_seconds: 25 * 60,
-      turns: [demoTurn(1, '핵심 정의'), demoTurn(2, '사용 예시')],
+      turns: [demoTurn(1, firstConcepts[0]), demoTurn(2, firstConcepts[1])],
     },
     {
       ...base,
       id: '00000000-0000-4000-8000-0000000000d2',
-      folder_id: folderIds[1] ?? folderIds[0],
+      folder_id: second.id,
+      goal: `'${secondConcepts[2]}' 개념을 내 말로 설명하기`,
       study_seconds: 18 * 60,
       turns: [],
     },

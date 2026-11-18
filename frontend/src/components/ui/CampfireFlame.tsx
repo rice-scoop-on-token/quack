@@ -7,14 +7,18 @@ const FRAME_COUNT = 6;
 const FRAME_MS = 250;
 
 // 장면 속 모닥불. CharacterBox의 동작 시트와 같은 방식(한 칸 창 + 시트 이동)으로 재생하고, 화면이 가려지면 멈춘다.
-export function CampfireFlame({ size }: { size: number }) {
+// still가 true면 첫 칸에 멈춰 있다(작은 배지 아이콘용). 기본은 움직인다.
+export function CampfireFlame({ size, still = false }: { size: number; still?: boolean }) {
   const [frame, setFrame] = useState(0);
 
   useFocusEffect(
     useCallback(() => {
+      if (still) {
+        return;
+      }
       const id = setInterval(() => setFrame((f) => (f + 1) % FRAME_COUNT), FRAME_MS);
       return () => clearInterval(id);
-    }, []),
+    }, [still]),
   );
 
   return (

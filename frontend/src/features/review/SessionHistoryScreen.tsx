@@ -3,6 +3,7 @@ import { router, Stack, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 
+import { LoadingView } from '@/components/ui/LoadingView';
 import { Text } from '@/components/ui/Text';
 import { PAPER } from '@/theme/assetTokens';
 import { Button } from '@/components/ui/Button';
@@ -33,7 +34,7 @@ export function SessionHistoryScreen() {
   const [practice, setPractice] = useState<QuizPublic | null>(null);
 
   if (session === undefined || result === undefined) {
-    return null;
+    return <LoadingView />;
   }
   if (!session || !result) {
     return <NoRecord message="학습 기록을 찾을 수 없어요." onHome={() => router.dismissTo('/home')} />;

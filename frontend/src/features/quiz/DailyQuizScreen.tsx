@@ -2,8 +2,10 @@ import { router } from 'expo-router';
 import { useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 
+import { LoadingView } from '@/components/ui/LoadingView';
 import { Text } from '@/components/ui/Text';
 import { COLORS, FEEDBACK, PAPER } from '@/theme/assetTokens';
+import { Banner } from '@/components/ui/Banner';
 import { Button } from '@/components/ui/Button';
 import { useApiQuery, useQuackApi } from '@/api';
 import type { TempDailyQuizResult } from '@/api/tempContract';
@@ -27,7 +29,7 @@ export function DailyQuizScreen() {
   const [submitting, setSubmitting] = useState(false);
 
   if (!quiz) {
-    return null;
+    return <LoadingView />;
   }
   const stage = xp === undefined ? undefined : growthFromXp(xp).stage;
   const action = !result
@@ -91,12 +93,22 @@ export function DailyQuizScreen() {
         );
       })}
 
-      {/* 해설 자리는 늘 잡아 두어 답을 확인해도 보기가 밀리지 않는다 */}
-      <View style={styles.explanation}>
-        <Text style={styles.label}>해설</Text>
-        <Text accessibilityLiveRegion="polite">
-          {result ? `${result.correct ? '맞았어요! ' : '괜찮아요, 다시 연결해 봐요. '}${result.explanation}` : ' '}
-        </Text>
+      {/* 해설은 답을 확인한 뒤 보기 아래에 나타나서 보기가 밀리지 않는다. 읽어 주는 영역(liveRegion)은 미리 그려 둔다. */}
+      {/* 한계: 비어 있는 영역이 위 간격(12)을 차지하지 않도록 -12로 되돌린다. 배너가 생기면 간격이 자연스럽게 돌아온다. */}
+      <View accessibilityLiveRegion="polite" style={result?.explanation ? null : styles.emptyLive}>
+        {result?.explanation ? (
+          result.correct ? (
+            <Banner variant="success" title="맞았어요!" message={result.explanation} />
+          ) : (
+            // liveRegion 안이라 alert로 한 번 더 읽히지 않게 한다
+            <Banner
+              variant="notice"
+              alert={false}
+              title={`정답은 ${String.fromCharCode(65 + result.correct_answer)}예요`}
+              message={result.explanation}
+            />
+          )
+        ) : null}
       </View>
     </BottomActionLayout>
   );
@@ -121,15 +133,7 @@ const styles = StyleSheet.create({
   wrong: {
     backgroundColor: FEEDBACK.negative,
   },
-  explanation: {
-    ...PAPER.card,
-    gap: 4,
-    minHeight: 96,
-  },
-  // "해설" 작은 문구
-  label: {
-    fontSize: 12,
-    fontWeight: '700',
-    color: COLORS.textSub,
+  emptyLive: {
+    marginTop: -12,
   },
 });

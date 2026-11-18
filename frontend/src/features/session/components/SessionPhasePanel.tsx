@@ -3,6 +3,7 @@ import type { ReactNode } from 'react';
 import { StyleSheet, View } from 'react-native';
 
 import { Button } from '@/components/ui/Button';
+import { Card } from '@/components/ui/Card';
 import { PERSONAS } from '@/api/mock/data/personas';
 import { SpeechBubble } from '@/components/ui/SpeechBubble';
 import { Text } from '@/components/ui/Text';
@@ -11,7 +12,7 @@ import { SCREEN_ACTIONS } from '@/features/character/screenActions';
 import { ExplainActions, ExplainInput } from '@/features/session/components/ExplainInput';
 import type { useExplanation } from '@/features/session/hooks/useExplanation';
 import type { useSessionTimer } from '@/features/session/hooks/useSessionTimer';
-import { COLORS, hardShadow, SIZES } from '@/theme/assetTokens';
+import { COLORS, SIZES } from '@/theme/assetTokens';
 
 type Props = {
   folder: Folder;
@@ -39,9 +40,9 @@ export function phaseView({ folder, goal, timer, explanation, onFinish }: Props)
         characterAction: timer.running ? SCREEN_ACTIONS.timing : SCREEN_ACTIONS.paused,
         body: (
           <>
-            <View style={styles.card}>
+            <Card>
               <Text>{goal}</Text>
-            </View>
+            </Card>
             <Text>{timer.running ? '나도 옆에서 읽고 있을게.' : '잠깐 쉬어가자.'}</Text>
             {/* 넘어간 개념은 리포트의 보완할 개념이 된다 */}
             {explanation.skipped ? <Text accessibilityLiveRegion="polite">{lines.skip}</Text> : null}
@@ -156,18 +157,6 @@ const styles = StyleSheet.create({
   center: {
     alignItems: 'center',
     gap: 8,
-  },
-  // 지금 공부하는 목표를 종이 카드에 담는다
-  card: {
-    paddingVertical: SIZES.card.paddingVertical,
-    paddingHorizontal: SIZES.card.paddingHorizontal,
-    borderWidth: SIZES.card.border,
-    borderColor: COLORS.outline,
-    borderRadius: SIZES.card.radius,
-    backgroundColor: COLORS.card,
-    // 그림자 자리를 아래에 비워 둔다
-    marginBottom: SIZES.card.shadow,
-    ...hardShadow(SIZES.card.shadow),
   },
   bubble: {
     padding: 12,

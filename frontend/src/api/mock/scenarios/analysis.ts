@@ -1,5 +1,6 @@
 import { createTurnResponseSchema, type CreateTurnResponse, type ExplanationTurn } from '@quack/shared';
 
+import { contentFor } from '@/api/mock/data/subjectContent';
 import type { ExplanationAnalysis, ExplanationVerdict, SessionTurn } from '@/api/tempContract';
 import { josa } from '@/lib/josa';
 
@@ -15,9 +16,6 @@ const SCENARIOS: Record<string, ExplanationVerdict[]> = {
   stuck: ['insufficient'],
 };
 
-// 자료 분석이 없어서 mock 개념 이름을 순서대로 쓴다
-const MOCK_CONCEPTS = ['핵심 정의', '사용 예시', '다른 개념과 비교'];
-
 const FOLLOW_UP_QUESTIONS = [
   '이 개념이 왜 필요한지도 설명해 줄래?',
   '실제로 쓰이는 예를 하나 들어 줄래?',
@@ -27,8 +25,9 @@ const FOLLOW_UP_QUESTIONS = [
 // 실제 STT는 개발 빌드 세팅 후 별도 커밋에서 붙인다
 export const MOCK_TRANSCRIPT = '음, 제가 이해한 건 이 개념이 어떤 문제를 풀려고 생겼고, 보통 이런 상황에서 쓴다는 거예요.';
 
-export function mockConcept(index: number): string {
-  return MOCK_CONCEPTS[index] ?? `개념 ${index + 1}`;
+// 자료 분석이 없어서 mock 개념 이름을 그 폴더 과목의 개념에서 순서대로 쓴다(data/subjectContent.ts)
+export function mockConcept(index: number, folderName: string | undefined): string {
+  return contentFor(folderName).concepts[index] ?? `개념 ${index + 1}`;
 }
 
 export type AnalyzeRequest = {

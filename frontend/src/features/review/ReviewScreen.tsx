@@ -3,6 +3,7 @@ import { router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 
+import { LoadingView } from '@/components/ui/LoadingView';
 import { Text } from '@/components/ui/Text';
 import { PAPER } from '@/theme/assetTokens';
 import { PaperInput } from '@/components/ui/PaperInput';
@@ -50,7 +51,7 @@ export function ReviewScreen() {
   }, [step, sessionId, quiz, api]);
 
   if (session === undefined || (session && items === null)) {
-    return null;
+    return <LoadingView />;
   }
   if (!session || !items) {
     return <NoRecord message="점검할 공부 기록이 없어요." onHome={() => leave(() => router.dismissTo('/home'))} />;
@@ -95,7 +96,7 @@ export function ReviewScreen() {
 
   if (step === 'quiz') {
     if (!quiz) {
-      return null;
+      return <LoadingView />;
     }
     return (
       <QuizRunner
@@ -152,6 +153,7 @@ export function ReviewScreen() {
                   multiline
                   editable={!analysis && !sending}
                   placeholder="내 말로 다시 설명해 보세요."
+                  error={analysis ? undefined : error}
                 />
                 {analysis ? (
                   <Text accessibilityLiveRegion="polite">
@@ -164,8 +166,6 @@ export function ReviewScreen() {
                             : ''
                         }`}
                   </Text>
-                ) : error ? (
-                  <Text accessibilityRole="alert">{error}</Text>
                 ) : null}
               </>
             ) : null}

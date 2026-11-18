@@ -2,6 +2,8 @@ import { router, useLocalSearchParams, usePreventRemove } from 'expo-router';
 import { useState } from 'react';
 import { Platform, StyleSheet, View } from 'react-native';
 
+import { LoadingView } from '@/components/ui/LoadingView';
+import { Banner } from '@/components/ui/Banner';
 import { Button } from '@/components/ui/Button';
 import { useApiQuery, useQuackApi } from '@/api';
 import { useDemoVariant } from '@/api/mock/useDemoVariant';
@@ -17,6 +19,8 @@ import { useExplanation } from '@/features/session/hooks/useExplanation';
 import { useSessionTimer } from '@/features/session/hooks/useSessionTimer';
 import { formatElapsed } from '@/features/session/machine';
 import { COLORS, FONT, SIZES } from '@/theme/assetTokens';
+
+const MIN_STUDY_MS = 60_000;
 
 // S-02 집중 타이머와 S-03 설명·꼬리 질문. 시간이 끊기지 않도록 한 화면 안에서 단계별 본문만 바꾼다.
 export function TimerScreen() {
@@ -48,7 +52,7 @@ export function TimerScreen() {
   });
 
   if (session === undefined || folders === undefined) {
-    return null;
+    return <LoadingView />;
   }
   if (!folder || !goal) {
     return <NoRecord message="진행 중인 공부가 없어요. 홈에서 다시 시작해 주세요." onHome={() => router.dismissTo('/home')} />;
@@ -57,8 +61,19 @@ export function TimerScreen() {
   const phase = timer.state.phase;
   // 분석 중에는 공부 마치기를 막는다(machine.ts 규칙)
   const canFinish = phase !== 'analyzing';
-  // 설명 단계에서 보내지 않은 입력이 있으면 마치기 확인 창에 알린다
-  const hasUnsent = phase === 'explaining' && explanation.draft.text.trim() !== '';
+  // 입력창에 남은 글이 있으면 마치기 확인 창에 알린다. 보낸 설명은 초안이 비워지고, 돌아가기로 나와도 초안은 남기 때문에 단계와 상관없이 본다.
+  const hasUnsent = explanation.draft.text.trim() !== '';
+  // 이번 공부에서 설명을 한 번이라도 보냈는지. 이번 화면에서 받은 분석이나, 서버 세션에 이미 저장된 설명 기록이 있으면 보낸 것이다.
+  const sentAny = explanation.last !== null || (activeSession?.turns.length ?? 0) > 0;
+  // 한 번에 하나만 보여 준다(앞의 것이 우선). 마치기는 막지 않는다.
+  // 한계: 1분은 임시값이다. 팀이 정한 기준이 아니라 "리포트에 0분으로 남는" 경계를 눈으로 보이려고 둔 숫자다.
+  const finishNotice = hasUnsent
+    ? { title: '보내지 않은 설명이 있어요', message: '공부를 마치면 이 설명은 저장되지 않아요.' }
+    : !sentAny
+      ? { title: '설명을 아직 안 했어요', message: '설명을 한 번도 보내지 않으면 리포트에서 설명한 개념이 0개로 나와요.' }
+      : timer.elapsedMs < MIN_STUDY_MS
+        ? { title: '공부 시간이 아주 짧아요', message: '1분보다 짧으면 기록에 0분으로 남아요.' }
+        : null;
 
   // 앱은 공부 시간만 보낸다. 종료 상태와 끝낸 시각은 서버가 정하고, 설명 기록은 설명할 때마다 저장됐다.
   async function handleFinish() {
@@ -135,9 +150,9 @@ export function TimerScreen() {
       <ConfirmDialog
         visible={confirmingFinish}
         title="공부를 마칠까요?"
-        message={`지금까지 ${formatElapsed(timer.elapsedMs)} 공부했어요. 기록을 저장하고 학습 점검으로 가요.${
-          hasUnsent ? ' 보내지 않은 설명은 저장되지 않아요.' : ''
-        }`}
+        message={`지금까지 ${formatElapsed(timer.elapsedMs)} 공부했어요. 기록을 저장하고 학습 점검으로 가요.`}
+        // 확인 창이 이미 alert라서 배너는 따로 알리지 않는다
+        notice={finishNotice ? <Banner variant="notice" alert={false} {...finishNotice} /> : undefined}
         confirmLabel="공부 마치기"
         onConfirm={handleFinish}
         onCancel={() => setConfirmingFinish(false)}
@@ -160,13 +175,12 @@ const styles = StyleSheet.create({
   half: {
     flex: 1,
   },
-  // 경과 시간을 크게 보여 준다
+  // 경과 시간만 가운데에 크게 보여 주고, 과목명과 보조 문구는 왼쪽에 둔다
   time: {
-    fontSize: 52,
-    fontWeight: FONT.title.fontWeight,
+    ...FONT.display,
+    textAlign: 'center',
   },
   top: {
-    alignItems: 'center',
     gap: 8,
   },
   sub: {

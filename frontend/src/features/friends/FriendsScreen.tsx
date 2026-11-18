@@ -2,7 +2,12 @@ import { router, useFocusEffect } from 'expo-router';
 import { useCallback, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 
-import { COLORS, SIZES } from '@/theme/assetTokens';
+import { LoadingView } from '@/components/ui/LoadingView';
+import { COLORS, FONT, RADIUS, SIZES } from '@/theme/assetTokens';
+import { Card } from '@/components/ui/Card';
+import { summarizeToday } from '@/features/home/todaySummary';
+import { EmptyState } from '@/components/ui/EmptyState';
+import { ScreenTitle } from '@/components/ui/ScreenTitle';
 import { Text } from '@/components/ui/Text';
 import { Button } from '@/components/ui/Button';
 import { useApiQuery } from '@/api';
@@ -23,6 +28,8 @@ function hms(total: number): string {
 export function FriendsScreen() {
   const demo = useDemoVariant();
   const friends = useApiQuery((a) => a.listFriends(), []);
+  const sessions = useApiQuery((a) => a.listSessions(), []);
+  const folders = useApiQuery((a) => a.listFolders(), []);
   // 화면이 보이는 동안 1초마다 올라가고, 화면을 떠나면 멈춘다. 공부 중인 친구의 시간만 이만큼 더한다.
   // 한계: 시간이 올라가는 것은 시연용 흉내다. 실제 시간은 서버가 알려 줘야 한다.
   const [elapsed, setElapsed] = useState(0);
@@ -34,8 +41,12 @@ export function FriendsScreen() {
   );
 
   if (!friends) {
-    return null;
+    return <LoadingView />;
   }
+
+  // 홈의 오늘 기록과 같은 계산이다. 조회가 끝나기 전이나 실패했을 때는 카드를 숨겨서 0이 잠깐 보이지 않게 한다.
+  // 한계: 지금 진행 중인 세션은 끝나야(ended_at이 생겨야) 합산된다. 그래서 공부하는 동안에는 이 값이 올라가지 않는다.
+  const myToday = sessions && folders ? summarizeToday(sessions, folders, new Date()).totalSeconds : null;
 
   return (
     <BottomActionLayout
@@ -52,8 +63,22 @@ export function FriendsScreen() {
         </>
       }
     >
+      <ScreenTitle title="친구" subtitle="함께 공부하는 친구들이에요." />
+
+      {myToday === null ? null : (
+        // 친구 카드의 "공부 중 = 노랑 / 쉬는 중 = 회색" 규칙과 헷갈리지 않게 바탕은 카드색 그대로 둔다
+        <Card
+          style={styles.mine}
+          accessible
+          accessibilityLabel={`나의 오늘 공부 시간, ${Math.floor(myToday / 3600)}시간 ${Math.floor((myToday % 3600) / 60)}분 ${myToday % 60}초`}
+        >
+          <Text style={styles.mineLabel}>나의 오늘 공부</Text>
+          <Text style={styles.mineValue}>{hms(myToday)}</Text>
+        </Card>
+      )}
+
       {friends.length === 0 ? (
-        <Text>아직 친구가 없어요.</Text>
+        <EmptyState title="아직 친구가 없어요." message="친구가 생기면 여기에서 공부 중인지 볼 수 있어요." />
       ) : (
         // 친구가 많으면 아래로 스크롤된다
         <View style={styles.grid}>
@@ -78,6 +103,16 @@ export function FriendsScreen() {
 }
 
 const styles = StyleSheet.create({
+  mine: {
+    gap: 2,
+  },
+  mineLabel: {
+    ...FONT.caption,
+    color: COLORS.mutedStrong,
+  },
+  mineValue: {
+    ...FONT.title,
+  },
   // 3열: 칸마다 좌우 4씩 띄우고 격자 전체를 그만큼 당겨 가장자리를 맞춘다
   grid: {
     flexDirection: 'row',
@@ -93,7 +128,7 @@ const styles = StyleSheet.create({
     gap: 6,
     paddingVertical: 10,
     paddingHorizontal: 4,
-    borderRadius: 16,
+    borderRadius: RADIUS.large,
   },
   studying: {
     backgroundColor: COLORS.primary,

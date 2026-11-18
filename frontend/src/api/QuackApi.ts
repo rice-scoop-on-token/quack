@@ -10,6 +10,8 @@ import type {
   QuizResponse,
   Session,
   SpeciesId,
+  StartSessionRequest,
+  StartSessionResponse,
   SubmitQuizRequest,
   SubmitQuizResponse,
   TranscribeResponse,
@@ -27,6 +29,7 @@ import type {
   TempPodcast,
   TempQuizAttempt,
   TempReportResponse,
+  TempRoom,
 } from '@/api/tempContract';
 
 // 화면과 훅은 이 인터페이스로만 데이터를 가져온다(CLAUDE.md Frontend). 메서드는 서버 계약(shared)에 맞춘다.
@@ -46,6 +49,10 @@ export interface QuackApi {
   // Storage에 파일을 올리고 materials 행을 만든다
   createMaterial(input: { folder_id: string; kind: Material['kind']; title: string }): Promise<Material>;
   startSession(input: { folder_id: string; goal: string }): Promise<Session>;
+  // 공부 시작: 학습 목표가 지원 과목(자료구조·알고리즘·컴퓨터구조) 범위인지 확인하고, 범위 안이면 세션을 만든다(POST /sessions/start).
+  // 같은 request_id로 다시 보내면 같은 결과를 돌려준다. 오류는 ApiError(AI_FAILED, INVALID_STATE 등)로 던진다.
+  // 한계: 서버 라우트가 아직 없어서 mock만 있다. 안내 문구는 응답에 없고 앱의 고정 문구를 쓴다.
+  requestSessionStart(input: StartSessionRequest): Promise<StartSessionResponse>;
   // 설명 기록과 점검 퀴즈 결과가 함께 온다(StudySession은 임시 타입)
   listSessions(): Promise<StudySession[]>;
   getSession(id: string): Promise<StudySession | null>;
@@ -71,6 +78,10 @@ export interface QuackApi {
   saveQuietStudy(input: { folder_id: string; study_seconds: number }): Promise<void>;
   // 지금 공부 중인 친구
   listFriends(): Promise<TempFriend[]>;
+  // 같은 자료를 공부하는 친구들의 통화방. 지원 과목의 모든 자료가 방 하나씩이다(참가자가 없는 방도 있다).
+  listRooms(): Promise<TempRoom[]>;
+  // 없는 방이면 null
+  getRoom(id: string): Promise<TempRoom | null>;
 
   // AI 팟캐스트. 자료 고르기는 listMaterials를 쓴다.
   createPodcast(input: { folder_id: string; material_ids: string[]; minutes: TempPodcast['minutes'] }): Promise<TempPodcast>;

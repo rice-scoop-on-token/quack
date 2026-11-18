@@ -2,9 +2,12 @@ import { router } from 'expo-router';
 import { useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 
+import { LoadingView } from '@/components/ui/LoadingView';
+import { ScreenTitle } from '@/components/ui/ScreenTitle';
 import { Text } from '@/components/ui/Text';
-import { COLORS, FEEDBACK, PAPER, SIZES } from '@/theme/assetTokens';
+import { COLORS, FEEDBACK, FONT, PAPER, SIZES } from '@/theme/assetTokens';
 import { Button } from '@/components/ui/Button';
+import { IconButton } from '@/components/ui/IconButton';
 import { useApiQuery } from '@/api';
 import { demoRecordSessions } from '@/api/mock/data/demoRecords';
 import { useDemoVariant } from '@/api/mock/useDemoVariant';
@@ -24,14 +27,15 @@ export function CalendarScreen() {
   const [selected, setSelected] = useState<string | null>(dayKey(now));
 
   if (!sessions || !folders) {
-    return null;
+    return <LoadingView />;
   }
   // ?demo=records: 실제 기록에 지난 4주 mock 세션을 더한다. 오늘 기록과 과목 상세에는 섞지 않는다.
-  const all = demo === 'records' ? [...sessions, ...demoRecordSessions(folders.map((f) => f.id), now)] : sessions;
+  const all = demo === 'records' ? [...sessions, ...demoRecordSessions(folders, now)] : sessions;
   const byDay = groupByDay(all);
   const summary = monthSummary(all, cursor.year, cursor.month);
   const cells = calendarCells(cursor.year, cursor.month);
   const todayKey = dayKey(now);
+  const isCurrentMonth = cursor.year === now.getFullYear() && cursor.month === now.getMonth();
 
   const moveMonth = (delta: number) => {
     const d = new Date(cursor.year, cursor.month + delta, 1);
@@ -53,40 +57,40 @@ export function CalendarScreen() {
         />
       }
     >
+      <ScreenTitle title="기록" subtitle="날짜를 눌러 그날의 공부를 돌아봐요." />
+
       <View style={styles.monthRow}>
-        <Pressable
-          style={({ pressed }) => [styles.arrow, pressed && styles.arrowPressed]}
-          onPress={() => moveMonth(-1)}
-          accessibilityRole="button"
-          accessibilityLabel="이전 달"
-        >
-          <Text style={styles.arrowMark}>‹</Text>
-        </Pressable>
+        <IconButton icon="arrow-left" label="이전 달" onPress={() => moveMonth(-1)} />
         <Text style={styles.month}>
           {cursor.year}년 {cursor.month + 1}월
         </Text>
-        <Pressable
-          style={({ pressed }) => [styles.arrow, pressed && styles.arrowPressed]}
-          onPress={() => moveMonth(1)}
-          accessibilityRole="button"
-          accessibilityLabel="다음 달"
-        >
-          <Text style={styles.arrowMark}>›</Text>
-        </Pressable>
+        {/* 이번 달이 마지막이라 미래 달로는 넘기지 않는다 */}
+        <IconButton icon="arrow-right" label="다음 달" disabled={isCurrentMonth} onPress={() => moveMonth(1)} />
       </View>
 
-      <View style={styles.summary}>
-        <Text>이번 달 요약</Text>
-        <Text>
-          공부한 날 {summary.days}일 · 공부 시간 {Math.floor(summary.seconds / 60)}분 · 설명한 개념 {summary.concepts}개
-        </Text>
+      {/* 제목 글자는 화면에서 빼고, 스크린 리더에는 한 덩어리로 읽어 준다 */}
+      <View
+        style={styles.summary}
+        accessible
+        accessibilityLabel={`이번 달 요약, 공부한 날 ${summary.days}일, 공부 시간 ${Math.floor(summary.seconds / 60)}분, 설명한 개념 ${summary.concepts}개`}
+      >
+        {[
+          { label: '공부한 날', value: `${summary.days}일` },
+          { label: '공부 시간', value: `${Math.floor(summary.seconds / 60)}분` },
+          { label: '설명한 개념', value: `${summary.concepts}개` },
+        ].map((m) => (
+          <View key={m.label} style={styles.summaryCol}>
+            <Text style={styles.summaryLabel}>{m.label}</Text>
+            <Text style={styles.summaryValue}>{m.value}</Text>
+          </View>
+        ))}
       </View>
 
       <View style={styles.week}>
         {DAY_NAMES.map((n) => (
-          <Text key={n} style={styles.cell}>
-            {n}
-          </Text>
+          <View key={n} style={[styles.cell, styles.day]}>
+            <Text>{n}</Text>
+          </View>
         ))}
       </View>
       {/* 달이 바뀌어도 높이가 변하지 않도록 늘 6주를 그린다 */}
@@ -155,38 +159,38 @@ export function CalendarScreen() {
 const styles = StyleSheet.create({
   monthRow: {
     flexDirection: 'row',
-    alignItems: 'center',
+    // 버튼 아래에 그림자 자리가 있어서 가운데 맞춤 대신 위에 맞추고, 연·월은 버튼 몸통 높이(44)에 직접 맞춘다
+    alignItems: 'flex-start',
     gap: 8,
-  },
-  // 터치 영역 44×44, 화살표 글자는 28로 크게 보이게 한다
-  arrow: {
-    width: SIZES.touchMin,
-    height: SIZES.touchMin,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: SIZES.row.border,
-    borderColor: COLORS.outline,
-    borderRadius: SIZES.row.radius,
-    backgroundColor: COLORS.card,
-  },
-  arrowPressed: {
-    backgroundColor: COLORS.cream,
-  },
-  arrowMark: {
-    fontSize: 28,
-    lineHeight: 32,
-    fontWeight: '700',
   },
   // 연·월은 두 버튼 사이 가운데에 둔다
   month: {
+    ...FONT.heading,
     flex: 1,
+    height: SIZES.touchMin,
+    lineHeight: SIZES.touchMin,
     textAlign: 'center',
-    fontSize: 17,
-    fontWeight: '700',
   },
   summary: {
     ...PAPER.card,
-    gap: 4,
+    flexDirection: 'row',
+  },
+  // 세 칸이 같은 폭을 나눈다. minWidth 0이 없으면 글자 폭이 긴 칸이 줄어들지 못해 폭이 달라진다.
+  summaryCol: {
+    flex: 1,
+    minWidth: 0,
+    alignItems: 'center',
+    gap: 2,
+  },
+  summaryLabel: {
+    fontSize: 12,
+    color: COLORS.mutedStrong,
+    textAlign: 'center',
+  },
+  summaryValue: {
+    fontSize: 18,
+    fontWeight: '700',
+    textAlign: 'center',
   },
   week: {
     flexDirection: 'row',
@@ -195,11 +199,10 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     flexWrap: 'wrap',
   },
-  // 7등분
+  // 7등분. 요일 칸도 날짜 칸과 같은 day 스타일로 가운데에 맞춘다.
   cell: {
     width: `${100 / 7}%`,
     height: CELL_HEIGHT,
-    textAlign: 'center',
   },
   day: {
     alignItems: 'center',

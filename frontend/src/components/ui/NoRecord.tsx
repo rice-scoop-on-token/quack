@@ -1,5 +1,5 @@
 
-import { Text } from '@/components/ui/Text';
+import { EmptyState } from '@/components/ui/EmptyState';
 import { Button } from '@/components/ui/Button';
 import { BottomActionLayout } from '@/components/ui/BottomActionLayout';
 
@@ -16,7 +16,7 @@ export function NoRecord({ message, onHome }: Props) {
         <Button variant="primary" title="홈으로" onPress={onHome} />
       }
     >
-      <Text>{message}</Text>
+      <EmptyState error title={message} />
     </BottomActionLayout>
   );
 }

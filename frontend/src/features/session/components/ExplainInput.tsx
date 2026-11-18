@@ -3,6 +3,7 @@ import { Pressable, StyleSheet, View } from 'react-native';
 import { Button } from '@/components/ui/Button';
 import { PaperInput } from '@/components/ui/PaperInput';
 import { Text } from '@/components/ui/Text';
+import { InputLevelMeter } from '@/features/session/components/InputLevelMeter';
 import type { ExplainDraft, InputMode } from '@/features/session/hooks/useExplainDraft';
 import { COLORS, FEEDBACK, hardShadow, PAPER, SIZES } from '@/theme/assetTokens';
 
@@ -12,6 +13,9 @@ const TABS: { mode: InputMode; label: string }[] = [
 ];
 
 const RECORD_BUTTON_SIZE = 72;
+
+// 초 → 00:07
+const formatSeconds = (s: number) => `${String(Math.floor(s / 60)).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`;
 
 // 설명 입력(글·말 탭, 입력란). 녹음·보내기 버튼은 하단 고정 영역에 두므로 아래 ExplainActions로 나눴다.
 // 말 탭에서는 녹음이 끝난 전사문을 같은 입력란에서 바로 확인하고 고친다.
@@ -32,11 +36,22 @@ export function ExplainInput({ draft }: { draft: ExplainDraft }) {
         ))}
       </View>
 
-      {/* 녹음 상태 문구는 입력란 제목에 붙여 알린다(색만으로 알리지 않는다) */}
-      <Text accessibilityLiveRegion="polite">
-        {draft.mode === 'voice' ? '전사문 확인·수정' : '나의 설명'}
-        {draft.recording ? ' · ● 듣는 중…' : ''}
-      </Text>
+      {/* 글 탭은 이전과 같다. 말 탭에서만 녹음 줄과 소리 막대를 둔다. */}
+      {draft.mode === 'voice' ? (
+        <>
+          {/* 녹음 상태는 빨간 점과 글자로 함께 알린다. 높이를 미리 잡아서 녹음을 시작해도 아래가 밀리지 않는다. */}
+          <View style={styles.listening}>
+            {draft.recording ? <View style={styles.liveDot} accessibilityElementsHidden importantForAccessibility="no-hide-descendants" /> : null}
+            {/* 읽어 주는 영역은 "듣는 중…"만 둔다. 시간까지 넣으면 1초마다 읽혀서 시끄럽다. */}
+            <Text accessibilityLiveRegion="polite" style={styles.listeningText}>
+              {draft.recording ? '듣는 중…' : ''}
+            </Text>
+            {draft.recording ? <Text style={styles.listeningTime}>{formatSeconds(draft.recordingSeconds)}</Text> : null}
+          </View>
+          <InputLevelMeter active={draft.recording} />
+        </>
+      ) : null}
+      <Text>{draft.mode === 'voice' ? '전사문 확인·수정' : '나의 설명'}</Text>
       {/* mock: 실제 마이크는 쓰지 않는다. 녹음을 멈추면 예시 전사문이 채워진다 */}
       <PaperInput
         style={styles.input}
@@ -45,8 +60,8 @@ export function ExplainInput({ draft }: { draft: ExplainDraft }) {
         multiline
         editable={!draft.recording}
         placeholder={draft.mode === 'voice' ? '녹음을 멈추면 전사문이 여기에 나와요.' : '배운 개념을 내 말로 설명해 보세요.'}
+        error={draft.error}
       />
-      {draft.error ? <Text accessibilityRole="alert">{draft.error}</Text> : null}
     </View>
   );
 }
@@ -72,12 +87,9 @@ export function ExplainActions({
           accessibilityLabel={draft.recording ? '녹음 멈추기' : '녹음 시작'}
           accessibilityState={{ selected: draft.recording }}
         >
-          {/* 녹음 전: 빨간 채운 원. 녹음 중: Ⅱ 표시 */}
+          {/* 녹음 전: 빨간 채운 원. 녹음 중: 빨간 사각형(멈춤) */}
           {draft.recording ? (
-            <View style={styles.pause}>
-              <View style={styles.pauseBar} />
-              <View style={styles.pauseBar} />
-            </View>
+            <View style={styles.stop} />
           ) : (
             <View style={styles.dot} />
           )}
@@ -144,14 +156,31 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     backgroundColor: FEEDBACK.record,
   },
-  pause: {
-    flexDirection: 'row',
-    gap: 8,
-  },
-  pauseBar: {
-    width: 8,
+  stop: {
+    width: 28,
     height: 28,
-    borderRadius: 2,
-    backgroundColor: COLORS.text,
+    borderRadius: 6,
+    borderWidth: 2,
+    borderColor: COLORS.outline,
+    backgroundColor: FEEDBACK.record,
+  },
+  listening: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    minHeight: 20,
+  },
+  liveDot: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    backgroundColor: FEEDBACK.record,
+  },
+  listeningText: {
+    fontWeight: '700',
+  },
+  listeningTime: {
+    color: COLORS.mutedStrong,
+    fontVariant: ['tabular-nums'],
   },
 });

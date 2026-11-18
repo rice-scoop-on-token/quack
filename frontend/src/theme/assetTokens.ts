@@ -12,21 +12,38 @@ export const COLORS = {
   accent: '#E98A3A',
   cream: '#F2DDB6',
   disabledBg: '#E9DFC6',
+  // 글자용 주황. 주황 accent는 면·테두리에만 쓰고 글자에는 쓰지 않는다.
+  textAccent: '#A4540F',
+  danger: '#A3321F',
+  dangerBg: '#F8DDD3',
+  noticeBg: '#FFF1CC',
+  successBg: '#E3EFC9',
+  inputBg: '#FFFFFF',
+  // 12px 이하 작은 보조 글자와 비활성 글자용. textSub보다 진하다.
+  mutedStrong: '#6B5846',
 } as const;
 
+// 모서리 둥글기는 이 3단계만 쓴다. 작은 버튼·태그 10, 버튼·입력·고르는 칸 12, 카드·패널 14.
+// 예외(의도): 체크칸 6, 진행 막대 7(높이의 절반), FolderCard 본체 6(에셋의 계단식 모서리에 맞춤).
+export const RADIUS = { small: 10, medium: 12, large: 14 } as const;
+
 export const SIZES = {
-  button: { height: 52, radius: 12, border: 2, shadow: 3 },
-  buttonSmall: { height: 40, radius: 10, border: 2, shadow: 2 },
-  card: { radius: 14, border: 2, paddingVertical: 14, paddingHorizontal: 16, shadow: 3 },
-  row: { height: 56, radius: 12, border: 2, gap: 8 },
+  button: { height: 52, radius: RADIUS.medium, border: 2, shadow: 3 },
+  buttonSmall: { height: 40, radius: RADIUS.small, border: 2, shadow: 2 },
+  card: { radius: RADIUS.large, border: 2, paddingVertical: 14, paddingHorizontal: 16, shadow: 3 },
+  row: { height: 56, radius: RADIUS.medium, border: 2, gap: 8 },
   gutter: 16,
   sectionGap: 24,
   cardGap: 16,
   touchMin: 44,
 } as const;
 
+// 한계: 글꼴 파일(Galmuri11, Pretendard)이 아직 frontend/assets/fonts/ 에 없어서 fontFamily 토큰과 불러오기는 만들지 않았다.
+// 파일이 들어오면 루트 레이아웃에서 useFonts로 불러오고, ui/Text가 굵기별로 fontFamily를 붙이면 된다.
 export const FONT = {
+  display: { fontSize: 52, fontWeight: '700' },
   title: { fontSize: 20, fontWeight: '700' },
+  heading: { fontSize: 17, fontWeight: '700' },
   button: { fontSize: 16, fontWeight: '700' },
   body: { fontSize: 15, fontWeight: '400' },
   caption: { fontSize: 12, fontWeight: '500' },
@@ -42,6 +59,19 @@ export const FEEDBACK = {
   positive: '#CFE3B5',
   negative: '#F2C4B4',
   record: '#D64545',
+  // 통화방에서 말하는 사람의 링 색. 주황 강조색을 그대로 쓴다.
+  speaking: COLORS.accent,
+} as const;
+
+// 성장 연출(GrowthEffect) 색. 어두운 막 위에 노란 빛을 겹쳐 그린다.
+export const GROWTH = {
+  dim: 'rgba(26,16,10,0.72)',
+  // 빛 테두리 3겹(바깥 → 안쪽). 안쪽일수록 진하다.
+  glow: ['rgba(246,201,79,0.16)', 'rgba(246,201,79,0.26)', 'rgba(246,201,79,0.40)'],
+  flash: '#FFF6D6',
+  spark: ['#F6C94F', '#FFFBF0'],
+  burst: '#F6C94F',
+  text: '#FFFBF0',
 } as const;
 
 // 종이 UI 공용 표면 스타일. 카드(테두리 2, 모서리 14, 하드 그림자 3), 입력창, 고르는 칸이 같은 값을 쓴다.
@@ -58,14 +88,17 @@ export const PAPER = {
     ...hardShadow(SIZES.card.shadow),
   },
   input: {
-    minHeight: SIZES.touchMin,
+    minHeight: 52,
     paddingHorizontal: 12,
     paddingVertical: 10,
     borderWidth: SIZES.row.border,
     borderColor: COLORS.outline,
     borderRadius: SIZES.row.radius,
-    backgroundColor: COLORS.card,
+    backgroundColor: COLORS.inputBg,
     color: COLORS.text,
+    // 위쪽 안쪽 그림자로 살짝 파인 느낌을 준다
+    // 한계: 안드로이드 9 미만에서는 box-shadow가 그려지지 않는다. 테두리와 색은 그대로라 쓰는 데는 문제없다.
+    boxShadow: 'inset 0px 2px 0px rgba(75,50,38,0.12)',
     ...FONT.body,
   },
   // 고르는 칸(보기, 탭, 길이 선택 등). 고른 칸은 주요색, 정답·오답은 FEEDBACK 색으로 칠한다.

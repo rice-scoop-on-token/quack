@@ -1,9 +1,13 @@
 import { router } from 'expo-router';
 import { useState } from 'react';
-import { Pressable, StyleSheet, Switch, View } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
 
-import { COLORS, PAPER, SIZES } from '@/theme/assetTokens';
+import { LoadingView } from '@/components/ui/LoadingView';
+import { COLORS, FONT, PAPER, SIZES } from '@/theme/assetTokens';
+import { EmptyState } from '@/components/ui/EmptyState';
+import { ScreenTitle } from '@/components/ui/ScreenTitle';
 import { Text } from '@/components/ui/Text';
+import { Toggle } from '@/components/ui/Toggle';
 import { Button } from '@/components/ui/Button';
 import { useApiQuery, useQuackApi } from '@/api';
 import type { TempLockQuizSettings } from '@/api/tempContract';
@@ -23,7 +27,7 @@ export function SettingsScreen() {
   const { folders, selected } = useSelectedFolder();
 
   if (!saved || folders === undefined) {
-    return null;
+    return <LoadingView />;
   }
   const settings = local ?? saved;
   const folder = folders.find((f) => f.id === settings.folder_id) ?? selected;
@@ -44,11 +48,13 @@ export function SettingsScreen() {
         </>
       }
     >
-      <Text>잠금화면 퀴즈</Text>
+      <ScreenTitle title="설정" subtitle="잠금화면 퀴즈를 내게 맞게 받아요." />
+
+      <Text style={styles.section}>잠금화면 퀴즈</Text>
       <ToggleRow label="잠금화면 퀴즈 켜기" value={settings.enabled} onChange={(v) => change({ enabled: v })} />
       <ToggleRow label="밤에는 쉬기" value={settings.quiet_at_night} onChange={(v) => change({ quiet_at_night: v })} />
 
-      <Text>하루에 받을 횟수</Text>
+      <Text style={styles.section}>하루에 받을 횟수</Text>
       <View style={styles.row}>
         {PER_DAY.map((n) => (
           <Pressable
@@ -63,11 +69,11 @@ export function SettingsScreen() {
         ))}
       </View>
 
-      <Text>출제 과목</Text>
+      <Text style={styles.section}>출제 과목</Text>
       {folder ? (
         <SubjectSelect folders={folders} value={folder} onChange={(f) => change({ folder_id: f.id })} />
       ) : (
-        <Text>과목이 없어요. 과목을 먼저 만들어 주세요.</Text>
+        <EmptyState title="과목이 없어요." message="과목을 먼저 만들어 주세요." />
       )}
     </BottomActionLayout>
   );
@@ -77,19 +83,15 @@ function ToggleRow({ label, value, onChange }: { label: string; value: boolean; 
   return (
     <View style={styles.toggle}>
       <Text>{label}</Text>
-      <Switch
-        value={value}
-        onValueChange={onChange}
-        accessibilityLabel={label}
-        trackColor={{ false: COLORS.disabledBg, true: COLORS.primary }}
-        thumbColor={COLORS.card}
-        ios_backgroundColor={COLORS.disabledBg}
-      />
+      <Toggle value={value} onValueChange={onChange} accessibilityLabel={label} />
     </View>
   );
 }
 
 const styles = StyleSheet.create({
+  section: {
+    ...FONT.heading,
+  },
   toggle: {
     ...PAPER.option,
     flexDirection: 'row',

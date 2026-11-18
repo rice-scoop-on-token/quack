@@ -1,7 +1,8 @@
 import type { Folder } from '@quack/shared';
 import { router, useLocalSearchParams } from 'expo-router';
 
-import { Text } from '@/components/ui/Text';
+import { LoadingView } from '@/components/ui/LoadingView';
+import { EmptyState } from '@/components/ui/EmptyState';
 import { Button } from '@/components/ui/Button';
 import { useApiQuery } from '@/api';
 import { BottomActionLayout } from '@/components/ui/BottomActionLayout';
@@ -24,7 +25,7 @@ export function SubjectMaterialsScreen() {
   }
 
   if (folders === undefined) {
-    return null;
+    return <LoadingView />;
   }
   if (!folder) {
     return <MissingFolder />;
@@ -57,7 +58,7 @@ function MissingFolder() {
         <Button variant="primary" title="과목 서랍으로" onPress={() => router.dismissTo('/subjects')} />
       }
     >
-      <Text>과목을 찾을 수 없어요.</Text>
+      <EmptyState error title="과목을 찾을 수 없어요." />
     </BottomActionLayout>
   );
 }

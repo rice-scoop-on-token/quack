@@ -5,6 +5,7 @@ import { Pressable, StyleSheet, View } from 'react-native';
 import { SPECIES } from '@/api/mock/data/species';
 import { CharacterBox } from '@/components/ui/CharacterBox';
 import { FolderCard } from '@/components/ui/FolderCard';
+import { Icon } from '@/components/ui/Icon';
 import { Text } from '@/components/ui/Text';
 import { growthFromXp } from '@/features/character/growth';
 import { useCharacterXp } from '@/features/character/useCharacterXp';
@@ -44,7 +45,7 @@ export function SubjectCard({ folder, detail, onPress, onDelete }: Props) {
           accessibilityLabel={`${folder.name} 메뉴`}
           accessibilityState={{ expanded: menuOpen }}
         >
-          <Text style={styles.kebabMark}>⋮</Text>
+          <Icon name="more-vertical" />
         </Pressable>
       </View>
 
@@ -96,7 +97,7 @@ const styles = StyleSheet.create({
     fontWeight: '500',
     color: COLORS.textSub,
   },
-  // 터치 영역 44×44, 표시는 24. 카드 오른쪽 여백 쪽으로 조금 당긴다.
+  // 터치 영역 44×44, 아이콘은 24. 카드 오른쪽 여백 쪽으로 조금 당긴다.
   kebab: {
     width: SIZES.touchMin,
     height: SIZES.touchMin,
@@ -104,11 +105,6 @@ const styles = StyleSheet.create({
     marginTop: -8,
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  kebabMark: {
-    fontSize: 24,
-    lineHeight: 28,
-    fontWeight: '700',
   },
   // 케밥 왼쪽, 카드 안쪽에 띄운다. 카드 밖으로 나가면 목록 맨 아래 카드에서 스크롤 영역에 잘려 눌리지 않기 때문이다.
   menu: {

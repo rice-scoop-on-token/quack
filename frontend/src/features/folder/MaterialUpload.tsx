@@ -1,12 +1,16 @@
 import type { Folder, Material } from '@quack/shared';
 import { router } from 'expo-router';
-import { ActivityIndicator, Pressable, StyleSheet, View } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
 
+import { EmptyState } from '@/components/ui/EmptyState';
+import { ScreenTitle } from '@/components/ui/ScreenTitle';
+import { Spinner } from '@/components/ui/Spinner';
 import { Text } from '@/components/ui/Text';
 import { COLORS, PAPER } from '@/theme/assetTokens';
 import { FolderCard } from '@/components/ui/FolderCard';
 import { Button } from '@/components/ui/Button';
 import { useApiQuery, useQuackApi } from '@/api';
+import { nextSampleTitle } from '@/api/mock/data/catalog';
 import { useDemoVariant } from '@/api/mock/useDemoVariant';
 
 const STATUS_LABEL: Record<Material['status'], string> = {
@@ -26,12 +30,15 @@ export function useMaterialUpload(folder: Folder) {
   const loading = demo === 'loading' || folderMaterials.some((m) => m.status === 'processing');
   const failed = demo === 'error' || folderMaterials.some((m) => m.status === 'failed');
 
-  // 한계: 실제 파일 선택이 없어서 누를 때마다 번호를 붙인 샘플 자료를 넣는다. 파일 선택을 붙일 때 고른 파일의 종류와 이름을 쓴다.
+  // 한계: 실제 파일 선택이 없어서 샘플 자료를 넣는다. 폴더 이름이 지원 과목이면 그 과목의 카탈로그 자료 제목을 차례로 쓰고(통화방의 내 방과 이어진다), 아니면 번호를 붙인다. 파일 선택을 붙일 때 고른 파일의 종류와 이름을 쓴다.
   async function upload() {
     const material = await api.createMaterial({
       folder_id: folder.id,
       kind: 'pdf',
-      title: `샘플자료_${folderMaterials.length + 1}.pdf`,
+      title: nextSampleTitle(
+        folder.name,
+        folderMaterials.map((m) => m.title),
+      ),
     });
     await api.processMaterial(material.id);
   }
@@ -51,8 +58,7 @@ type BodyProps = {
 export function MaterialUploadBody({ state, onSkip }: BodyProps) {
   return (
     <View style={styles.container}>
-      <Text>공부할 자료가 있나요?</Text>
-      <Text>자료를 더하면 배운 내용을 바탕으로 질문해요. 지금은 건너뛰어도 괜찮아요.</Text>
+      <ScreenTitle title="공부할 자료가 있나요?" subtitle="자료를 더하면 배운 내용을 바탕으로 질문해요. 지금은 건너뛰어도 괜찮아요." />
 
       <View style={styles.card}>
         <Text>{state.folder.name}</Text>
@@ -70,14 +76,14 @@ export function MaterialUploadBody({ state, onSkip }: BodyProps) {
         <FolderCard>
           <View style={styles.inner}>
             <Text>자료에서 텍스트를 읽고 있어요…</Text>
-            <ActivityIndicator color={COLORS.accent} />
+            <Spinner />
           </View>
         </FolderCard>
       ) : null}
 
       {state.failed ? (
         <FolderCard>
-          <Text accessibilityRole="alert">자료를 읽지 못했어요. 텍스트가 있는 파일로 다시 시도해 주세요.</Text>
+          <EmptyState error title="자료를 읽지 못했어요." message="텍스트가 있는 파일로 다시 시도해 주세요." />
         </FolderCard>
       ) : null}
 

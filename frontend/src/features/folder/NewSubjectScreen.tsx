@@ -19,11 +19,9 @@ export function NewSubjectScreen() {
   }
 
   return (
-    // 온보딩 첫 과목 화면과 같게 본문을 세로 중앙에 둔다
     <BottomActionLayout
-      centered
       actions={
-        <Button variant="primary" title="과목 만들기" onPress={handleSubmit} />
+        <Button variant="primary" title="과목 만들기" disabled={form.allAdded} onPress={handleSubmit} />
       }
     >
       <NewFolderFields form={form} />
