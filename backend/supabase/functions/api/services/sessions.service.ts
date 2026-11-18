@@ -5,7 +5,7 @@ import type { FinishSessionResponse, Session } from '@quack/shared';
 import { AppError, appErrorFromDb } from '../middleware/error.ts';
 
 // sessionSchema의 칸과 같다. 응답 스키마에 필요한 칸을 빠짐없이 읽기 위해 한 곳에 둔다.
-const SESSION_COLUMNS = 'id, user_id, folder_id, goal, status, started_at, ended_at';
+export const SESSION_COLUMNS = 'id, user_id, folder_id, goal, status, started_at, ended_at';
 
 // adminDb는 다른 사용자의 세션도 바꿀 수 있으므로, 그 전에 RLS가 적용되는 userDb로 내 세션인지 확인한다.
 // turns.service.ts도 같은 확인을 쓴다.

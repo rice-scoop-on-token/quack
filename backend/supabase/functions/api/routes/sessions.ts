@@ -4,16 +4,31 @@ import {
   createTurnRequestSchema,
   createTurnResponseSchema,
   finishSessionResponseSchema,
+  startSessionRequestSchema,
+  startSessionResponseSchema,
   uuidParamSchema,
 } from '@quack/shared';
 
 import type { AuthEnv } from '../middleware/auth.ts';
 import { respond } from '../middleware/respond.ts';
 import { validateJson, validateParams } from '../middleware/validate.ts';
+import { createSessionStartDependencies, startSession } from '../services/sessionStart.service.ts';
 import { finishSession } from '../services/sessions.service.ts';
 import { createTurn } from '../services/turns.service.ts';
 
 export const sessionsRoute = new Hono<AuthEnv>();
+
+sessionsRoute.post('/start', validateJson(startSessionRequestSchema), async (c) => {
+  const body = c.req.valid('json');
+
+  const result = await startSession(
+    c.var.userId,
+    body,
+    createSessionStartDependencies(c.var.userDb, c.var.adminDb),
+  );
+
+  return respond(c, startSessionResponseSchema, result);
+});
 
 sessionsRoute.post(
   '/:id/turns',
