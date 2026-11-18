@@ -20,6 +20,17 @@ export function readLlmConfig(): LlmConfig {
   return { apiKey, model };
 }
 
+// 음성 전사(STT) 키. readLlmConfig와 같은 이유로 요청을 처리할 때 부르고, 값이 없으면 변수 이름만 담은 에러를 던진다.
+export function readSttApiKey(): string {
+  const apiKey = Deno.env.get('STT_API_KEY')?.trim() ?? '';
+
+  if (!apiKey) {
+    throw new Error('STT 설정이 없습니다: STT_API_KEY');
+  }
+
+  return apiKey;
+}
+
 // 아래 두 값은 팀 결정 전 임시값이다(docs/Todo.md A4, 미정 사항).
 
 // 사용자 한 명이 하루(서울 시간)에 AI 분석을 요청할 수 있는 횟수. server.consume_ai_quota에 넘긴다.
