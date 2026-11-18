@@ -154,3 +154,19 @@ export type AiAnalysisOutput = z.infer<typeof aiAnalysisOutputSchema>;
 export function validateAiAnalysisOutput(value: unknown) {
   return aiAnalysisOutputSchema.safeParse(value);
 }
+
+const goalScopeStatusSchema = z.enum([
+  "in_scope",
+  "out_of_scope",
+  "needs_clarification",
+]);
+
+export const goalScopeOutputSchema = z.strictObject({ status: goalScopeStatusSchema });
+export type GoalScopeStatus = z.infer<typeof goalScopeStatusSchema>;
+
+export const goalScopeOutputJsonSchema = {
+  type: "object",
+  properties: { status: { type: "string", enum: goalScopeStatusSchema.options } },
+  required: ["status"],
+  additionalProperties: false,
+};
