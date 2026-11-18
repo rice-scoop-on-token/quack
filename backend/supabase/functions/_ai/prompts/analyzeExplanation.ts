@@ -8,6 +8,7 @@ export interface AnalyzeExplanationInput {
     content: string;
   }[];
   user_message: string;
+  input_mode?: "chat" | "voice";
   conversation_history: { role: "user" | "assistant"; content: string }[];
   species_id: "rubber_duck" | "raccoon" | "cat";
 }
@@ -65,11 +66,25 @@ species_id와 관계없이 분석 기준은 같아야 한다. 내부 분석 필�
 이 출력은 AI 내부 평가용 임시 형식이다. API 계약·보상·리포트 집계가 아니며 상태를 기존 판정 하나로 자동 변환하지 않는다.
 ${JSON.stringify(aiAnalysisOutputJsonSchema)}`;
 
+const voiceTranscriptGuidance = `
+[음성 전사 처리]
+현재 user_message는 음성에서 변환된 텍스트다.
+수식·숫자·부정 표현이나 전문 용어가 어색하고 의미가 불분명하면, 문맥만으로 정답이나 오답을 추측해 채우지 않는다.
+전사 때문에 해석할 수 없는 부분은 errors·omissions에 기록하지 않는다. 목표 판정에 필요한 근거가 그 부분에만 있다면 관련 상태를 unverified로 둔다.
+명확히 전달된 설명은 평소 기준으로 분석한다. 명확히 틀린 명제도 평소 기준으로 판단한다.
+전사문 확인·수정이나 같은 말을 다시 녹음하도록 요구하지 않는다. 불확실한 표현 외에 확인할 학습 내용이 없다면, 명확히 들은 내용만 짧게 되짚고 질문 없이 마무리할 수 있다.
+`;
+
 export function buildAnalyzeExplanationMessages(
   input: AnalyzeExplanationInput,
 ) {
   return [
-    { role: "system" as const, content: analyzeExplanationPrompt },
+    {
+      role: "system" as const,
+      content: input.input_mode === "voice"
+        ? analyzeExplanationPrompt + voiceTranscriptGuidance
+        : analyzeExplanationPrompt,
+    },
     { role: "user" as const, content: JSON.stringify(input) },
   ];
 }
