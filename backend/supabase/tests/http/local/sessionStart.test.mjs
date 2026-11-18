@@ -96,6 +96,49 @@ test('공부 시작: 오늘 사용량을 다 썼으면 429이고 세션을 만�
   assert.deepEqual(await sessionsWithKey(B, requestId), []);
 });
 
+test('공부 시작: 이미 만든 세션에 같은 재시도 키로 동시에 다시 보내도 모두 같은 세션이고 AI를 부르지 않는다', async () => {
+  const folderId = await makeFolder(A);
+  const requestId = randomUUID();
+  const goal = '큐의 enqueue와 dequeue';
+  const sessionId = await makeSavedSession(A, folderId, goal, requestId);
+
+  // 앱이 응답을 못 받아 같은 요청을 여러 번 다시 보내는 경우다.
+  const results = await Promise.all(
+    Array.from({ length: 3 }, () => start(A, { folder_id: folderId, goal, request_id: requestId })),
+  );
+  for (const res of results) {
+    assert.equal(res.status, 200, JSON.stringify(res.body));
+    assert.equal(res.body.status, 'in_scope');
+    assert.equal(res.body.session.id, sessionId);
+  }
+  assert.equal((await sessionsWithKey(A, requestId)).length, 1);
+  assert.deepEqual(await usage(A), []);
+});
+
+test('공부 시작(실제 AI): 같은 재시도 키와 같은 입력을 동시에 두 번 보내도 세션은 하나다', { skip: !LIVE_AI && 'LIVE_AI=1일 때만 실행' }, async (t) => {
+  // 사용량을 이 시험만의 값으로 보기 위해 새 사용자를 쓴다.
+  const user = await local.signup();
+  const folderId = await makeFolder(user);
+  const requestId = randomUUID();
+  const body = { folder_id: folderId, goal: '스택의 push와 pop이 왜 O(1)인지', request_id: requestId };
+
+  const [r1, r2] = await Promise.all([start(user, body), start(user, body)]);
+  assert.equal(r1.status, 200, JSON.stringify(r1.body));
+  assert.equal(r2.status, 200, JSON.stringify(r2.body));
+  assert.equal(r1.body.status, 'in_scope');
+  assert.equal(r2.body.status, 'in_scope');
+  assert.equal(r1.body.session.id, r2.body.session.id);
+
+  const saved = await sessionsWithKey(user, requestId);
+  assert.equal(saved.length, 1);
+  assert.equal(saved[0].id, r1.body.session.id);
+
+  // 2면 두 요청이 모두 조회를 통과해 AI까지 가고, 한쪽이 유일 제약 충돌 뒤 저장된 세션을 다시 읽은 것이다.
+  // 타이밍에 따라 1일 수도 있어 성공 조건으로 쓰지 않고 기록만 한다.
+  const used = (await usage(user))[0]?.count ?? 0;
+  t.diagnostic(`analysis 사용량: ${used}`);
+});
+
 test('공부 시작(실제 AI): 범위 안의 목표는 세션을 하나 만들고, 다시 보내도 같은 세션이다', { skip: !LIVE_AI && 'LIVE_AI=1일 때만 실행' }, async () => {
   const folderId = await makeFolder(A);
   const requestId = randomUUID();
