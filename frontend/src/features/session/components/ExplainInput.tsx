@@ -44,7 +44,7 @@ export function ExplainInput({ draft }: { draft: ExplainDraft }) {
             {draft.recording ? <View style={styles.liveDot} accessibilityElementsHidden importantForAccessibility="no-hide-descendants" /> : null}
             {/* 읽어 주는 영역은 "듣는 중…"만 둔다. 시간까지 넣으면 1초마다 읽혀서 시끄럽다. */}
             <Text accessibilityLiveRegion="polite" style={styles.listeningText}>
-              {draft.recording ? '듣는 중…' : ''}
+              {draft.recording ? '듣는 중…' : draft.transcribing ? '글로 바꾸는 중…' : ''}
             </Text>
             {draft.recording ? <Text style={styles.listeningTime}>{formatSeconds(draft.recordingSeconds)}</Text> : null}
           </View>
@@ -52,15 +52,15 @@ export function ExplainInput({ draft }: { draft: ExplainDraft }) {
         </>
       ) : null}
       <Text>{draft.mode === 'voice' ? '전사문 확인·수정' : '나의 설명'}</Text>
-      {/* mock: 실제 마이크는 쓰지 않는다. 녹음을 멈추면 예시 전사문이 채워진다 */}
+      {/* 서버 연결 모드는 실제 녹음을 글로 바꿔 채운다. mock 모드는 마이크 없이 예시 전사문이 채워진다. */}
       <PaperInput
         style={styles.input}
         value={draft.text}
         onChangeText={draft.setText}
         multiline
-        editable={!draft.recording}
+        editable={!draft.recording && !draft.transcribing}
         placeholder={draft.mode === 'voice' ? '녹음을 멈추면 전사문이 여기에 나와요.' : '배운 개념을 내 말로 설명해 보세요.'}
-        error={draft.error}
+        error={draft.error || draft.voiceError}
       />
     </View>
   );
@@ -81,11 +81,12 @@ export function ExplainActions({
     <>
       {draft.mode === 'voice' ? (
         <Pressable
-          style={styles.recordButton}
+          style={[styles.recordButton, draft.transcribing && styles.recordButtonBusy]}
           onPress={draft.toggleRecording}
+          disabled={draft.transcribing}
           accessibilityRole="button"
           accessibilityLabel={draft.recording ? '녹음 멈추기' : '녹음 시작'}
-          accessibilityState={{ selected: draft.recording }}
+          accessibilityState={{ selected: draft.recording, disabled: draft.transcribing }}
         >
           {/* 녹음 전: 빨간 채운 원. 녹음 중: 빨간 사각형(멈춤) */}
           {draft.recording ? (
@@ -149,6 +150,10 @@ const styles = StyleSheet.create({
     borderColor: COLORS.outline,
     backgroundColor: COLORS.card,
     ...hardShadow(SIZES.button.shadow),
+  },
+  // 글로 바꾸는 동안은 다시 누를 수 없다
+  recordButtonBusy: {
+    opacity: 0.5,
   },
   dot: {
     width: 32,
