@@ -49,6 +49,30 @@ function messageForStatus(status: number | undefined): string {
   }
 }
 
+const NATIVE_AUDIO_TYPE = 'audio/mp4';
+
+// 네이티브 녹음 파일을 바이트로 읽는다. expo-file-system은 읽을 때 불러온다(지연 로드).
+// 파일이 없거나 비었거나 읽기에 실패하면 서버를 부르기 전에 "녹음을 읽지 못했어요"로 처리한다.
+async function readNativeBytes(uri: string): Promise<Uint8Array> {
+  try {
+    const { File } = await import('expo-file-system');
+    const file = new File(uri);
+    if (!file.exists) {
+      throw new Error('녹음 파일이 없다');
+    }
+    const bytes = await file.bytes();
+    if (bytes.length === 0) {
+      throw new Error('녹음 파일이 비어 있다');
+    }
+    return bytes;
+  } catch (e) {
+    if (__DEV__) {
+      console.warn('[transcribe] 녹음 파일을 읽지 못했어요:', e instanceof Error ? e.message : String(e));
+    }
+    throw new TranscribeRequestError(MESSAGES.unreadable);
+  }
+}
+
 // 서버가 파트의 Content-Type만 보고(audio/webm, audio/mp4), 파일 이름은 보지 않는다.
 // RN이 자동으로 붙이는 audio/x-m4a는 400이 나므로 type을 직접 지정한다.
 async function buildForm(audio: TranscribeAudio): Promise<FormData> {
@@ -66,12 +90,36 @@ async function buildForm(audio: TranscribeAudio): Promise<FormData> {
     if (!audio.mimeType) {
       throw new TranscribeRequestError(MESSAGES.unreadable);
     }
-    // 한계: RN의 파일 첨부 방식({ uri, name, type })이라 타입을 맞추려고 단언을 쓴다. Expo Go 폰에서 보내 봐야 동작을 확인할 수 있다.
-    form.append(SPEECH_AUDIO_FIELD, { uri: audio.uri, name: 'audio.m4a', type: audio.mimeType } as unknown as Blob);
+    // 한계: SDK 58의 전역 fetch(expo/fetch)는 RN 파일 첨부({ uri, name, type })를 지원하지 않아서(convertFormData가 문자열·Blob·bytes()가 있는 객체만 받는다),
+    // 파일을 바이트로 읽어 bytes()를 가진 파트로 보낸다. 파일 전체를 메모리로 읽는다(60초 m4a는 약 1MB).
+    // 서버는 파트의 type만 보므로 type은 'audio/mp4'로 직접 지정한다. 타입을 맞추려고 단언을 쓴다. 폰(Expo Go)에서 보내 봐야 동작을 확인할 수 있다.
+    const bytes = await readNativeBytes(audio.uri);
+    form.append(SPEECH_AUDIO_FIELD, { name: 'audio.m4a', type: NATIVE_AUDIO_TYPE, bytes: () => Promise.resolve(bytes) } as unknown as Blob);
   }
   // 서버는 duration_ms를 문자열로 읽는다
   form.append(SPEECH_DURATION_FIELD, String(durationMs));
   return form;
+}
+
+// 전송 실패 원인 진단용(개발 중에만). 음성·전사문·키·토큰·헤더·전체 경로는 남기지 않는다.
+async function logAudioDiagnostics(audio: TranscribeAudio) {
+  const ext = audio.uri.split('?')[0].split('.').pop();
+  const info: Record<string, unknown> = {
+    os: Platform.OS,
+    uriStartsWithFile: audio.uri.startsWith('file://'),
+    uriExtension: ext,
+    mimeType: audio.mimeType,
+    durationMs: audio.durationMs,
+  };
+  if (Platform.OS !== 'web') {
+    // 파일이 비어 있지 않은지 읽어서 크기(바이트)만 본다. 읽기에 실패하면 예외 메시지만 남긴다.
+    try {
+      info.blobSizeBytes = (await (await fetch(audio.uri)).blob()).size;
+    } catch (e) {
+      info.readError = e instanceof Error ? e.message : String(e);
+    }
+  }
+  console.warn('[transcribe] 보내기 전 점검:', info);
 }
 
 // POST /speech/transcribe. 실패하면 화면에 보여 줄 문장이 담긴 TranscribeRequestError를 던진다.
@@ -83,6 +131,9 @@ export async function transcribeRemote(audio: TranscribeAudio): Promise<Transcri
     throw new TranscribeRequestError(MESSAGES.unauthorized);
   }
 
+  if (__DEV__) {
+    await logAudioDiagnostics(audio);
+  }
   const form = await buildForm(audio);
 
   // Content-Type 헤더는 주지 않는다. FormData면 supabase-js가 건드리지 않아서 multipart 경계가 자동으로 붙는다.
@@ -93,7 +144,18 @@ export async function transcribeRemote(audio: TranscribeAudio): Promise<Transcri
 
   if (error) {
     if (error instanceof FunctionsFetchError) {
-      const aborted = (error.context as Error | undefined)?.name === 'AbortError';
+      const original = error.context as Error | undefined;
+      const aborted = original?.name === 'AbortError';
+      if (__DEV__) {
+        // context가 fetch가 던진 원래 예외다(예: "Network request failed")
+        console.warn('[transcribe] fetch 자체가 실패했어요:', {
+          os: Platform.OS,
+          name: error.name,
+          message: error.message,
+          contextName: original?.name,
+          contextMessage: original?.message,
+        });
+      }
       throw new TranscribeRequestError(aborted ? MESSAGES.timeout : MESSAGES.network);
     }
     const status = error instanceof FunctionsHttpError ? (error.context as Response).status : undefined;
