@@ -2,7 +2,7 @@ import { StyleSheet, View } from 'react-native';
 
 import { Icon } from '@/components/ui/Icon';
 import { Text } from '@/components/ui/Text';
-import { COLORS, RADIUS } from '@/theme/assetTokens';
+import { COLORS, FONT, RADIUS } from '@/theme/assetTokens';
 
 type Variant = 'notice' | 'hint' | 'error' | 'success';
 
@@ -52,7 +52,7 @@ function Badge({ variant }: { variant: Variant }) {
     return (
       <View style={styles.badgeBox} {...hidden}>
         <View style={styles.diamond}>
-          <Text style={[styles.glyph, { fontSize: 13, lineHeight: 15, color: COLORS.danger, transform: [{ rotate: '-45deg' }] }]}>
+          <Text style={[styles.glyph, { lineHeight: 15, color: COLORS.danger, transform: [{ rotate: '-45deg' }] }]}>
             !
           </Text>
         </View>
@@ -88,12 +88,11 @@ const styles = StyleSheet.create({
     gap: 2,
   },
   title: {
-    fontSize: 14,
-    fontWeight: '700',
+    ...FONT.heading,
   },
   message: {
-    fontSize: 13,
-    lineHeight: 13 * 1.55,
+    ...FONT.body,
+    lineHeight: 22,
   },
   badge: {
     width: BADGE,
@@ -129,8 +128,7 @@ const styles = StyleSheet.create({
     transform: [{ rotate: '45deg' }],
   },
   glyph: {
-    fontSize: 16,
+    ...FONT.heading,
     lineHeight: 20,
-    fontWeight: '700',
   },
 });

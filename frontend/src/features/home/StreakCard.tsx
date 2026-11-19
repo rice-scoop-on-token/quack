@@ -53,7 +53,6 @@ const styles = StyleSheet.create({
     color: COLORS.textSub,
   },
   value: {
-    fontSize: 18,
-    fontWeight: '700',
+    ...FONT.title,
   },
 });

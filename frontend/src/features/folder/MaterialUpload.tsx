@@ -6,7 +6,7 @@ import { EmptyState } from '@/components/ui/EmptyState';
 import { ScreenTitle } from '@/components/ui/ScreenTitle';
 import { Spinner } from '@/components/ui/Spinner';
 import { Text } from '@/components/ui/Text';
-import { COLORS, PAPER } from '@/theme/assetTokens';
+import { COLORS, FONT, PAPER } from '@/theme/assetTokens';
 import { FolderCard } from '@/components/ui/FolderCard';
 import { Button } from '@/components/ui/Button';
 import { useApiQuery, useQuackApi } from '@/api';
@@ -122,11 +122,10 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   title: {
-    fontWeight: '700',
+    ...FONT.heading,
   },
   status: {
-    fontSize: 13,
-    fontWeight: '500',
+    ...FONT.caption,
     color: COLORS.textSub,
   },
   // 버튼이 가로 전체로 늘어나지 않게 하고 가로 중앙에 둔다
@@ -134,7 +133,7 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
   },
   skip: {
-    fontSize: 12,
+    ...FONT.caption,
     color: COLORS.textSub,
   },
 });

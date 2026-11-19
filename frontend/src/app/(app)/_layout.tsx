@@ -27,7 +27,7 @@ export default function AppLayout() {
         contentStyle: { backgroundColor: COLORS.screen },
         headerStyle: { backgroundColor: COLORS.screen },
         headerTintColor: COLORS.text,
-        // 한계: 글꼴 파일이 들어오기 전이라 fontFamily는 지정하지 못한다. 크기·굵기·색만 고정한다.
+        // 헤더 제목도 FONT.heading으로 갈무리 글꼴(fontFamily)이 붙는다.
         headerTitleStyle: { color: COLORS.text, ...FONT.heading },
         headerTitleAlign: 'left',
         headerShadowVisible: false,

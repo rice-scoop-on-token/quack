@@ -60,7 +60,7 @@ export function Button({ title, onPress, icon, disabled = false, loading = false
           ) : icon ? (
             <Icon name={icon} tint={off ? COLORS.mutedStrong : COLORS.text} />
           ) : null}
-          <Text style={[styles.label, variant === 'small' && styles.smallLabel, off && styles.disabledLabel]}>
+          <Text style={[styles.label, off && styles.disabledLabel]}>
             {title}
           </Text>
         </View>
@@ -85,9 +85,6 @@ const styles = StyleSheet.create({
   label: {
     ...FONT.button,
     textAlign: 'center',
-  },
-  smallLabel: {
-    fontSize: 14,
   },
   disabledLabel: {
     color: COLORS.mutedStrong,

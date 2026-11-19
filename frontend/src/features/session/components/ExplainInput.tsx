@@ -5,7 +5,7 @@ import { PaperInput } from '@/components/ui/PaperInput';
 import { Text } from '@/components/ui/Text';
 import { InputLevelMeter } from '@/features/session/components/InputLevelMeter';
 import type { ExplainDraft, InputMode } from '@/features/session/hooks/useExplainDraft';
-import { COLORS, FEEDBACK, hardShadow, PAPER, SIZES } from '@/theme/assetTokens';
+import { COLORS, FEEDBACK, FONT, hardShadow, PAPER, SIZES } from '@/theme/assetTokens';
 
 const TABS: { mode: InputMode; label: string }[] = [
   { mode: 'chat', label: '글로 설명' },
@@ -177,7 +177,7 @@ const styles = StyleSheet.create({
     backgroundColor: FEEDBACK.record,
   },
   listeningText: {
-    fontWeight: '700',
+    ...FONT.heading,
   },
   listeningTime: {
     color: COLORS.mutedStrong,

@@ -61,8 +61,8 @@ export default function TabsLayout() {
         tabBarLabel: ({ focused, children }) => (
           <Text
             style={{
+              // 굵은 글꼴 하나뿐이라 선택 표시는 굵기가 아니라 색과 노란 알약이 맡는다
               ...FONT.tabLabel,
-              fontWeight: focused ? '700' : '500',
               color: focused ? COLORS.text : COLORS.mutedStrong,
             }}
           >

@@ -18,7 +18,7 @@ import { BottomActionLayout } from '@/components/ui/BottomActionLayout';
 import { TeacherSummary } from '@/features/character/TeacherSummary';
 import { useSelectedFolder } from '@/features/folder/SelectedFolder';
 import { SubjectSelect } from '@/features/folder/SubjectSelect';
-import { COLORS } from '@/theme/assetTokens';
+import { COLORS, FONT } from '@/theme/assetTokens';
 
 const GOAL_MAX_LENGTH = 140;
 // 서버의 AI 판정 대기(30초)보다 길게 45초로 둔다. 앱이 먼저 포기하면 서버는 계속 처리 중인데 같은 request_id로 다시 보내
@@ -226,7 +226,7 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   counter: {
-    fontSize: 12,
+    ...FONT.caption,
     color: COLORS.mutedStrong,
   },
 });

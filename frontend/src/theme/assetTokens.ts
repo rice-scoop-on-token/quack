@@ -2,6 +2,8 @@
 // 낮과 밤은 배경 이미지만 바뀌고 UI 색은 같다(밤에도 크림 종이 UI). 탭 아이콘 외곽선이 갈색이라 어두운 바탕에서 묻히기 때문이다.
 // 시스템 다크 모드를 따르지 않도록 글자·배경 색을 모두 여기 값으로 지정한다.
 
+import { Platform } from 'react-native';
+
 export const COLORS = {
   screen: '#F7EFD8',
   card: '#FFFBF0',
@@ -38,16 +40,27 @@ export const SIZES = {
   touchMin: 44,
 } as const;
 
-// 한계: 글꼴 파일(Galmuri11, Pretendard)이 아직 frontend/assets/fonts/ 에 없어서 fontFamily 토큰과 불러오기는 만들지 않았다.
-// 파일이 들어오면 루트 레이아웃에서 useFonts로 불러오고, ui/Text가 굵기별로 fontFamily를 붙이면 된다.
+// 갈무리 픽셀 글꼴. 격자의 정수 배 크기로만 써야 번지지 않는다.
+// - Galmuri11 Bold(굵은 글꼴): 12px 격자라 12, 24, 36, 48만 쓴다. 제목·버튼·강조·캡션.
+// - Galmuri14(보통 굵기): 15px 격자라 15, 30만 쓴다. 본문.
+// 굵기가 한 가지씩뿐이라 fontWeight는 항상 'normal'이다(굵게 보이게 하려면 700 대신 Bold 글꼴 토큰을 쓴다. 가짜 볼드 방지).
+// 글꼴은 루트 레이아웃(useAppFonts)에서 불러온다. 이 이름으로 등록한다.
+export const FONT_FACE = { bold: 'Galmuri11Bold', regular: 'Galmuri14' } as const;
+// 웹은 불러오기 전·실패 시 브라우저 기본 글꼴(serif)로 떨어지지 않게 시스템 글꼴을 뒤에 붙인다.
+const family = (face: string) => (Platform.OS === 'web' ? `${face}, system-ui, sans-serif` : face);
+const BOLD = { fontFamily: family(FONT_FACE.bold), fontWeight: 'normal' } as const;
+const REGULAR = { fontFamily: family(FONT_FACE.regular), fontWeight: 'normal' } as const;
+
+// 한계: 글꼴을 못 불러오면 시스템 글꼴로 그려진다. 이때 크기는 그대로라 줄바꿈 위치가 조금 달라질 수 있다.
+// 한계: 갈무리에 없는 글자(이모지 등)는 시스템 글꼴로 대체된다. 지금 UI에는 이모지가 없다.
 export const FONT = {
-  display: { fontSize: 52, fontWeight: '700' },
-  title: { fontSize: 20, fontWeight: '700' },
-  heading: { fontSize: 17, fontWeight: '700' },
-  button: { fontSize: 16, fontWeight: '700' },
-  body: { fontSize: 15, fontWeight: '400' },
-  caption: { fontSize: 12, fontWeight: '500' },
-  tabLabel: { fontSize: 11, fontWeight: '500' },
+  display: { ...BOLD, fontSize: 48 },
+  title: { ...BOLD, fontSize: 24 },
+  heading: { ...BOLD, fontSize: 12 },
+  button: { ...BOLD, fontSize: 12 },
+  body: { ...REGULAR, fontSize: 15 },
+  caption: { ...BOLD, fontSize: 12 },
+  tabLabel: { ...BOLD, fontSize: 12 },
 } as const;
 
 // 번지지 않는 단단한 그림자(blur 0). 눌렸을 때는 그림자를 빼고 버튼을 그만큼 내린다.

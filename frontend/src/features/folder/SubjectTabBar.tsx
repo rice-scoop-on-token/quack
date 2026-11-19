@@ -42,7 +42,7 @@ export function SubjectTabBar({ value, onChange }: Props) {
               style={styles.image}
               resizeMode="stretch"
             />
-            <Text style={[styles.label, selected && styles.selectedLabel]}>{t.label}</Text>
+            <Text style={[styles.label]}>{t.label}</Text>
           </Pressable>
         );
       })}
@@ -81,8 +81,5 @@ const styles = StyleSheet.create({
   label: {
     ...FONT.caption,
     color: COLORS.text,
-  },
-  selectedLabel: {
-    fontWeight: '700',
   },
 });
