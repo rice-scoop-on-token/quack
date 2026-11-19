@@ -8,6 +8,7 @@ import {
   startSessionRequestSchema,
   startSessionResponseSchema,
   type CharacterStats,
+  type CreateTurnRequest,
   type Folder,
   type Material,
   type QuizPublic,
@@ -122,6 +123,18 @@ function conceptPosition(turns: SessionTurn[], trigger: SessionTurn['trigger']) 
 function reExplainConcept(turns: SessionTurn[], question: string | null, folderName: string | undefined): string {
   const asked = [...turns].reverse().find((t) => t.analysis.follow_up_question === question);
   return asked?.analysis.concept ?? question?.match(/^'(.+?)'/)?.[1] ?? mockConcept(0, folderName);
+}
+
+// 이번 설명이 다룰 개념 이름과 꼬리 질문 수, 제안할 다음 주제. sendTurn과 recordTurn이 같이 쓴다.
+function conceptContext(turns: SessionTurn[], input: CreateTurnRequest, folderName: string | undefined) {
+  const position = input.trigger === 're_explain' ? null : conceptPosition(turns, input.trigger);
+  return {
+    concept: position
+      ? mockConcept(position.index, folderName)
+      : reExplainConcept(turns, input.question_text, folderName),
+    followUpCount: position?.followUpCount ?? 0,
+    nextConcept: position ? mockConcept(position.index + 1, folderName) : null,
+  };
 }
 
 // ── 웹 저장 ──
@@ -450,20 +463,10 @@ export function MockApiProvider({ children }: { children: ReactNode }) {
         }
         // 기다리는 동안 다른 설명이 저장됐을 수 있어서 기다린 뒤에 세션을 읽는다
         const session = findSession(sessionId);
-        const position =
-          input.trigger === 're_explain' ? null : conceptPosition(session.turns, input.trigger);
         // 개념은 이 세션 폴더의 과목에서 가져온다
         const folderName = db.current.folders.find((f) => f.id === session.folder_id)?.name;
-        const analysis = mockAnalysis({
-          concept: position
-            ? mockConcept(position.index, folderName)
-            : reExplainConcept(session.turns, input.question_text, folderName),
-          text: input.text,
-          trigger: input.trigger,
-          followUpCount: position?.followUpCount ?? 0,
-          nextConcept: position ? mockConcept(position.index + 1, folderName) : null,
-          demo,
-        });
+        const { concept, followUpCount, nextConcept } = conceptContext(session.turns, input, folderName);
+        const analysis = mockAnalysis({ concept, text: input.text, trigger: input.trigger, followUpCount, nextConcept, demo });
         const turn: SessionTurn = { seq: session.turns.length + 1, ...input, analysis };
         updateSession(sessionId, (s) => ({ ...s, turns: [...s.turns, turn] }));
         return turn;
@@ -472,6 +475,30 @@ export function MockApiProvider({ children }: { children: ReactNode }) {
       async explain(sessionId, input) {
         const turn = await methods.sendTurn(sessionId, input);
         return toCreateTurnResponse(turn, { id: tempId(), sessionId, createdAt: new Date().toISOString() });
+      },
+      // 서버가 이미 판정한 설명을 mock 세션에 남긴다(분석·대기·?demo=fail은 없다).
+      // 한계: 서버 응답에 개념 이름이 없어서 mock 규칙(과목별 순서 이름)으로 정한다. 사용자가 설명한 내용의 개념이 아니다.
+      // 한계: 서버가 주지 않는 missing_concepts는 빈 배열이고, 꼬리 질문 수·다음 주제는 앱이 센 값이라 서버 기준과 다를 수 있다.
+      async recordTurn(sessionId, input, response) {
+        const session = findSession(sessionId);
+        const folderName = db.current.folders.find((f) => f.id === session.folder_id)?.name;
+        const { concept, followUpCount, nextConcept } = conceptContext(session.turns, input, folderName);
+        const status = response.analysis.understanding_status;
+        // 확인하지 못한 설명(unverified)은 이해한 개념으로 세지 않는다
+        const verdict = status === 'unverified' ? 'insufficient' : status;
+        const turn: SessionTurn = {
+          seq: session.turns.length + 1,
+          ...input,
+          analysis: {
+            verdict,
+            concept,
+            missing_concepts: [],
+            follow_up_question: response.analysis.response.question,
+            next_topic: verdict === 'sufficient' ? nextConcept : null,
+            follow_up_count: followUpCount,
+          },
+        };
+        updateSession(sessionId, (s) => ({ ...s, turns: [...s.turns, turn] }));
       },
       async finishSession(sessionId, { study_seconds }) {
         updateSession(sessionId, (s) => ({

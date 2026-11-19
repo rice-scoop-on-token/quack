@@ -67,6 +67,9 @@ export interface QuackApi {
   // 타이머 화면의 설명 제출. 응답은 shared 계약(POST /sessions/:id/turns)을 따른다.
   // 점검 화면의 다시 설명하기는 아직 위의 sendTurn(옛 임시 모양)을 쓴다. 시연 영상용으로 타이머 흐름만 먼저 옮겼다(이슈 #22).
   explain(sessionId: string, input: CreateTurnRequest): Promise<CreateTurnResponse>;
+  // 발표용 임시: 서버로 보낸 설명(RemoteTurnsProvider)을 mock 세션의 설명 기록(turns)에도 남긴다.
+  // 리포트·기록·성장·홈이 mock 세션의 turns로 세기 때문이다. 판정은 서버 응답 값을 쓰고, 개념 이름은 mock 규칙으로 정한다.
+  recordTurn(sessionId: string, input: CreateTurnRequest, response: CreateTurnResponse): Promise<void>;
   // 쉬기 버튼은 앱만 알아서 공부 시간은 앱이 잰다. 요청 본문(study_seconds)은 shared 반영 전이다.
   finishSession(sessionId: string, input: { study_seconds: number }): Promise<FinishSessionResponse>;
   createQuiz(sessionId: string): Promise<QuizResponse>;

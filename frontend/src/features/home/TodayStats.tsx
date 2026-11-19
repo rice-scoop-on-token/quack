@@ -23,10 +23,10 @@ export function TodayStats() {
       ) : (
         <>
           <View style={styles.row}>
-            <Text>오늘의 공부 {Math.floor(summary.totalSeconds / 60)}분</Text>
-            <Text>공부 횟수 {summary.count}회</Text>
+            <Text style={styles.stat}>오늘의 공부 {Math.floor(summary.totalSeconds / 60)}분</Text>
+            <Text style={styles.stat}>공부 횟수 {summary.count}회</Text>
             {/* 충분 판정을 받은 개념만 센다 */}
-            <Text>설명한 개념 {summary.conceptCount}개</Text>
+            <Text style={styles.stat}>설명한 개념 {summary.conceptCount}개</Text>
           </View>
 
           {/* 스크린 리더는 막대 대신 아래 범례를 읽는다 */}
@@ -39,7 +39,7 @@ export function TodayStats() {
           {summary.bySubject.map((s) => (
             <View key={s.folderId} style={styles.legend}>
               <View style={[styles.swatch, { backgroundColor: s.color }]} />
-              <Text>{s.name}</Text>
+              <Text style={styles.legendName}>{s.name}</Text>
               <Text>{Math.floor(s.seconds / 60)}분</Text>
             </View>
           ))}
@@ -55,8 +55,17 @@ const styles = StyleSheet.create({
   },
   row: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     gap: 8,
+  },
+  // 세 칸이 폭을 나눠 갖고, 글자가 넓은 갈무리 글꼴에서도 박스를 넘지 않고 어절 단위로 줄바꿈한다. minWidth 0이 없으면 칸이 줄어들지 못한다.
+  stat: {
+    flex: 1,
+    minWidth: 0,
+  },
+  // 과목 이름이 길어도 분 숫자가 오른쪽에 남고 이름이 줄바꿈된다
+  legendName: {
+    flex: 1,
+    minWidth: 0,
   },
   bar: {
     flexDirection: 'row',
