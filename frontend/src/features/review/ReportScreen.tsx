@@ -9,7 +9,7 @@ import { NoRecord } from '@/components/ui/NoRecord';
 import { stageChange } from '@/features/review/report';
 import { ReportSummary } from '@/features/review/ReportSummary';
 import { useAfterSession, useSessionReport } from '@/features/review/useAfterSession';
-import { COLORS, RADIUS } from '@/theme/assetTokens';
+import { COLORS, FONT, RADIUS } from '@/theme/assetTokens';
 
 // S-05 학습 결과 리포트. 리포트를 요청하면 서버가 보상도 함께 지급한다. 성장했으면 성장 축하 화면으로 간다.
 export function ReportScreen() {
@@ -60,7 +60,7 @@ const styles = StyleSheet.create({
   },
   // 글자용 주황(textAccent). 면·테두리용 주황은 글자에 쓰지 않는다.
   xpValue: {
-    fontWeight: '700',
+    ...FONT.heading,
     color: COLORS.textAccent,
   },
 });

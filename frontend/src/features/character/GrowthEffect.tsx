@@ -309,11 +309,10 @@ const styles = StyleSheet.create({
     ...hardShadow(SIZES.card.shadow),
   },
   cardTitle: {
-    fontSize: 22,
-    fontWeight: '700',
+    ...FONT.title,
   },
   cardSubtitle: {
-    fontSize: 14,
+    ...FONT.body,
     color: COLORS.textSub,
   },
 });

@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { StyleSheet, TextInput, View, type TextInputProps } from 'react-native';
 
 import { Text } from '@/components/ui/Text';
-import { COLORS, PAPER } from '@/theme/assetTokens';
+import { COLORS, FONT, PAPER } from '@/theme/assetTokens';
 
 type Props = TextInputProps & {
   // 문자열이면 입력창 아래에 오류 문구를 보여 주고, true면 테두리만 오류 색으로 바꾼다
@@ -75,16 +75,14 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.danger,
   },
   errorMarkText: {
-    fontSize: 11,
+    ...FONT.caption,
     lineHeight: 14,
-    fontWeight: '700',
     color: COLORS.inputBg,
   },
   errorText: {
     flex: 1,
-    fontSize: 12,
+    ...FONT.caption,
     lineHeight: 17,
-    fontWeight: '700',
     color: COLORS.danger,
   },
 });

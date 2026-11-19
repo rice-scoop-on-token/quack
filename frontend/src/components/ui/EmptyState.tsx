@@ -31,8 +31,7 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   title: {
-    ...FONT.body,
-    fontWeight: '700',
+    ...FONT.heading,
   },
   message: {
     ...FONT.body,

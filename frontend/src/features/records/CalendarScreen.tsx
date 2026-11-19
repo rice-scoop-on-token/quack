@@ -183,13 +183,12 @@ const styles = StyleSheet.create({
     gap: 2,
   },
   summaryLabel: {
-    fontSize: 12,
+    ...FONT.caption,
     color: COLORS.mutedStrong,
     textAlign: 'center',
   },
   summaryValue: {
-    fontSize: 18,
-    fontWeight: '700',
+    ...FONT.title,
     textAlign: 'center',
   },
   week: {
@@ -217,7 +216,7 @@ const styles = StyleSheet.create({
     borderColor: COLORS.outline,
   },
   today: {
-    fontWeight: '700',
+    ...FONT.heading,
   },
   card: {
     ...PAPER.card,

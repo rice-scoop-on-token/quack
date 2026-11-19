@@ -9,7 +9,7 @@ import { Icon } from '@/components/ui/Icon';
 import { Text } from '@/components/ui/Text';
 import { growthFromXp } from '@/features/character/growth';
 import { useCharacterXp } from '@/features/character/useCharacterXp';
-import { COLORS, SIZES } from '@/theme/assetTokens';
+import { COLORS, FONT, SIZES } from '@/theme/assetTokens';
 
 type Props = {
   folder: Folder;
@@ -81,20 +81,17 @@ const styles = StyleSheet.create({
     gap: 2,
   },
   name: {
-    fontSize: 17,
-    fontWeight: '700',
+    ...FONT.heading,
   },
   teacher: {
-    fontSize: 13,
-    fontWeight: '600',
+    ...FONT.caption,
     color: COLORS.textSub,
   },
   description: {
-    fontSize: 13,
+    ...FONT.caption,
   },
   count: {
-    fontSize: 12,
-    fontWeight: '500',
+    ...FONT.caption,
     color: COLORS.textSub,
   },
   // 터치 영역 44×44, 아이콘은 24. 카드 오른쪽 여백 쪽으로 조금 당긴다.

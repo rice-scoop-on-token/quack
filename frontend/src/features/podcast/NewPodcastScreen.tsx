@@ -6,7 +6,7 @@ import { LoadingView } from '@/components/ui/LoadingView';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { Icon } from '@/components/ui/Icon';
 import { Text } from '@/components/ui/Text';
-import { COLORS, PAPER } from '@/theme/assetTokens';
+import { COLORS, FONT, PAPER } from '@/theme/assetTokens';
 import { FolderCard } from '@/components/ui/FolderCard';
 import { Button } from '@/components/ui/Button';
 import { useApiQuery, useQuackApi } from '@/api';
@@ -170,7 +170,7 @@ const styles = StyleSheet.create({
   },
   materialTitle: {
     flex: 1,
-    fontWeight: '700',
+    ...FONT.heading,
   },
   // 체크 칸은 색만이 아니라 체크 아이콘으로도 고른 것을 알린다
   checkbox: {

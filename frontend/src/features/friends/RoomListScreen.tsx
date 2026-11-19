@@ -16,7 +16,7 @@ import { ScreenTitle } from '@/components/ui/ScreenTitle';
 import { Text } from '@/components/ui/Text';
 import { myRoomIds } from '@/features/friends/matchMyRooms';
 import { ICONS } from '@/features/navigation/icons';
-import { COLORS } from '@/theme/assetTokens';
+import { COLORS, FONT } from '@/theme/assetTokens';
 
 const AVATAR_SIZE = 32;
 // 한계: 참가자가 많은 방은 앞 사람 몇 명만 그리고 나머지는 "N명 참여 중"의 숫자로만 알린다.
@@ -77,7 +77,7 @@ export function RoomListScreen() {
             accessibilityState={{ selected: filter === f.key }}
             style={[styles.chip, filter === f.key && styles.chipOn]}
           >
-            <Text style={[styles.chipText, filter === f.key && styles.chipTextOn]}>{f.label}</Text>
+            <Text style={styles.chipText}>{f.label}</Text>
           </Pressable>
         ))}
       </View>
@@ -184,15 +184,12 @@ const styles = StyleSheet.create({
   chipOn: {
     backgroundColor: COLORS.primary,
   },
+  // 굵은 글꼴 하나뿐이라 고른 칩은 굵기가 아니라 노란 배경으로 구분한다
   chipText: {
-    fontSize: 14,
-    fontWeight: '500',
-  },
-  chipTextOn: {
-    fontWeight: '700',
+    ...FONT.caption,
   },
   help: {
-    fontSize: 13,
+    ...FONT.caption,
     color: COLORS.mutedStrong,
   },
   room: {
@@ -223,15 +220,13 @@ const styles = StyleSheet.create({
     borderRadius: 10,
   },
   tagText: {
-    fontSize: 12,
-    fontWeight: '700',
+    ...FONT.caption,
   },
   title: {
-    fontSize: 15,
-    fontWeight: '700',
+    ...FONT.heading,
   },
   sub: {
-    fontSize: 12,
+    ...FONT.caption,
     color: COLORS.mutedStrong,
   },
   people: {
@@ -259,8 +254,7 @@ const styles = StyleSheet.create({
     gap: 2,
   },
   count: {
-    fontSize: 13,
-    fontWeight: '700',
+    ...FONT.heading,
   },
   mic: {
     flexDirection: 'row',
