@@ -30,6 +30,7 @@ import type {
   TempQuizAttempt,
   TempReportResponse,
   TempRoom,
+  TranscribeAudio,
 } from '@/api/tempContract';
 
 // 화면과 훅은 이 인터페이스로만 데이터를 가져온다(CLAUDE.md Frontend). 메서드는 서버 계약(shared)에 맞춘다.
@@ -59,8 +60,9 @@ export interface QuackApi {
 
   // 서버(api 함수)
   processMaterial(id: string): Promise<ProcessMaterialResponse>;
-  // 한계: 실제 녹음을 붙일 때 녹음 파일 인자를 더한다
-  transcribe(): Promise<TranscribeResponse>;
+  // 서버 연결 모드는 녹음 파일(uri)을 보낸다. mock은 인자를 무시하고 예시 전사문을 돌려준다.
+  // mimeType은 웹에서 녹음기가 준 형식이 비어 있을 수 있어 선택이다(비면 서버 연결 구현이 보내지 않는다).
+  transcribe(audio?: TranscribeAudio): Promise<TranscribeResponse>;
   requestAiQuestion(sessionId: string): Promise<TempAiQuestion>;
   // 어느 개념에 대한 설명인지와 꼬리 질문 수는 서버가 지난 설명 기록으로 정해 응답에 넣는다
   sendTurn(sessionId: string, input: CreateTurnRequest): Promise<SessionTurn>;

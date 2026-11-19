@@ -59,6 +59,10 @@ export type SessionTurn = Pick<ExplanationTurn, 'seq' | 'trigger' | 'input_mode'
   analysis: ExplanationAnalysis;
 };
 
+// 앱이 녹음한 음성 파일(POST /speech/transcribe로 보낸다). durationMs는 앱이 잰 녹음 시간으로 1~60000이다.
+// mimeType: 네이티브는 'audio/mp4'(없으면 보내지 않는다). 웹은 비워도 되고, 서버 연결 구현이 녹음 Blob의 type을 쓴다(비면 보내지 않는다).
+export type TranscribeAudio = { uri: string; mimeType?: string; durationMs: number };
+
 // POST /sessions/:id/ai-question 응답 초안. shared에는 AI 분석 스키마와 함께 들어갈 예정이다.
 export type TempAiQuestion = { question: string };
 
