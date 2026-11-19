@@ -23,7 +23,7 @@ const FOLLOW_UP_QUESTIONS = [
 ];
 
 // 실제 STT는 개발 빌드 세팅 후 별도 커밋에서 붙인다
-export const MOCK_TRANSCRIPT = '음, 제가 이해한 건 이 개념이 어떤 문제를 풀려고 생겼고, 보통 이런 상황에서 쓴다는 거예요.';
+export const MOCK_TRANSCRIPT = '오름차순으로 정렬되어 있으니까 가운데 왼쪽의 값들은 모두 가운데 값보다 작거나 같아. 따라서 찾는 값이 가운데 값보다 크면 왼쪽과 가운데는 후보에서 제외할 수 있어. 작은 경우에는 반대로 오른쪽과 가운데를 제외해. 남은 범위에서도 이 과정을 반복하고, 가운데 값과 같으면 찾은 거야. 같아지기 전에 탐색 범위가 비면 배열에 없는 값이라고 끝내.';
 
 // 자료 분석이 없어서 mock 개념 이름을 그 폴더 과목의 개념에서 순서대로 쓴다(data/subjectContent.ts)
 export function mockConcept(index: number, folderName: string | undefined): string {
